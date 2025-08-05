@@ -1,0 +1,6 @@
+@NaviGoApi.API_HostAddress = http://localhost:5117
+
+GET {{NaviGoApi.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
