@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NaviGoApi.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250806145415_CreateAllDBTables")]
+    [Migration("20250806150503_CreateAllDBTables")]
     partial class CreateAllDBTables
     {
         /// <inheritdoc />
@@ -114,7 +114,7 @@ namespace NaviGoApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Company");
+                    b.ToTable("Companies");
                 });
 
             modelBuilder.Entity("NaviGoApi.Domain.Entities.Contract", b =>
@@ -526,7 +526,7 @@ namespace NaviGoApi.Infrastructure.Migrations
 
                     b.HasIndex("VehicleTypeId");
 
-                    b.ToTable("RoutesPrice");
+                    b.ToTable("RoutesPrices");
                 });
 
             modelBuilder.Entity("NaviGoApi.Domain.Entities.Shipment", b =>
@@ -832,7 +832,7 @@ namespace NaviGoApi.Infrastructure.Migrations
 
                     b.HasIndex("VehicleId");
 
-                    b.ToTable("VehicleMaintenance");
+                    b.ToTable("VehicleMaintenances");
                 });
 
             modelBuilder.Entity("NaviGoApi.Domain.Entities.VehicleType", b =>

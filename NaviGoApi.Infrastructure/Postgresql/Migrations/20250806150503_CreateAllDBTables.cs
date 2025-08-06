@@ -29,7 +29,7 @@ namespace NaviGoApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Company",
+                name: "Companies",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -49,7 +49,7 @@ namespace NaviGoApi.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Company", x => x.Id);
+                    table.PrimaryKey("PK_Companies", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -105,9 +105,9 @@ namespace NaviGoApi.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_Drivers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Drivers_Company_CompanyId",
+                        name: "FK_Drivers_Companies_CompanyId",
                         column: x => x.CompanyId,
-                        principalTable: "Company",
+                        principalTable: "Companies",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -135,9 +135,9 @@ namespace NaviGoApi.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Users_Company_CompanyId",
+                        name: "FK_Users_Companies_CompanyId",
                         column: x => x.CompanyId,
-                        principalTable: "Company",
+                        principalTable: "Companies",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                 });
@@ -163,9 +163,9 @@ namespace NaviGoApi.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_Routes", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Routes_Company_CompanyId",
+                        name: "FK_Routes_Companies_CompanyId",
                         column: x => x.CompanyId,
-                        principalTable: "Company",
+                        principalTable: "Companies",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -205,9 +205,9 @@ namespace NaviGoApi.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_Vehicles", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Vehicles_Company_CompanyId",
+                        name: "FK_Vehicles_Companies_CompanyId",
                         column: x => x.CompanyId,
-                        principalTable: "Company",
+                        principalTable: "Companies",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -270,9 +270,9 @@ namespace NaviGoApi.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_Contracts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Contracts_Company_ForwarderId",
+                        name: "FK_Contracts_Companies_ForwarderId",
                         column: x => x.ForwarderId,
-                        principalTable: "Company",
+                        principalTable: "Companies",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -308,9 +308,9 @@ namespace NaviGoApi.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_ForwarderOffers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ForwarderOffers_Company_ForwarderId",
+                        name: "FK_ForwarderOffers_Companies_ForwarderId",
                         column: x => x.ForwarderId,
-                        principalTable: "Company",
+                        principalTable: "Companies",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -322,7 +322,7 @@ namespace NaviGoApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "RoutesPrice",
+                name: "RoutesPrices",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -334,15 +334,15 @@ namespace NaviGoApi.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RoutesPrice", x => x.Id);
+                    table.PrimaryKey("PK_RoutesPrices", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_RoutesPrice_Routes_RouteId",
+                        name: "FK_RoutesPrices_Routes_RouteId",
                         column: x => x.RouteId,
                         principalTable: "Routes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_RoutesPrice_VehicleTypes_VehicleTypeId",
+                        name: "FK_RoutesPrices_VehicleTypes_VehicleTypeId",
                         column: x => x.VehicleTypeId,
                         principalTable: "VehicleTypes",
                         principalColumn: "Id",
@@ -350,7 +350,7 @@ namespace NaviGoApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "VehicleMaintenance",
+                name: "VehicleMaintenances",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -366,15 +366,15 @@ namespace NaviGoApi.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_VehicleMaintenance", x => x.Id);
+                    table.PrimaryKey("PK_VehicleMaintenances", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_VehicleMaintenance_Users_ReportedByUserId",
+                        name: "FK_VehicleMaintenances_Users_ReportedByUserId",
                         column: x => x.ReportedByUserId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_VehicleMaintenance_Vehicles_VehicleId",
+                        name: "FK_VehicleMaintenances_Vehicles_VehicleId",
                         column: x => x.VehicleId,
                         principalTable: "Vehicles",
                         principalColumn: "Id",
@@ -656,13 +656,13 @@ namespace NaviGoApi.Infrastructure.Migrations
                 column: "StartLocationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RoutesPrice_RouteId",
-                table: "RoutesPrice",
+                name: "IX_RoutesPrices_RouteId",
+                table: "RoutesPrices",
                 column: "RouteId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RoutesPrice_VehicleTypeId",
-                table: "RoutesPrice",
+                name: "IX_RoutesPrices_VehicleTypeId",
+                table: "RoutesPrices",
                 column: "VehicleTypeId");
 
             migrationBuilder.CreateIndex(
@@ -711,13 +711,13 @@ namespace NaviGoApi.Infrastructure.Migrations
                 column: "CompanyId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_VehicleMaintenance_ReportedByUserId",
-                table: "VehicleMaintenance",
+                name: "IX_VehicleMaintenances_ReportedByUserId",
+                table: "VehicleMaintenances",
                 column: "ReportedByUserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_VehicleMaintenance_VehicleId",
-                table: "VehicleMaintenance",
+                name: "IX_VehicleMaintenances_VehicleId",
+                table: "VehicleMaintenances",
                 column: "VehicleId");
 
             migrationBuilder.CreateIndex(
@@ -755,7 +755,7 @@ namespace NaviGoApi.Infrastructure.Migrations
                 name: "RefreshTokens");
 
             migrationBuilder.DropTable(
-                name: "RoutesPrice");
+                name: "RoutesPrices");
 
             migrationBuilder.DropTable(
                 name: "ShipmentDocuments");
@@ -764,7 +764,7 @@ namespace NaviGoApi.Infrastructure.Migrations
                 name: "ShipmentStatusHistories");
 
             migrationBuilder.DropTable(
-                name: "VehicleMaintenance");
+                name: "VehicleMaintenances");
 
             migrationBuilder.DropTable(
                 name: "Shipments");
@@ -794,7 +794,7 @@ namespace NaviGoApi.Infrastructure.Migrations
                 name: "Locations");
 
             migrationBuilder.DropTable(
-                name: "Company");
+                name: "Companies");
         }
     }
 }

@@ -111,7 +111,7 @@ namespace NaviGoApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Company");
+                    b.ToTable("Companies");
                 });
 
             modelBuilder.Entity("NaviGoApi.Domain.Entities.Contract", b =>
@@ -523,7 +523,7 @@ namespace NaviGoApi.Infrastructure.Migrations
 
                     b.HasIndex("VehicleTypeId");
 
-                    b.ToTable("RoutesPrice");
+                    b.ToTable("RoutesPrices");
                 });
 
             modelBuilder.Entity("NaviGoApi.Domain.Entities.Shipment", b =>
@@ -829,7 +829,7 @@ namespace NaviGoApi.Infrastructure.Migrations
 
                     b.HasIndex("VehicleId");
 
-                    b.ToTable("VehicleMaintenance");
+                    b.ToTable("VehicleMaintenances");
                 });
 
             modelBuilder.Entity("NaviGoApi.Domain.Entities.VehicleType", b =>
