@@ -14,7 +14,6 @@
   <ItemGroup>
     <Folder Include="MongoDB\Repositories\" />
     <Folder Include="Neo4j\Repositories\" />
-    <Folder Include="Postgresql\Persistence\Configurations\" />
     <Folder Include="Postgresql\Repositories\" />
   </ItemGroup>
 

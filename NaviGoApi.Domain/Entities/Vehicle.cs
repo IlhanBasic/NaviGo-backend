@@ -1,4 +1,4 @@
-﻿using NaviGoApi.Domain.Entities.NaviGoApi.Domain.Entities;
+﻿
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;

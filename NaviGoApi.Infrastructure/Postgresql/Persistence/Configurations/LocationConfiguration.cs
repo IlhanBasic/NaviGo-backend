@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using NaviGoApi.Domain.Entities;
-using NaviGoApi.Domain.Entities.NaviGoApi.Domain.Entities;
 
 namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 {
