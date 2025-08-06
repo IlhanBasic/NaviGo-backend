@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -7,8 +8,6 @@ using System.Threading.Tasks;
 
 namespace NaviGoApi.Domain.Entities
 {
-	namespace NaviGoApi.Domain.Entities
-	{
 		public class Location
 		{
 			public int Id { get; set; }
@@ -24,6 +23,5 @@ namespace NaviGoApi.Domain.Entities
 			public ICollection<Route>? RoutesEnd { get; set; }
 			public ICollection<Vehicle>? VehiclesCurrentLocation { get; set; }
 		}
-	}
 
 }
