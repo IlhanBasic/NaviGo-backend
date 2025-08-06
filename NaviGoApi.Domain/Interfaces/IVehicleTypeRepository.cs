@@ -1,0 +1,18 @@
+﻿using NaviGoApi.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace NaviGoApi.Domain.Interfaces
+{
+	public interface IVehicleTypeRepository
+	{
+		Task<IEnumerable<VehicleType>> GetAllAsync();
+		Task<VehicleType?> GetByIdAsync(Guid id);
+		Task AddAsync(VehicleType vehicleType);
+		Task UpdateAsync(VehicleType vehicleType);
+		Task DeleteAsync(int id);
+	}
+}

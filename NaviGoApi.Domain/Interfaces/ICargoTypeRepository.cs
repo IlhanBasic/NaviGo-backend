@@ -1,0 +1,15 @@
+﻿using NaviGoApi.Domain.Entities;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace NaviGoApi.Domain.Interfaces
+{
+	public interface ICargoTypeRepository
+	{
+		Task<IEnumerable<CargoType>> GetAllAsync();
+		Task<CargoType?> GetByIdAsync(int id);
+		Task AddAsync(CargoType cargoType);
+		void Update(CargoType cargoType);
+		void Delete(CargoType cargoType);
+	}
+}
