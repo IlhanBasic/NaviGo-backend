@@ -1,68 +1,79 @@
 ﻿using KnjizaraApi.Domain.Interfaces;
 using NaviGoApi.Domain.Entities;
+using NaviGoApi.Infrastructure.Postgresql.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using Microsoft.EntityFrameworkCore;
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
 	public class UserRepository : IUserRepository
 	{
-		public Task AddAsync(User user)
+		private readonly ApplicationDbContext _context;
+
+		public UserRepository(ApplicationDbContext context)
 		{
-			throw new NotImplementedException();
+			_context = context;
+		}
+		public async Task AddAsync(User user)
+		{
+			await _context.Users.AddAsync(user);
 		}
 
-		public Task AddRefreshTokenAsync(RefreshToken token)
+		public async Task AddRefreshTokenAsync(RefreshToken token)
 		{
-			throw new NotImplementedException();
+			await _context.RefreshTokens.AddAsync(token);
 		}
 
-		public Task<User> FindByRefreshTokenAsync(string token)
+		public async Task<User> FindByRefreshTokenAsync(string token)
 		{
-			throw new NotImplementedException();
+			return await _context.Users
+				.Include(u => u.RefreshTokens)
+				.FirstOrDefaultAsync(u => u.RefreshTokens.Any(t => t.Token == token));
 		}
 
-		public Task<IEnumerable<User>> GetAllAsync()
+		public async Task<IEnumerable<User>> GetAllAsync()
 		{
-			throw new NotImplementedException();
+			return await _context.Users.ToListAsync();
 		}
 
-		public Task<User?> GetByEmailAsync(string email)
+		public async Task<User?> GetByEmailAsync(string email)
 		{
-			throw new NotImplementedException();
+			return await _context.Users
+				.FirstOrDefaultAsync(u => u.Email == email);
 		}
 
-		public Task<User?> GetByIdAsync(int id)
+		public async Task<User?> GetByIdAsync(int id)
 		{
-			throw new NotImplementedException();
+			return await _context.Users
+				.FirstOrDefaultAsync(u => u.Id == id);
 		}
 
-		public Task<RefreshToken?> GetRefreshTokenAsync(string token)
+		public async Task<RefreshToken?> GetRefreshTokenAsync(string token)
 		{
-			throw new NotImplementedException();
+			return await _context.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == token);
 		}
 
 		public IQueryable<User> Query()
 		{
-			throw new NotImplementedException();
+			return _context.Users.AsQueryable();
 		}
 
 		public void Remove(User user)
 		{
-			throw new NotImplementedException();
+			_context.Users.Remove(user);
 		}
 
 		public void Update(User user)
 		{
-			throw new NotImplementedException();
+			_context.Users.Update(user);
 		}
 
-		public Task UpdateRefreshTokenAsync(RefreshToken token)
+		public async Task UpdateRefreshTokenAsync(RefreshToken token)
 		{
-			throw new NotImplementedException();
+			_context.RefreshTokens.Update(token);
 		}
 	}
 }

@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using NaviGoApi.Application.CQRS.Commands.User;
+using NaviGoApi.Application.DTOs.User;
 
 namespace NaviGoApi.API.Controllers
 {
@@ -7,5 +10,62 @@ namespace NaviGoApi.API.Controllers
 	[ApiController]
 	public class AuthController : ControllerBase
 	{
+		private readonly IMediator _mediator;
+
+		public AuthController(IMediator mediator)
+		{
+			_mediator = mediator;
+		}
+
+		/// <summary>
+		/// Login user and receive JWT tokens.
+		/// </summary>
+		[HttpPost("login")]
+		public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
+		{
+			var result = await _mediator.Send(new AuthenticateCommand(request.Email, request.Password));
+			if (result == null)
+				return Unauthorized(new { message = "Invalid credentials" });
+
+			return Ok(new
+			{
+				accessToken = result.Value.accessToken,
+				refreshToken = result.Value.refreshToken
+			});
+		}
+
+		/// <summary>
+		/// Refresh JWT token using a valid refresh token.
+		/// </summary>
+		[HttpPost("refresh")]
+		public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequestDto request)
+		{
+			var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+			var result = await _mediator.Send(new RefreshTokenCommand(request.Token, ipAddress));
+
+			if (result == null)
+				return Unauthorized(new { message = "Invalid or expired refresh token" });
+
+			return Ok(new
+			{
+				accessToken = result.Value.accessToken,
+				refreshToken = result.Value.refreshToken
+			});
+		}
+		[HttpPost("google-login")]
+		public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequestDto request)
+		{
+			var result = await _mediator.Send(new GoogleAuthenticateCommand(request.IdToken));
+			if (result == null)
+				return Unauthorized(new { message = "Invalid Google token" });
+
+			return Ok(new
+			{
+				accessToken = result.Value.accessToken,
+				refreshToken = result.Value.refreshToken
+			});
+		}
+
 	}
 }

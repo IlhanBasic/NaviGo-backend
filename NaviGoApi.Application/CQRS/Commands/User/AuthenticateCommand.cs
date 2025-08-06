@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MediatR;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,5 @@ using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.CQRS.Commands.User
 {
-	internal class AuthenticateCommand
-	{
-	}
+	public record AuthenticateCommand(string Email, string Password) : IRequest<(string accessToken, string refreshToken)?>;
 }

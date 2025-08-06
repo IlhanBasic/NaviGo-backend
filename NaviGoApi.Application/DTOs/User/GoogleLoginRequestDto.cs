@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.DTOs.User
 {
-	internal class GoogleLoginRequestDto
+	public class GoogleLoginRequestDto
 	{
+		public string IdToken { get; set; } = null!;
 	}
 }

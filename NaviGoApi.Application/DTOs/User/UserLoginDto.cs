@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.DTOs.User
 {
-	internal class UserLoginDto
+	public class UserLoginDto
 	{
+		public string Email { get; set; } = null!;
+		public string Password { get; set; } = null!;
 	}
+
 }

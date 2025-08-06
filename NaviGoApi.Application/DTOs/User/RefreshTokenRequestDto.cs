@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.DTOs.User
 {
-	internal class RefreshTokenRequestDto
+	public class RefreshTokenRequestDto
 	{
+		public string Token { get; set; } = null!;
 	}
+
 }

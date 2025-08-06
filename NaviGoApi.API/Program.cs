@@ -1,8 +1,15 @@
 using KnjizaraApi.Domain.Interfaces;
+using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using NaviGoApi.Application.CQRS.Handlers.User;
+using NaviGoApi.Application.CQRS.Queries.User;
+using NaviGoApi.Application.MappingProfiles;
 using NaviGoApi.Domain.Interfaces;
 using NaviGoApi.Infrastructure.Postgresql.Persistence;
 using NaviGoApi.Infrastructure.Postgresql.Repositories;
+using System.Text;
 //POSTGRESQL
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -26,12 +33,78 @@ builder.Services.AddScoped<IVehicleMaintenanceRepository,VehicleMaintenanceRepos
 builder.Services.AddScoped<IVehicleTypeRepository, VehicleTypeRepository>();
 builder.Services.AddScoped<IVehicleRepository,VehicleRepository>();
 builder.Services.AddScoped<IContractRepository,ContractRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // Add services to the container.
-
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddControllers();
+builder.Services.AddMediatR(typeof(GetAllUserQuery).Assembly);
+var jwtSecret = builder.Configuration["JWT_SECRET"];
+var key = Encoding.ASCII.GetBytes(jwtSecret!);
+
+builder.Services.AddAuthentication(options =>
+{
+	options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+	options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+	options.RequireHttpsMetadata = false;
+	options.SaveToken = true;
+	options.TokenValidationParameters = new TokenValidationParameters
+	{
+		ValidateIssuerSigningKey = true,
+		IssuerSigningKey = new SymmetricSecurityKey(key),
+		ValidateIssuer = false,
+		ValidateAudience = false,
+		ClockSkew = TimeSpan.Zero
+	};
+})
+.AddGoogle("Google", options =>
+{
+	options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+	options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+	options.SaveTokens = true;
+
+	options.Events.OnCreatingTicket = ctx =>
+	{
+		// ovde možeš dodatno uhvatiti info iz Google korisnika
+		return Task.CompletedTask;
+	};
+});
+builder.Services.AddAuthorization();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+	// Dodaj definiciju sigurnosnog šeme
+	options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+	{
+		Description = "Unesite JWT token ovde sa prefixom 'Bearer '",
+		Name = "Authorization",
+		In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+		Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+		Scheme = "Bearer"
+	});
+
+	// Dodaj zahtev za koriš?enje te sigurnosne šeme globalno u Swagger UI
+	options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement()
+	{
+		{
+			new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+			{
+				Reference = new Microsoft.OpenApi.Models.OpenApiReference
+				{
+					Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+					Id = "Bearer"
+				},
+				Scheme = "oauth2",
+				Name = "Bearer",
+				In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+			},
+			new List<string>()
+		}
+	});
+});
 
 var app = builder.Build();
 

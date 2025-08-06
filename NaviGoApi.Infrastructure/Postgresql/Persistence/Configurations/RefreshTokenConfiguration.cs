@@ -1,40 +1,37 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using NaviGoApi.Domain.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using NaviGoApi.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 {
-	internal class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
+	public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
 	{
+
 		public void Configure(EntityTypeBuilder<RefreshToken> builder)
 		{
+			builder.HasKey(rt => rt.Id);
 
-			builder.HasKey(x => x.Id);
-
-			builder.Property(x => x.Id);
-
-			builder.Property(x => x.UserId)
+			builder.Property(rt => rt.Token)
 				.IsRequired();
 
-			builder.Property(x => x.Token)
-				.IsRequired();
+			builder.Property(rt => rt.Expires)
+						.IsRequired();
 
-			builder.Property(x => x.Expires)
-				.IsRequired();
+			builder.Property(rt => rt.Created)
+						.IsRequired();
 
-			builder.Property(x => x.CreatedAt)
-				.IsRequired();
+			builder.Property(rt => rt.CreatedByIp)
+						.IsRequired();
+			builder.HasOne(rt => rt.User)
+						  .WithMany(u => u.RefreshTokens)
+						  .HasForeignKey(rt => rt.UserId)
+						  .OnDelete(DeleteBehavior.Cascade);
 
-			builder.Property(x => x.Revoked);
-
-			builder.Property(x => x.IsActive)
-				.IsRequired();
-
-			// Relation with User
-			builder.HasOne(x => x.User)
-				.WithMany(u => u.RefreshTokens)
-				.HasForeignKey(x => x.UserId)
-				.OnDelete(DeleteBehavior.Cascade);
 		}
 	}
 }
