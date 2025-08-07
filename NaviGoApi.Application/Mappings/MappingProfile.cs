@@ -3,6 +3,7 @@ using NaviGoApi.Application.DTOs.CargoType;
 using NaviGoApi.Application.DTOs.Company;
 using NaviGoApi.Application.DTOs.Location;
 using NaviGoApi.Application.DTOs.User;
+using NaviGoApi.Application.DTOs.Vehicle;
 using NaviGoApi.Application.DTOs.VehicleType;
 using NaviGoApi.Domain.Entities;
 
@@ -40,6 +41,13 @@ namespace NaviGoApi.Application.MappingProfiles
 			CreateMap<CompanyCreateDto, Company>();
 
 			CreateMap<CompanyUpdateDto, Company>();
+			//Vehicle
+			CreateMap<Vehicle, VehicleDto>()
+				.ForMember(dest => dest.VehicleStatus, opt => opt.MapFrom(src => src.VehicleStatus.ToString()));
+
+			CreateMap<VehicleCreateDto, Vehicle>();
+			CreateMap<VehicleUpdateDto, Vehicle>();
+
 		}
 	}
 }
