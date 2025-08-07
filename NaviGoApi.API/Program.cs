@@ -42,7 +42,8 @@ builder.Services.AddScoped<IContractRepository,ContractRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // Add services to the container.
 builder.Services.AddAutoMapper(typeof(MappingProfile));
-builder.Services.AddControllers();
+builder.Services.AddControllersWithViews();
+
 builder.Services.AddValidatorsFromAssemblyContaining<LocationCreateDtoValidator>();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));

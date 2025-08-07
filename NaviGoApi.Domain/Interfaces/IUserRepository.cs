@@ -19,6 +19,8 @@ namespace KnjizaraApi.Domain.Interfaces
 		Task AddRefreshTokenAsync(RefreshToken token);
 		Task UpdateRefreshTokenAsync(RefreshToken token);
 		Task<User> FindByRefreshTokenAsync(string token);
+		Task<User?> GetByEmailVerificationTokenAsync(string token);
+
 		IQueryable<User> Query();
 	}
 }

@@ -43,6 +43,7 @@ namespace NaviGoApi.Domain.Entities
 		public DateTime? LastLogin { get; set; }
 
 		public bool EmailVerified { get; set; }
+		public string? EmailVerificationToken { get; set; }
 
 		public UserStatus UserStatus { get; set; } = UserStatus.Active;
 

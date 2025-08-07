@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NaviGoApi.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250807105148_CreatedAllTables")]
+    [Migration("20250807155409_CreatedAllTables")]
     partial class CreatedAllTables
     {
         /// <inheritdoc />
@@ -708,6 +708,9 @@ namespace NaviGoApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<string>("EmailVerificationToken")
+                        .HasColumnType("text");
 
                     b.Property<bool>("EmailVerified")
                         .HasColumnType("boolean");

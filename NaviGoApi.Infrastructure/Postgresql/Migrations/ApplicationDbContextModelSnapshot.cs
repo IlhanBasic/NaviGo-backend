@@ -706,6 +706,9 @@ namespace NaviGoApi.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("EmailVerificationToken")
+                        .HasColumnType("text");
+
                     b.Property<bool>("EmailVerified")
                         .HasColumnType("boolean");
 

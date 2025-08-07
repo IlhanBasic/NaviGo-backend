@@ -55,7 +55,11 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		{
 			return await _context.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == token);
 		}
-
+		public async Task<User?> GetByEmailVerificationTokenAsync(string token)
+		{
+			return await _context.Users
+				.FirstOrDefaultAsync(u => u.EmailVerificationToken == token);
+		}
 		public IQueryable<User> Query()
 		{
 			return _context.Users.AsQueryable();

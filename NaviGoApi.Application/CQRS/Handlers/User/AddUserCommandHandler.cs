@@ -30,14 +30,12 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			var userEntity = _mapper.Map<Domain.Entities.User>(request.UserDto);
 
 			userEntity.PasswordHash = HashPassword(request.UserDto.Password);
-
+			var verificationToken = System.Guid.NewGuid().ToString();
+			userEntity.EmailVerificationToken = verificationToken;
 			await _unitOfWork.Users.AddAsync(userEntity);
 			await _unitOfWork.SaveChangesAsync();
-
-			// TODO: Ovde generiši pravi token za verifikaciju i sačuvaj ga ako treba
-			var verificationToken = System.Guid.NewGuid().ToString();
-			var verificationLink = $"https://localhost:7028/verify?token={verificationToken}";
-
+			
+			var verificationLink = $"https://localhost:7028/api/User/verify-email?token={verificationToken}";
 			// Pošalji email sa linkom za verifikaciju
 			await _emailService.SendVerificationEmailAsync(userEntity.Email, verificationLink);
 

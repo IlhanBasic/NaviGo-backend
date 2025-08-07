@@ -129,6 +129,7 @@ namespace NaviGoApi.Infrastructure.Migrations
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     LastLogin = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     EmailVerified = table.Column<bool>(type: "boolean", nullable: false),
+                    EmailVerificationToken = table.Column<string>(type: "text", nullable: true),
                     UserStatus = table.Column<int>(type: "integer", nullable: false),
                     CompanyId = table.Column<int>(type: "integer", nullable: true)
                 },

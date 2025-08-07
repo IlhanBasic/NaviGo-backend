@@ -58,5 +58,57 @@ namespace NaviGoApi.API.Controllers
 				return NotFound();
 			return NoContent();
 		}
+		[HttpGet("verify-email")]
+		public async Task<IActionResult> VerifyEmail([FromQuery] string token)
+		{
+			var command = new VerifyEmailCommand(token);
+			var result = await _mediator.Send(command);
+
+			if (!result)
+			{
+				var errorHtml = @"
+            <html>
+            <head>
+                <title>Email Verification Failed</title>
+                <style>
+                    body { font-family: Arial, sans-serif; background-color: #f8d7da; color: #721c24; text-align: center; padding: 50px; }
+                    .container { background-color: #f5c6cb; border-radius: 10px; padding: 20px; max-width: 500px; margin: auto; }
+                    a { color: #721c24; text-decoration: none; font-weight: bold; }
+                    a:hover { text-decoration: underline; }
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <h1>Email Verification Failed</h1>
+                    <p>Invalid or expired verification token.</p>
+                    <p><a href='/login'>Go to Login</a></p>
+                </div>
+            </body>
+            </html>";
+				return Content(errorHtml, "text/html");
+			}
+
+			var successHtml = @"
+        <html>
+        <head>
+            <title>Email Verified</title>
+            <style>
+                body { font-family: Arial, sans-serif; background-color: #d4edda; color: #155724; text-align: center; padding: 50px; }
+                .container { background-color: #c3e6cb; border-radius: 10px; padding: 20px; max-width: 500px; margin: auto; }
+                a { color: #155724; text-decoration: none; font-weight: bold; }
+                a:hover { text-decoration: underline; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <h1>Success!</h1>
+                <p>Your email has been verified successfully.</p>
+                <p><a href='/login'>Proceed to Login</a></p>
+            </div>
+        </body>
+        </html>";
+			return Content(successHtml, "text/html");
+		}
+
 	}
 }
