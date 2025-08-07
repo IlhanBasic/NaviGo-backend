@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
+using NaviGoApi.Application.DTOs.VehicleType;
 
 namespace NaviGoApi.Application.CQRS.Commands.VehicleType
 {
-	internal class UpdateVehicleTypeCommand
-	{
-	}
+	public record UpdateVehicleTypeCommand(int Id, VehicleTypeUpdateDto VehicleTypeDto) : IRequest<Unit>;
+
 }

@@ -1,38 +1,51 @@
-﻿using NaviGoApi.Domain.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
+using NaviGoApi.Infrastructure.Postgresql.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
 	public class VehicleTypeRepository : IVehicleTypeRepository
 	{
-		public Task AddAsync(VehicleType vehicleType)
+		private readonly ApplicationDbContext _context;
+
+		public VehicleTypeRepository(ApplicationDbContext context)
 		{
-			throw new NotImplementedException();
+			_context = context;
 		}
 
-		public Task DeleteAsync(int id)
+		public async Task AddAsync(VehicleType vehicleType)
 		{
-			throw new NotImplementedException();
+			await _context.VehicleTypes.AddAsync(vehicleType);
 		}
 
-		public Task<IEnumerable<VehicleType>> GetAllAsync()
+		public async Task DeleteAsync(int id)
 		{
-			throw new NotImplementedException();
+			var entity = await _context.VehicleTypes.FindAsync(id);
+			if (entity != null)
+			{
+				_context.VehicleTypes.Remove(entity);
+			}
 		}
 
-		public Task<VehicleType?> GetByIdAsync(Guid id)
+		public async Task<IEnumerable<VehicleType>> GetAllAsync()
 		{
-			throw new NotImplementedException();
+			return await _context.VehicleTypes.ToListAsync();
+		}
+
+		public async Task<VehicleType?> GetByIdAsync(int id)
+		{
+			return await _context.VehicleTypes.FindAsync(id);
 		}
 
 		public Task UpdateAsync(VehicleType vehicleType)
 		{
-			throw new NotImplementedException();
+			_context.VehicleTypes.Update(vehicleType);
+			return Task.CompletedTask;
 		}
 	}
 }

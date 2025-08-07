@@ -1,12 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
+using NaviGoApi.Application.DTOs.VehicleType;
 
 namespace NaviGoApi.Application.CQRS.Queries.VehicleType
 {
-	internal class GetVehicleTypeByIdQuery
+	public class GetVehicleTypeByIdQuery : IRequest<VehicleTypeDto>
 	{
+		public int Id { get; set; }
+
+		public GetVehicleTypeByIdQuery(int id)
+		{
+			Id = id;
+		}
 	}
 }

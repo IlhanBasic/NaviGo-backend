@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.DTOs.VehicleType
 {
-	internal class VehicleTypeCreateDto
+	public class VehicleTypeCreateDto
 	{
+		public string TypeName { get; set; } = null!;
+		public string? Description { get; set; }
+		public bool RequiresSpecialLicense { get; set; }
 	}
 }

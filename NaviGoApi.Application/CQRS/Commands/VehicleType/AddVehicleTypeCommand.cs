@@ -1,12 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
+using NaviGoApi.Application.DTOs.VehicleType;
 
 namespace NaviGoApi.Application.CQRS.Commands.VehicleType
 {
-	internal class AddVehicleTypeCommand
+	public class AddVehicleTypeCommand : IRequest<Unit>
 	{
+		public VehicleTypeCreateDto VehicleTypeDto { get; set; }
+
+		public AddVehicleTypeCommand(VehicleTypeCreateDto dto)
+		{
+			VehicleTypeDto = dto;
+		}
 	}
 }

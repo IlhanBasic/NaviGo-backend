@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using NaviGoApi.Application.DTOs.Location;
 using NaviGoApi.Application.DTOs.User;
+using NaviGoApi.Application.DTOs.VehicleType;
 using NaviGoApi.Domain.Entities;
 
 namespace NaviGoApi.Application.MappingProfiles
@@ -19,6 +20,9 @@ namespace NaviGoApi.Application.MappingProfiles
 			CreateMap<Location, LocationDto>().ReverseMap();
 			CreateMap<Location,LocationCreateDto>().ReverseMap();
 			CreateMap<Location,LocationUpdateDto>().ReverseMap();
+			CreateMap<VehicleType, VehicleTypeDto>().ReverseMap();
+			CreateMap<VehicleType, VehicleTypeCreateDto>().ReverseMap();
+			CreateMap<VehicleType,VehicleTypeUpdateDto>().ReverseMap();
 		}
 	}
 }
