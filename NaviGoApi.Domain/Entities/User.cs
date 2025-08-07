@@ -36,15 +36,16 @@ namespace NaviGoApi.Domain.Entities
 
 		public UserRole UserRole { get; set; }
 
-		public bool IsActive { get; set; } = true;
-
 		public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
 		public DateTime? LastLogin { get; set; }
 
 		public bool EmailVerified { get; set; }
 		public string? EmailVerificationToken { get; set; }
+		public TimeSpan? EmailVerificationTokenDuration { get; set; } = TimeSpan.FromMinutes(15);
 
+		public string? PasswordResetToken {  get; set; }
+		public TimeSpan? PasswordResetTokenDuration { get; set; } = TimeSpan.FromMinutes(15);
 		public UserStatus UserStatus { get; set; } = UserStatus.Active;
 
 		public int? CompanyId { get; set; }

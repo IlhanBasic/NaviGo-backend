@@ -9,7 +9,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 	using AutoMapper;
 	using global::NaviGoApi.Application.CQRS.Queries.User;
 	using global::NaviGoApi.Application.DTOs.User;
-	using KnjizaraApi.Domain.Interfaces;
+	using global::NaviGoApi.Domain.Interfaces;
 	using MediatR;
 
 	using System.Collections.Generic;

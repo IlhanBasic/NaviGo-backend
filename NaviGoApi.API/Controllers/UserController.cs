@@ -109,6 +109,31 @@ namespace NaviGoApi.API.Controllers
         </html>";
 			return Content(successHtml, "text/html");
 		}
+		[HttpPost("forgot-password")]
+		public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto request)
+		{
+			var result = await _mediator.Send(new ForgotPasswordCommand(request.Email));
+			if (!result)
+				return BadRequest(new { message = "Unable to process forgot password request." });
+			return Ok(new { message = "If an account with that email exists, a password reset link has been sent." });
+		}
 
+		[HttpPost("reset-password")]
+		public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestDto request)
+		{
+			var result = await _mediator.Send(new ResetPasswordCommand(request.Token, request.NewPassword));
+			if (!result)
+				return BadRequest(new { message = "Invalid token or password reset failed." });
+			return Ok(new { message = "Password has been reset successfully." });
+		}
+
+		[HttpPost("change-password")]
+		public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDto request)
+		{
+			var result = await _mediator.Send(new ChangePasswordCommand(request.UserId, request.CurrentPassword, request.NewPassword));
+			if (!result)
+				return BadRequest(new { message = "Current password is incorrect or password change failed." });
+			return Ok(new { message = "Password has been changed successfully." });
+		}
 	}
 }

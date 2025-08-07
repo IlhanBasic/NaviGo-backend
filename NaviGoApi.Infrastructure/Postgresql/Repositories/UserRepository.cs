@@ -1,4 +1,4 @@
-﻿using KnjizaraApi.Domain.Interfaces;
+﻿
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Infrastructure.Postgresql.Persistence;
 using System;
@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using NaviGoApi.Domain.Interfaces;
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
 	public class UserRepository : IUserRepository
@@ -44,7 +45,11 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			return await _context.Users
 				.FirstOrDefaultAsync(u => u.Email == email);
 		}
-
+		public async Task<User?> GetByPasswordResetTokenAsync(string token)
+		{
+			return await _context.Users
+				.FirstOrDefaultAsync(u => u.PasswordResetToken == token);
+		}
 		public async Task<User?> GetByIdAsync(int id)
 		{
 			return await _context.Users

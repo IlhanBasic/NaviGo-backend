@@ -5,12 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KnjizaraApi.Domain.Interfaces
+namespace NaviGoApi.Domain.Interfaces
 {
 	public interface IUserRepository
 	{
 		Task<IEnumerable<User>> GetAllAsync();
 		Task<User?> GetByIdAsync(int id);
+		Task<User?> GetByPasswordResetTokenAsync(string token);
 		Task AddAsync(User user);
 		void Update(User user);
 		void Remove(User user);

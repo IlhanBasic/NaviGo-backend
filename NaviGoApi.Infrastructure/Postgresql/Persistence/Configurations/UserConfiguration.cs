@@ -36,9 +36,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 			builder.Property(x => x.UserRole)
 				.IsRequired();
 
-			builder.Property(x => x.IsActive)
-				.IsRequired();
-
 			builder.Property(x => x.CreatedAt)
 				.IsRequired();
 

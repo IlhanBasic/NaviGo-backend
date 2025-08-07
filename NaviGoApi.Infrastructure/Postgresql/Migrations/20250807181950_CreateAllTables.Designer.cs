@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NaviGoApi.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250807155409_CreatedAllTables")]
-    partial class CreatedAllTables
+    [Migration("20250807181950_CreateAllTables")]
+    partial class CreateAllTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -712,6 +712,9 @@ namespace NaviGoApi.Infrastructure.Migrations
                     b.Property<string>("EmailVerificationToken")
                         .HasColumnType("text");
 
+                    b.Property<TimeSpan?>("EmailVerificationTokenDuration")
+                        .HasColumnType("interval");
+
                     b.Property<bool>("EmailVerified")
                         .HasColumnType("boolean");
 
@@ -719,9 +722,6 @@ namespace NaviGoApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastLogin")
                         .HasColumnType("timestamp with time zone");
@@ -735,6 +735,12 @@ namespace NaviGoApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
+
+                    b.Property<string>("PasswordResetToken")
+                        .HasColumnType("text");
+
+                    b.Property<TimeSpan?>("PasswordResetTokenDuration")
+                        .HasColumnType("interval");
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()

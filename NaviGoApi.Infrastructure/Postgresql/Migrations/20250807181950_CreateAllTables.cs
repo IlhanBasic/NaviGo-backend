@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NaviGoApi.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class CreatedAllTables : Migration
+    public partial class CreateAllTables : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -125,11 +125,13 @@ namespace NaviGoApi.Infrastructure.Migrations
                     LastName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     PhoneNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     UserRole = table.Column<int>(type: "integer", nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     LastLogin = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     EmailVerified = table.Column<bool>(type: "boolean", nullable: false),
                     EmailVerificationToken = table.Column<string>(type: "text", nullable: true),
+                    EmailVerificationTokenDuration = table.Column<TimeSpan>(type: "interval", nullable: true),
+                    PasswordResetToken = table.Column<string>(type: "text", nullable: true),
+                    PasswordResetTokenDuration = table.Column<TimeSpan>(type: "interval", nullable: true),
                     UserStatus = table.Column<int>(type: "integer", nullable: false),
                     CompanyId = table.Column<int>(type: "integer", nullable: true)
                 },

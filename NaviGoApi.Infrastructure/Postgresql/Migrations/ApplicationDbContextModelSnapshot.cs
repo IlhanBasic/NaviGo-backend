@@ -709,6 +709,9 @@ namespace NaviGoApi.Infrastructure.Migrations
                     b.Property<string>("EmailVerificationToken")
                         .HasColumnType("text");
 
+                    b.Property<TimeSpan?>("EmailVerificationTokenDuration")
+                        .HasColumnType("interval");
+
                     b.Property<bool>("EmailVerified")
                         .HasColumnType("boolean");
 
@@ -716,9 +719,6 @@ namespace NaviGoApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastLogin")
                         .HasColumnType("timestamp with time zone");
@@ -732,6 +732,12 @@ namespace NaviGoApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
+
+                    b.Property<string>("PasswordResetToken")
+                        .HasColumnType("text");
+
+                    b.Property<TimeSpan?>("PasswordResetTokenDuration")
+                        .HasColumnType("interval");
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()

@@ -36,7 +36,28 @@ namespace NaviGoApi.Application.Services
 
 			await client.SendMailAsync(message);
 		}
+		public async Task SendResetPasswordPinEmailAsync(string toEmail, string pin)
+		{
+			var htmlBody = GenerateResetPasswordPinEmailHtml(pin);
 
+			var message = new MailMessage
+			{
+				From = new MailAddress(_smtpSettings.FromEmail, _smtpSettings.DisplayName),
+				Subject = "Your NaviGo Password Reset PIN",
+				Body = htmlBody,
+				IsBodyHtml = true
+			};
+
+			message.To.Add(toEmail);
+
+			using var client = new SmtpClient(_smtpSettings.Host, _smtpSettings.Port)
+			{
+				Credentials = new NetworkCredential(_smtpSettings.Username, _smtpSettings.Password),
+				EnableSsl = _smtpSettings.EnableSsl
+			};
+
+			await client.SendMailAsync(message);
+		}
 		private string GenerateVerificationEmailHtml(string verificationLink)
 		{
 			return $@"
@@ -74,6 +95,43 @@ namespace NaviGoApi.Application.Services
 					</div>
 				</body>
 				</html>";
+		}
+		private string GenerateResetPasswordPinEmailHtml(string pin)
+		{
+			return $@"
+        <html>
+        <head>
+            <style>
+                .container {{
+                    font-family: Arial, sans-serif;
+                    max-width: 600px;
+                    margin: auto;
+                    padding: 20px;
+                    border: 1px solid #ddd;
+                    border-radius: 10px;
+                    background-color: #f9f9f9;
+                    text-align: center;
+                }}
+                .pin {{
+                    font-size: 32px;
+                    font-weight: bold;
+                    color: #dc3545;
+                    margin: 20px 0;
+                    letter-spacing: 5px;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <h2>Password Reset PIN</h2>
+                <p>Your password reset PIN is:</p>
+                <div class='pin'>{pin}</div>
+                <p>This PIN is valid for 15 minutes.</p>
+                <p>If you did not request a password reset, please ignore this email.</p>
+                <p>– NaviGo Team</p>
+            </div>
+        </body>
+        </html>";
 		}
 	}
 }
