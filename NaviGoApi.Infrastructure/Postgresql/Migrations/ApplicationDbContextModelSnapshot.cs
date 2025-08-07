@@ -101,6 +101,10 @@ namespace NaviGoApi.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<string>("ProofFileUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
                     b.Property<decimal?>("SaldoAmount")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -110,6 +114,9 @@ namespace NaviGoApi.Infrastructure.Migrations
                         .HasColumnType("character varying(200)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PIB")
+                        .IsUnique();
 
                     b.ToTable("Companies");
                 });
@@ -334,6 +341,9 @@ namespace NaviGoApi.Infrastructure.Migrations
                         .HasColumnType("character varying(20)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ZIP")
+                        .IsUnique();
 
                     b.ToTable("Locations");
                 });

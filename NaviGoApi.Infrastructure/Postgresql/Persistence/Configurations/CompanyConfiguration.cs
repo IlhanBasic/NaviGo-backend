@@ -8,7 +8,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 	{
 		public void Configure(EntityTypeBuilder<Company> builder)
 		{
-
 			builder.HasKey(c => c.Id);
 
 			builder.Property(c => c.CompanyName)
@@ -18,6 +17,9 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 			builder.Property(c => c.PIB)
 				   .IsRequired()
 				   .HasMaxLength(20);
+
+			// Dodajemo unique constraint na PIB
+			builder.HasIndex(c => c.PIB).IsUnique();
 
 			builder.Property(c => c.Address)
 				   .IsRequired()
@@ -44,13 +46,16 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 				   .HasDefaultValue(CompanyStatus.Pending);
 
 			builder.Property(c => c.MaxCommissionRate)
-				   .HasPrecision(5, 2); // npr. 99.99 %
+				   .HasPrecision(5, 2); 
 
 			builder.Property(c => c.SaldoAmount)
-				   .HasPrecision(18, 2); // standard za novac
+				   .HasPrecision(18, 2);
 
 			builder.Property(c => c.CreatedAt)
 				   .IsRequired();
+
+			builder.Property(c => c.ProofFileUrl)
+				   .HasMaxLength(1000);
 
 			// Veze
 
@@ -73,7 +78,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 				   .WithOne(r => r.Company)
 				   .HasForeignKey(r => r.CompanyId)
 				   .OnDelete(DeleteBehavior.Restrict);
-
 
 			builder.HasMany(c => c.ForwarderOffers)
 				   .WithOne(fo => fo.Forwarder)

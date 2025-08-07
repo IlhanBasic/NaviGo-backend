@@ -1,43 +1,49 @@
-﻿using NaviGoApi.Domain.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
-using System;
+using NaviGoApi.Infrastructure.Postgresql.Persistence; 
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
 	public class CompanyRepository : ICompanyRepository
 	{
-		public Task AddAsync(Company company)
+		private readonly ApplicationDbContext _context;
+
+		public CompanyRepository(ApplicationDbContext context)
 		{
-			throw new NotImplementedException();
+			_context = context;
+		}
+
+		public async Task AddAsync(Company company)
+		{
+			await _context.Companies.AddAsync(company);
 		}
 
 		public void Delete(Company company)
 		{
-			throw new NotImplementedException();
+			_context.Companies.Remove(company);
 		}
 
-		public Task<IEnumerable<Company>> GetAllAsync()
+		public async Task<IEnumerable<Company>> GetAllAsync()
 		{
-			throw new NotImplementedException();
+			return await _context.Companies.ToListAsync();
 		}
 
-		public Task<Company?> GetByIdAsync(int id)
+		public async Task<Company?> GetByIdAsync(int id)
 		{
-			throw new NotImplementedException();
+			return await _context.Companies.FindAsync(id);
 		}
 
-		public Task<Company?> GetByNameAsync(string name)
+		public async Task<Company?> GetByNameAsync(string name)
 		{
-			throw new NotImplementedException();
+			return await _context.Companies.FirstOrDefaultAsync(c => c.CompanyName == name);
 		}
 
 		public void Update(Company company)
 		{
-			throw new NotImplementedException();
+			_context.Companies.Update(company);
 		}
 	}
 }

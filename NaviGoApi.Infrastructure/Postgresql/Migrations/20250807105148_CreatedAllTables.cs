@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NaviGoApi.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class CreateAllDBTables : Migration
+    public partial class CreatedAllTables : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -45,7 +45,8 @@ namespace NaviGoApi.Infrastructure.Migrations
                     CompanyStatus = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
                     MaxCommissionRate = table.Column<decimal>(type: "numeric(5,2)", precision: 5, scale: 2, nullable: true),
                     SaldoAmount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ProofFileUrl = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -580,6 +581,12 @@ namespace NaviGoApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Companies_PIB",
+                table: "Companies",
+                column: "PIB",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Contracts_ClientId",
                 table: "Contracts",
                 column: "ClientId");
@@ -614,6 +621,12 @@ namespace NaviGoApi.Infrastructure.Migrations
                 name: "IX_ForwarderOffers_RouteId",
                 table: "ForwarderOffers",
                 column: "RouteId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Locations_ZIP",
+                table: "Locations",
+                column: "ZIP",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Payments_ClientId",

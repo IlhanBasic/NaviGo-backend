@@ -6,7 +6,32 @@ using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.DTOs.Vehicle
 {
-	internal class VehicleDto
+	public class VehicleDto
 	{
+		public int Id { get; set; }
+
+		public int CompanyId { get; set; }
+
+		public int VehicleTypeId { get; set; }
+
+		public string RegistrationNumber { get; set; } = null!;
+
+		public int CapacityKg { get; set; }
+
+		public int ManufactureYear { get; set; }
+
+		public string VehicleStatus { get; set; } = null!;  
+
+		public DateTime? LastInspectionDate { get; set; }
+
+		public DateTime? InsuranceExpiry { get; set; }
+
+		public int? CurrentLocationId { get; set; }
+
+		public bool IsAvailable { get; set; }
+
+		public DateTime CreatedAt { get; set; }
+
+		public string? Categories { get; set; }
 	}
 }

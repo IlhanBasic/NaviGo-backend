@@ -50,6 +50,7 @@ namespace NaviGoApi.Domain.Entities
 		public decimal? SaldoAmount { get; set; }
 
 		public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+		public string? ProofFileUrl { get; set; }
 
 		// Navigation properties
 		public ICollection<User> Users { get; set; } = new List<User>();

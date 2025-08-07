@@ -8,7 +8,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 	{
 		public void Configure(EntityTypeBuilder<Location> builder)
 		{
-
 			builder.HasKey(x => x.Id);
 
 			builder.Property(x => x.Id);
@@ -25,6 +24,9 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 				.IsRequired()
 				.HasMaxLength(20);
 
+			// Dodajemo unique constraint na ZIP
+			builder.HasIndex(x => x.ZIP).IsUnique();
+
 			builder.Property(x => x.Latitude)
 				.IsRequired();
 
@@ -37,19 +39,16 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 
 			// Veze - navigaciona svojstva
 
-			// RoutesStart (1 lokacija može biti početna za više ruta)
 			builder.HasMany(x => x.RoutesStart)
 				.WithOne(r => r.StartLocation)
 				.HasForeignKey(r => r.StartLocationId)
 				.OnDelete(DeleteBehavior.Restrict);
 
-			// RoutesEnd (1 lokacija može biti krajnja za više ruta)
 			builder.HasMany(x => x.RoutesEnd)
 				.WithOne(r => r.EndLocation)
 				.HasForeignKey(r => r.EndLocationId)
 				.OnDelete(DeleteBehavior.Restrict);
 
-			// VehiclesCurrentLocation (1 lokacija može biti trenutna lokacija za više vozila)
 			builder.HasMany(x => x.VehiclesCurrentLocation)
 				.WithOne(v => v.CurrentLocation)
 				.HasForeignKey(v => v.CurrentLocationId)
