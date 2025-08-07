@@ -1,11 +1,15 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using KnjizaraApi.Domain.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using NaviGoApi.Application.CQRS.Handlers.User;
 using NaviGoApi.Application.CQRS.Queries.User;
 using NaviGoApi.Application.MappingProfiles;
+using NaviGoApi.Application.Validators.Location;
 using NaviGoApi.Domain.Interfaces;
 using NaviGoApi.Infrastructure.Postgresql.Persistence;
 using NaviGoApi.Infrastructure.Postgresql.Repositories;
@@ -37,6 +41,9 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // Add services to the container.
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddControllers();
+builder.Services.AddValidatorsFromAssemblyContaining<LocationCreateDtoValidator>();
+builder.Services.AddFluentValidationAutoValidation();
+
 builder.Services.AddMediatR(typeof(GetAllUserQuery).Assembly);
 var jwtSecret = builder.Configuration["JWT_SECRET"];
 var key = Encoding.ASCII.GetBytes(jwtSecret!);

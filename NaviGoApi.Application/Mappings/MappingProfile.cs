@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using NaviGoApi.Application.DTOs.Location;
 using NaviGoApi.Application.DTOs.User;
 using NaviGoApi.Domain.Entities;
 
@@ -15,6 +16,9 @@ namespace NaviGoApi.Application.MappingProfiles
 			CreateMap<User, UserDto>()
 				.ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => src.UserRole.ToString()))
 				.ForMember(dest => dest.UserStatus, opt => opt.MapFrom(src => src.UserStatus.ToString()));
+			CreateMap<Location, LocationDto>().ReverseMap();
+			CreateMap<Location,LocationCreateDto>().ReverseMap();
+			CreateMap<Location,LocationUpdateDto>().ReverseMap();
 		}
 	}
 }

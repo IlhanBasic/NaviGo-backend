@@ -1,38 +1,50 @@
 ﻿using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
-using System;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using System;
+using NaviGoApi.Infrastructure.Postgresql.Persistence;
 
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
 	public class LocationRepository : ILocationRepository
 	{
-		public Task AddAsync(Location location)
+		private readonly ApplicationDbContext _context;
+
+		public LocationRepository(ApplicationDbContext context)
 		{
-			throw new NotImplementedException();
+			_context = context;
 		}
 
-		public Task DeleteAsync(int id)
+		public async Task AddAsync(Location location)
 		{
-			throw new NotImplementedException();
+			await _context.Locations.AddAsync(location);
 		}
 
-		public Task<IEnumerable<Location>> GetAllAsync()
+		public async Task DeleteAsync(int id)
 		{
-			throw new NotImplementedException();
+			var location = await _context.Locations.FindAsync(id);
+			if (location != null)
+			{
+				_context.Locations.Remove(location);
+			}
+			// SaveChanges radi UnitOfWork
 		}
 
-		public Task<Location?> GetByIdAsync(int id)
+		public async Task<IEnumerable<Location>> GetAllAsync()
 		{
-			throw new NotImplementedException();
+			return await _context.Locations.ToListAsync();
 		}
 
-		public Task UpdateAsync(Location location)
+		public async Task<Location?> GetByIdAsync(int id)
 		{
-			throw new NotImplementedException();
+			return await _context.Locations.FindAsync(id);
+		}
+
+		public async Task UpdateAsync(Location location)
+		{
+			_context.Locations.Update(location);
 		}
 	}
 }
