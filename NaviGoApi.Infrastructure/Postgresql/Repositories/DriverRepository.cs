@@ -1,48 +1,51 @@
-﻿using NaviGoApi.Domain.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using NaviGoApi.Infrastructure.Postgresql.Persistence;
 
-namespace NaviGoApi.Infrastructure.Postgresql.Repositories
+public class DriverRepository : IDriverRepository
 {
-	public class DriverRepository : IDriverRepository
+	private readonly ApplicationDbContext _context;
+
+	public DriverRepository(ApplicationDbContext context)
 	{
-		public Task AddAsync(Driver driver)
-		{
-			throw new NotImplementedException();
-		}
+		_context = context;
+	}
 
-		public void Delete(Driver driver)
-		{
-			throw new NotImplementedException();
-		}
+	public async Task AddAsync(Driver driver)
+	{
+		await _context.Drivers.AddAsync(driver);
+	}
 
-		public Task<IEnumerable<Driver>> GetAllAsync()
-		{
-			throw new NotImplementedException();
-		}
+	public void Delete(Driver driver)
+	{
+		_context.Drivers.Remove(driver);
+	}
 
-		public Task<IEnumerable<Driver>> GetAvailableDriversAsync()
-		{
-			throw new NotImplementedException();
-		}
+	public async Task<IEnumerable<Driver>> GetAllAsync()
+	{
+		return await _context.Drivers.ToListAsync();
+	}
 
-		public Task<IEnumerable<Driver>> GetByCompanyIdAsync(int companyId)
-		{
-			throw new NotImplementedException();
-		}
+	public async Task<IEnumerable<Driver>> GetAvailableDriversAsync()
+	{
+		return await _context.Drivers.ToListAsync();
+	}
 
-		public Task<Driver?> GetByIdAsync(int id)
-		{
-			throw new NotImplementedException();
-		}
+	public async Task<IEnumerable<Driver>> GetByCompanyIdAsync(int companyId)
+	{
+		return await _context.Drivers
+			.Where(d => d.CompanyId == companyId)
+			.ToListAsync();
+	}
 
-		public void Update(Driver driver)
-		{
-			throw new NotImplementedException();
-		}
+	public async Task<Driver?> GetByIdAsync(int id)
+	{
+		return await _context.Drivers.FindAsync(id);
+	}
+
+	public void Update(Driver driver)
+	{
+		_context.Drivers.Update(driver);
 	}
 }

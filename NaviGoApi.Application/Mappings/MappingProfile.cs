@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using NaviGoApi.Application.DTOs.CargoType;
 using NaviGoApi.Application.DTOs.Company;
+using NaviGoApi.Application.DTOs.Driver;
 using NaviGoApi.Application.DTOs.Location;
 using NaviGoApi.Application.DTOs.User;
 using NaviGoApi.Application.DTOs.Vehicle;
@@ -49,7 +50,6 @@ namespace NaviGoApi.Application.MappingProfiles
 			CreateMap<VehicleCreateDto, Vehicle>();
 			CreateMap<VehicleUpdateDto, Vehicle>();
 			//VehicleMaintenance
-			// VehicleMaintenance mapping
 			CreateMap<VehicleMaintenance, VehicleMaintenanceDto>()
 				.ForMember(dest => dest.Severity, opt => opt.MapFrom(src => src.Severity.ToString()))
 				.ForMember(dest => dest.MaintenanceType, opt => opt.MapFrom(src => src.MaintenanceType.ToString()))
@@ -57,7 +57,18 @@ namespace NaviGoApi.Application.MappingProfiles
 
 			CreateMap<VehicleMaintenanceCreateDto, VehicleMaintenance>();
 			CreateMap<VehicleMaintenanceUpdateDto, VehicleMaintenance>();
+			//Driver
 
+			CreateMap<DriverCreateDto, Driver>();
+
+			// Mapiranje DriverUpdateDto -> Driver (enum mapira direktno, ignorisati null vrednosti)
+			CreateMap<DriverUpdateDto, Driver>()
+				.ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+
+			// Mapiranje Driver -> DriverDto (enum DriverStatus u string)
+			CreateMap<Driver, DriverDto>()
+				.ForMember(dest => dest.DriverStatus,
+					opt => opt.MapFrom(src => src.DriverStatus.ToString()));
 		}
 	}
 }

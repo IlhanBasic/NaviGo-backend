@@ -2,6 +2,7 @@
 using MediatR;
 using NaviGoApi.Application.CQRS.Commands.User;
 using NaviGoApi.Application.DTOs.User;
+using NaviGoApi.Application.Services;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System.Security.Cryptography;
@@ -15,22 +16,30 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 	{
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IMapper _mapper;
+		private readonly IEmailService _emailService;
 
-		public AddUserCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
+		public AddUserCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, IEmailService emailService)
 		{
 			_unitOfWork = unitOfWork;
 			_mapper = mapper;
+			_emailService = emailService;
 		}
 
 		public async Task<UserDto> Handle(AddUserCommand request, CancellationToken cancellationToken)
 		{
-			var userEntity = _mapper.Map<global::NaviGoApi.Domain.Entities.User>(request.UserDto);
-
+			var userEntity = _mapper.Map<Domain.Entities.User>(request.UserDto);
 
 			userEntity.PasswordHash = HashPassword(request.UserDto.Password);
 
 			await _unitOfWork.Users.AddAsync(userEntity);
 			await _unitOfWork.SaveChangesAsync();
+
+			// TODO: Ovde generiši pravi token za verifikaciju i sačuvaj ga ako treba
+			var verificationToken = System.Guid.NewGuid().ToString();
+			var verificationLink = $"https://localhost:7028/verify?token={verificationToken}";
+
+			// Pošalji email sa linkom za verifikaciju
+			await _emailService.SendVerificationEmailAsync(userEntity.Email, verificationLink);
 
 			return _mapper.Map<UserDto>(userEntity);
 		}
