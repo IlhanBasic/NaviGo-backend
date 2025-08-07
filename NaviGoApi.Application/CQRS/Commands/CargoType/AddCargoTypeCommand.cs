@@ -1,12 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
+using NaviGoApi.Application.DTOs.CargoType;
 
 namespace NaviGoApi.Application.CQRS.Commands.CargoType
 {
-	internal class AddCargoTypeCommand
+	public class AddCargoTypeCommand : IRequest<Unit>
 	{
+		public CargoTypeCreateDto CargoTypeDto { get; set; }
+
+		public AddCargoTypeCommand(CargoTypeCreateDto dto)
+		{
+			CargoTypeDto = dto;
+		}
 	}
 }

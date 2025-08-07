@@ -1,12 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
+using NaviGoApi.Application.DTOs.CargoType;
 
 namespace NaviGoApi.Application.CQRS.Queries.CargoType
 {
-	internal class GetCargoTypeByIdQuery
+	public class GetCargoTypeByIdQuery : IRequest<CargoTypeDto>
 	{
+		public int Id { get; set; }
+
+		public GetCargoTypeByIdQuery(int id)
+		{
+			Id = id;
+		}
 	}
 }

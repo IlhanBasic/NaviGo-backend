@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
 
 namespace NaviGoApi.Application.CQRS.Commands.CargoType
 {
-	internal class DeleteCargoTypeCommand
+	public class DeleteCargoTypeCommand : IRequest<Unit>
 	{
+		public int Id { get; set; }
+
+		public DeleteCargoTypeCommand(int id)
+		{
+			Id = id;
+		}
 	}
 }

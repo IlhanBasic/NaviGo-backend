@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using NaviGoApi.Application.DTOs.CargoType;
 using NaviGoApi.Application.DTOs.Location;
 using NaviGoApi.Application.DTOs.User;
 using NaviGoApi.Application.DTOs.VehicleType;
@@ -23,6 +24,9 @@ namespace NaviGoApi.Application.MappingProfiles
 			CreateMap<VehicleType, VehicleTypeDto>().ReverseMap();
 			CreateMap<VehicleType, VehicleTypeCreateDto>().ReverseMap();
 			CreateMap<VehicleType,VehicleTypeUpdateDto>().ReverseMap();
+			CreateMap<CargoType,CargoTypeDto>().ReverseMap();
+			CreateMap<CargoType,CargoTypeCreateDto>().ReverseMap();
+			CreateMap<CargoType,CargoTypeUpdateDto>().ReverseMap();
 		}
 	}
 }

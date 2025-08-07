@@ -20,7 +20,6 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpGet]
-		[Authorize(Roles = "SuperAdmin")]
 		public async Task<IActionResult> GetAll()
 		{
 			var result = await _mediator.Send(new GetAllVehicleTypeQuery());

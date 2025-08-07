@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
+using NaviGoApi.Application.DTOs.CargoType;
 
 namespace NaviGoApi.Application.CQRS.Commands.CargoType
 {
-	internal class UpdateCargoTypeCommand
-	{
-	}
+	public record UpdateCargoTypeCommand(int Id, CargoTypeUpdateDto CargoTypeDto) : IRequest<Unit>;
 }

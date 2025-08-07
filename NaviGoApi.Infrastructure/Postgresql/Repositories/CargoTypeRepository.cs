@@ -1,38 +1,42 @@
-﻿using NaviGoApi.Domain.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using NaviGoApi.Infrastructure.Postgresql.Persistence; 
 
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
 	public class CargoTypeRepository : ICargoTypeRepository
 	{
-		public Task AddAsync(CargoType cargoType)
+		private readonly ApplicationDbContext _context;
+
+		public CargoTypeRepository(ApplicationDbContext context)
 		{
-			throw new NotImplementedException();
+			_context = context;
+		}
+
+		public async Task AddAsync(CargoType cargoType)
+		{
+			await _context.CargoTypes.AddAsync(cargoType);
 		}
 
 		public void Delete(CargoType cargoType)
 		{
-			throw new NotImplementedException();
+			_context.CargoTypes.Remove(cargoType);
 		}
 
-		public Task<IEnumerable<CargoType>> GetAllAsync()
+		public async Task<IEnumerable<CargoType>> GetAllAsync()
 		{
-			throw new NotImplementedException();
+			return await _context.CargoTypes.ToListAsync();
 		}
 
-		public Task<CargoType?> GetByIdAsync(int id)
+		public async Task<CargoType?> GetByIdAsync(int id)
 		{
-			throw new NotImplementedException();
+			return await _context.CargoTypes.FindAsync(id);
 		}
 
 		public void Update(CargoType cargoType)
 		{
-			throw new NotImplementedException();
+			_context.CargoTypes.Update(cargoType);
 		}
 	}
 }

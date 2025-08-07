@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.DTOs.CargoType
 {
-	internal class CargoTypeUpdateDto
+	public class CargoTypeUpdateDto
 	{
+		public string TypeName { get; set; } = null!;
+		public string? Description { get; set; }
+		public int HazardLevel { get; set; }
+		public bool RequiresSpecialEquipment { get; set; }
 	}
 }

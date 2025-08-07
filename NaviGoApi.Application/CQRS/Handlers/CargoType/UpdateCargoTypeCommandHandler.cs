@@ -1,12 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using AutoMapper;
+using MediatR;
+using NaviGoApi.Application.CQRS.Commands.CargoType;
+using NaviGoApi.Domain.Interfaces;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.CQRS.Handlers.CargoType
 {
-	internal class UpdateCargoTypeCommandHandler
+	public class UpdateCargoTypeCommandHandler : IRequestHandler<UpdateCargoTypeCommand, Unit>
 	{
+		private readonly IUnitOfWork _unitOfWork;
+		private readonly IMapper _mapper;
+
+		public UpdateCargoTypeCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
+		{
+			_unitOfWork = unitOfWork;
+			_mapper = mapper;
+		}
+
+		public async Task<Unit> Handle(UpdateCargoTypeCommand request, CancellationToken cancellationToken)
+		{
+			var existing = await _unitOfWork.CargoTypes.GetByIdAsync(request.Id);
+			if (existing != null)
+			{
+				_mapper.Map(request.CargoTypeDto, existing);
+				_unitOfWork.CargoTypes.Update(existing);
+				await _unitOfWork.SaveChangesAsync();
+			}
+
+			return Unit.Value;
+		}
 	}
 }
