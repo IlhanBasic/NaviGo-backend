@@ -1,38 +1,58 @@
-﻿using NaviGoApi.Domain.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
-using System;
+using NaviGoApi.Infrastructure.Postgresql.Persistence;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
 	public class VehicleMaintenanceRepository : IVehicleMaintenanceRepository
 	{
-		public Task AddAsync(VehicleMaintenance maintenance)
+		private readonly ApplicationDbContext _context;
+
+		public VehicleMaintenanceRepository(ApplicationDbContext context)
 		{
-			throw new NotImplementedException();
+			_context = context;
 		}
 
-		public Task DeleteAsync(int id)
+		public async Task AddAsync(VehicleMaintenance maintenance)
 		{
-			throw new NotImplementedException();
+			await _context.VehicleMaintenances.AddAsync(maintenance);
+			await _context.SaveChangesAsync();
 		}
 
-		public Task<IEnumerable<VehicleMaintenance>> GetAllAsync()
+		public async Task DeleteAsync(int id)
 		{
-			throw new NotImplementedException();
+			var entity = await _context.VehicleMaintenances.FindAsync(id);
+			if (entity != null)
+			{
+				_context.VehicleMaintenances.Remove(entity);
+				await _context.SaveChangesAsync();
+			}
 		}
 
-		public Task<VehicleMaintenance?> GetByIdAsync(Guid id)
+		public async Task<IEnumerable<VehicleMaintenance>> GetAllAsync()
 		{
-			throw new NotImplementedException();
+			return await _context.VehicleMaintenances
+				//.Include(vm => vm.Vehicle)             // ako mi zatreba
+				//.Include(vm => vm.ReportedByUser)      // ako mi zatreba
+				.ToListAsync();
 		}
 
-		public Task UpdateAsync(VehicleMaintenance maintenance)
+		public async Task<VehicleMaintenance?> GetByIdAsync(int id)
 		{
-			throw new NotImplementedException();
+			return await _context.VehicleMaintenances
+				//.Include(vm => vm.Vehicle)             // ako mi zatreba
+				//.Include(vm => vm.ReportedByUser)      // ako mi zatreba
+				.FirstOrDefaultAsync(vm => vm.Id == id);
+		}
+
+		public async Task UpdateAsync(VehicleMaintenance maintenance)
+		{
+			_context.VehicleMaintenances.Update(maintenance);
+			await _context.SaveChangesAsync();
 		}
 	}
 }

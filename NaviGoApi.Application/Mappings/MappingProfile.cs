@@ -4,6 +4,7 @@ using NaviGoApi.Application.DTOs.Company;
 using NaviGoApi.Application.DTOs.Location;
 using NaviGoApi.Application.DTOs.User;
 using NaviGoApi.Application.DTOs.Vehicle;
+using NaviGoApi.Application.DTOs.VehicleMaintenance;
 using NaviGoApi.Application.DTOs.VehicleType;
 using NaviGoApi.Domain.Entities;
 
@@ -47,6 +48,15 @@ namespace NaviGoApi.Application.MappingProfiles
 
 			CreateMap<VehicleCreateDto, Vehicle>();
 			CreateMap<VehicleUpdateDto, Vehicle>();
+			//VehicleMaintenance
+			// VehicleMaintenance mapping
+			CreateMap<VehicleMaintenance, VehicleMaintenanceDto>()
+				.ForMember(dest => dest.Severity, opt => opt.MapFrom(src => src.Severity.ToString()))
+				.ForMember(dest => dest.MaintenanceType, opt => opt.MapFrom(src => src.MaintenanceType.ToString()))
+				.ForMember(dest => dest.ReportedByUserEmail, opt => opt.MapFrom(src => src.ReportedByUser != null ? src.ReportedByUser.Email : null));
+
+			CreateMap<VehicleMaintenanceCreateDto, VehicleMaintenance>();
+			CreateMap<VehicleMaintenanceUpdateDto, VehicleMaintenance>();
 
 		}
 	}

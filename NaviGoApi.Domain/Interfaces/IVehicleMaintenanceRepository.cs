@@ -10,7 +10,7 @@ namespace NaviGoApi.Domain.Interfaces
 	public interface IVehicleMaintenanceRepository
 	{
 		Task<IEnumerable<VehicleMaintenance>> GetAllAsync();
-		Task<VehicleMaintenance?> GetByIdAsync(Guid id);
+		Task<VehicleMaintenance?> GetByIdAsync(int id);
 		Task AddAsync(VehicleMaintenance maintenance);
 		Task UpdateAsync(VehicleMaintenance maintenance);
 		Task DeleteAsync(int id);
