@@ -17,3 +17,4 @@ out/
 *.ldf
 appsettings.Development.json
 appsettings.json
+*.pubxml
