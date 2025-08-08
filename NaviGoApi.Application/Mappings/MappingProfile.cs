@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using NaviGoApi.Application.DTOs.CargoType;
 using NaviGoApi.Application.DTOs.Company;
+using NaviGoApi.Application.DTOs.Contract;
 using NaviGoApi.Application.DTOs.Driver;
 using NaviGoApi.Application.DTOs.Location;
 using NaviGoApi.Application.DTOs.Route;
@@ -94,6 +95,18 @@ namespace NaviGoApi.Application.MappingProfiles
 			// Entity -> DTO
 			CreateMap<RoutePrice, RoutePriceDto>()
 				.ForMember(dest => dest.VehicleTypeName, opt => opt.MapFrom(src => src.VehicleType != null ? src.VehicleType.TypeName : string.Empty));
+			// Contract mappings
+			CreateMap<ContractCreateDto, Contract>();
+
+			CreateMap<ContractUpdateDto, Contract>()
+				.ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+
+			CreateMap<Contract, ContractDto>()
+				.ForMember(dest => dest.ClientEmail, opt => opt.MapFrom(src => src.Client != null ? src.Client.Email : null))
+				.ForMember(dest => dest.ClientFullName, opt => opt.MapFrom(src => src.Client != null ? $"{src.Client.FirstName} {src.Client.LastName}" : null))
+				.ForMember(dest => dest.ForwarderCompanyName, opt => opt.MapFrom(src => src.Forwarder != null ? src.Forwarder.CompanyName : null))
+				.ForMember(dest => dest.RouteName, opt => opt.MapFrom(src => src.Route != null ? $"{src.Route.StartLocation.FullAddress} - {src.Route.EndLocation.FullAddress}" : null));
+
 		}
 	}
 }
