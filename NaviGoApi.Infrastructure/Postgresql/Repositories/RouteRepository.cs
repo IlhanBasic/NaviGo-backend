@@ -1,48 +1,74 @@
-﻿using NaviGoApi.Domain.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
+using NaviGoApi.Infrastructure.Postgresql.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
 	public class RouteRepository : IRouteRepository
 	{
-		public Task AddAsync(Route route)
+		private readonly ApplicationDbContext _context;
+
+		public RouteRepository(ApplicationDbContext context)
 		{
-			throw new NotImplementedException();
+			_context = context;
 		}
 
-		public void Delete(Route route)
+		public async Task AddAsync(Route route)
 		{
-			throw new NotImplementedException();
-		}
-
-		public Task<IEnumerable<Route>> GetActiveRoutesAsync()
-		{
-			throw new NotImplementedException();
-		}
-
-		public Task<IEnumerable<Route>> GetAllAsync()
-		{
-			throw new NotImplementedException();
-		}
-
-		public Task<Route?> GetByIdAsync(int id)
-		{
-			throw new NotImplementedException();
-		}
-
-		public Task<IEnumerable<Route>> GetRoutesByCompanyIdAsync(int companyId)
-		{
-			throw new NotImplementedException();
+			await _context.Routes.AddAsync(route);
 		}
 
 		public void Update(Route route)
 		{
-			throw new NotImplementedException();
+			_context.Routes.Update(route);
+		}
+
+		public void Delete(Route route)
+		{
+			_context.Routes.Remove(route);
+		}
+
+		public async Task<Route?> GetByIdAsync(int id)
+		{
+			return await _context.Routes
+				.Include(r => r.Company)
+				.Include(r => r.StartLocation)
+				.Include(r => r.EndLocation)
+				.FirstOrDefaultAsync(r => r.Id == id);
+		}
+
+		public async Task<IEnumerable<Route>> GetAllAsync()
+		{
+			return await _context.Routes
+				.Include(r => r.Company)
+				.Include(r => r.StartLocation)
+				.Include(r => r.EndLocation)
+				.ToListAsync();
+		}
+
+		public async Task<IEnumerable<Route>> GetActiveRoutesAsync()
+		{
+			return await _context.Routes
+				.Where(r => r.IsActive && r.AvailableFrom <= DateTime.UtcNow && r.AvailableTo >= DateTime.UtcNow)
+				.Include(r => r.Company)
+				.Include(r => r.StartLocation)
+				.Include(r => r.EndLocation)
+				.ToListAsync();
+		}
+
+		public async Task<IEnumerable<Route>> GetRoutesByCompanyIdAsync(int companyId)
+		{
+			return await _context.Routes
+				.Where(r => r.CompanyId == companyId)
+				.Include(r => r.Company)
+				.Include(r => r.StartLocation)
+				.Include(r => r.EndLocation)
+				.ToListAsync();
 		}
 	}
 }

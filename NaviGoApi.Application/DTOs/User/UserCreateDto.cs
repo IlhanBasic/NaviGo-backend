@@ -1,4 +1,5 @@
-﻿using NaviGoApi.Domain.Entities;
+﻿using NaviGoApi.Application.DTOs.Company;
+using NaviGoApi.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +19,6 @@ namespace NaviGoApi.Application.DTOs.User
 		public UserRole UserRole { get; set; }         // enum
 		public UserStatus UserStatus { get; set; }     // enum
 
-		public bool IsActive { get; set; } = true;
 		public bool EmailVerified { get; set; } = false;
 		public int? CompanyId { get; set; }
 	}

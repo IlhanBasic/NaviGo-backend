@@ -49,6 +49,7 @@ builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpS
 builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddScoped<IUploadFileService, UploadFileService>();
 builder.Services.AddMediatR(typeof(GetAllUserQuery).Assembly);
+builder.Services.AddHttpClient();
 var jwtSecret = builder.Configuration["JWT_SECRET"];
 var key = Encoding.ASCII.GetBytes(jwtSecret!);
 

@@ -3,6 +3,7 @@ using NaviGoApi.Application.DTOs.CargoType;
 using NaviGoApi.Application.DTOs.Company;
 using NaviGoApi.Application.DTOs.Driver;
 using NaviGoApi.Application.DTOs.Location;
+using NaviGoApi.Application.DTOs.Route;
 using NaviGoApi.Application.DTOs.User;
 using NaviGoApi.Application.DTOs.Vehicle;
 using NaviGoApi.Application.DTOs.VehicleMaintenance;
@@ -69,6 +70,21 @@ namespace NaviGoApi.Application.MappingProfiles
 			CreateMap<Driver, DriverDto>()
 				.ForMember(dest => dest.DriverStatus,
 					opt => opt.MapFrom(src => src.DriverStatus.ToString()));
+			// Route mappings
+			CreateMap<RouteCreateDto, Route>()
+				.ForMember(dest => dest.DistanceKm, opt => opt.Ignore())
+				.ForMember(dest => dest.EstimatedDurationHours, opt => opt.Ignore())
+				.ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
+
+			CreateMap<RouteUpdateDto, Route>()
+				.ForMember(dest => dest.DistanceKm, opt => opt.Ignore())
+				.ForMember(dest => dest.EstimatedDurationHours, opt => opt.Ignore())
+				.ForMember(dest => dest.CreatedAt, opt => opt.Ignore()); 
+
+			CreateMap<Route, RouteDto>()
+				.ForMember(dest => dest.CompanyName, opt => opt.MapFrom(src => src.Company != null ? src.Company.CompanyName : null))
+				.ForMember(dest => dest.StartLocationName, opt => opt.MapFrom(src => src.StartLocation != null ? src.StartLocation.FullAddress : null))
+				.ForMember(dest => dest.EndLocationName, opt => opt.MapFrom(src => src.EndLocation != null ? src.EndLocation.FullAddress : null));
 		}
 	}
 }

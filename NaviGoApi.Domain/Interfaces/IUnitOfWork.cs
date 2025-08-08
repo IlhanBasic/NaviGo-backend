@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace NaviGoApi.Domain.Interfaces
 {
@@ -28,5 +29,6 @@ namespace NaviGoApi.Domain.Interfaces
 		IDelayPenaltyRepository DelayPenalties { get; }
 		IRoutePriceRepository RoutePrices { get; }
 		Task<int> SaveChangesAsync();
+
 	}
 }

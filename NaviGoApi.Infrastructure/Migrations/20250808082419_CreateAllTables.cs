@@ -161,7 +161,9 @@ namespace NaviGoApi.Infrastructure.Migrations
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     AvailableFrom = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    AvailableTo = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    AvailableTo = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    GeometryEncoded = table.Column<string>(type: "text", nullable: true),
+                    GeometryJson = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {

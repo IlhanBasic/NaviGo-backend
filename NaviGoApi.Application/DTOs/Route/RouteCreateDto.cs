@@ -6,7 +6,15 @@ using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.DTOs.Route
 {
-	internal class RouteCreateDto
+	public class RouteCreateDto
 	{
+		public int CompanyId { get; set; }
+		public int StartLocationId { get; set; }
+		public int EndLocationId { get; set; }
+		public decimal BasePrice { get; set; }
+		public bool IsActive { get; set; }
+		public DateTime AvailableFrom { get; set; }
+		public DateTime AvailableTo { get; set; }
 	}
+
 }

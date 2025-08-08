@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.EntityFrameworkCore.Storage;
 using NaviGoApi.Domain.Interfaces;
 using NaviGoApi.Infrastructure.Postgresql.Persistence;
 using System;

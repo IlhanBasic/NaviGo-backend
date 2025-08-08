@@ -34,7 +34,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			userEntity.EmailVerificationToken = verificationToken;
 			await _unitOfWork.Users.AddAsync(userEntity);
 			await _unitOfWork.SaveChangesAsync();
-			
+
 			var verificationLink = $"https://localhost:7028/api/User/verify-email?token={verificationToken}";
 			// Pošalji email sa linkom za verifikaciju
 			await _emailService.SendVerificationEmailAsync(userEntity.Email, verificationLink);

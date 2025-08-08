@@ -12,5 +12,7 @@ namespace NaviGoApi.Domain.Interfaces
 		void Update(Company company);
 		void Delete(Company company);
 		Task<Company?> GetByNameAsync(string name);
+		Task<Company?> GetByPibAsync(string pib);
+
 	}
 }

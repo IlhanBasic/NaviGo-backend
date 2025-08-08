@@ -19,7 +19,9 @@ namespace NaviGoApi.Domain.Entities
 		public bool IsActive { get; set; }
 		public DateTime CreatedAt { get; set; }
 		public DateTime AvailableFrom { get; set; }
-		public DateTime AvailableTo { get; set; }
+		public DateTime AvailableTo { get; set; }	
+		public string? GeometryEncoded { get; set; }  
+		public string? GeometryJson { get; set; } 
 
 		// Navigaciona svojstva
 		public Company? Company { get; set; }

@@ -45,5 +45,10 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		{
 			_context.Companies.Update(company);
 		}
+		public async Task<Company?> GetByPibAsync(string pib)
+		{
+			return await _context.Companies.FirstOrDefaultAsync(c => c.PIB == pib);
+		}
+
 	}
 }

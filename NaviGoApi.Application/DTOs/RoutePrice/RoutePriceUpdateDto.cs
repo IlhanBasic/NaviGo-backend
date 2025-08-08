@@ -6,7 +6,12 @@ using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.DTOs.RoutePrice
 {
-	internal class RoutePriceUpdateDto
+	public class RoutePriceUpdateDto
 	{
+		public int Id { get; set; }
+		public int RouteId { get; set; }
+		public int VehicleTypeId { get; set; }
+		public decimal PricePerKm { get; set; }
+		public decimal MinimumPrice { get; set; }
 	}
 }
