@@ -1,38 +1,53 @@
 ﻿using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
-using System;
+using NaviGoApi.Infrastructure.Postgresql.Persistence;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
 	public class RoutePriceRepository : IRoutePriceRepository
 	{
-		public Task AddAsync(RoutePrice price)
+		private readonly ApplicationDbContext _context;
+
+		public RoutePriceRepository(ApplicationDbContext context)
 		{
-			throw new NotImplementedException();
+			_context = context;
 		}
 
-		public Task DeleteAsync(int id)
+		public async Task AddAsync(RoutePrice price)
 		{
-			throw new NotImplementedException();
+			await _context.RoutesPrices.AddAsync(price);
 		}
 
-		public Task<IEnumerable<RoutePrice>> GetAllAsync()
+		public async Task DeleteAsync(int id)
 		{
-			throw new NotImplementedException();
+			var entity = await _context.RoutesPrices.FindAsync(id);
+			if (entity != null)
+			{
+				_context.RoutesPrices.Remove(entity);
+			}
 		}
 
-		public Task<RoutePrice?> GetByIdAsync(Guid id)
+		public async Task<IEnumerable<RoutePrice>> GetAllAsync()
 		{
-			throw new NotImplementedException();
+			return await _context.RoutesPrices
+				.Include(rp => rp.VehicleType)
+				.ToListAsync();
+		}
+
+		public async Task<RoutePrice?> GetByIdAsync(int id)
+		{
+			return await _context.RoutesPrices
+				.Include(rp => rp.VehicleType)
+				.FirstOrDefaultAsync(rp => rp.Id == id);
 		}
 
 		public Task UpdateAsync(RoutePrice price)
 		{
-			throw new NotImplementedException();
+			_context.RoutesPrices.Update(price);
+			return Task.CompletedTask;
 		}
 	}
 }

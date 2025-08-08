@@ -4,6 +4,7 @@ using NaviGoApi.Application.DTOs.Company;
 using NaviGoApi.Application.DTOs.Driver;
 using NaviGoApi.Application.DTOs.Location;
 using NaviGoApi.Application.DTOs.Route;
+using NaviGoApi.Application.DTOs.RoutePrice;
 using NaviGoApi.Application.DTOs.User;
 using NaviGoApi.Application.DTOs.Vehicle;
 using NaviGoApi.Application.DTOs.VehicleMaintenance;
@@ -85,6 +86,14 @@ namespace NaviGoApi.Application.MappingProfiles
 				.ForMember(dest => dest.CompanyName, opt => opt.MapFrom(src => src.Company != null ? src.Company.CompanyName : null))
 				.ForMember(dest => dest.StartLocationName, opt => opt.MapFrom(src => src.StartLocation != null ? src.StartLocation.FullAddress : null))
 				.ForMember(dest => dest.EndLocationName, opt => opt.MapFrom(src => src.EndLocation != null ? src.EndLocation.FullAddress : null));
+			// DTO -> Entity
+			CreateMap<RoutePriceCreateDto, RoutePrice>();
+
+			CreateMap<RoutePriceUpdateDto, RoutePrice>();
+
+			// Entity -> DTO
+			CreateMap<RoutePrice, RoutePriceDto>()
+				.ForMember(dest => dest.VehicleTypeName, opt => opt.MapFrom(src => src.VehicleType != null ? src.VehicleType.TypeName : string.Empty));
 		}
 	}
 }
