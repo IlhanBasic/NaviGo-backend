@@ -28,8 +28,6 @@ namespace NaviGoApi.Application.Validators.Vehicle
 			RuleFor(v => v.ManufactureYear)
 				.InclusiveBetween(1900, DateTime.UtcNow.Year).WithMessage($"ManufactureYear must be between 1900 and {DateTime.UtcNow.Year}.");
 
-			RuleFor(v => v.VehicleStatus)
-				.IsInEnum().WithMessage("Invalid VehicleStatus.");
 
 			RuleFor(v => v.LastInspectionDate)
 				.LessThanOrEqualTo(DateTime.UtcNow).When(v => v.LastInspectionDate.HasValue).WithMessage("LastInspectionDate cannot be in the future.");
@@ -39,9 +37,6 @@ namespace NaviGoApi.Application.Validators.Vehicle
 
 			RuleFor(v => v.Categories)
 				.MaximumLength(200).WithMessage("Categories can be at most 200 characters.");
-
-			RuleFor(v => v.IsAvailable)
-				.NotNull().WithMessage("IsAvailable must be specified.");
 		}
 	}
 

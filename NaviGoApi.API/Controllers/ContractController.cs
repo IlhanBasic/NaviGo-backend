@@ -48,8 +48,6 @@ namespace NaviGoApi.API.Controllers
 		[HttpPut("{id:int}")]
 		public async Task<IActionResult> Update(int id, [FromBody] ContractUpdateDto dto)
 		{
-			if (id != dto.Id)
-				return BadRequest("Id mismatch");
 
 			await _mediator.Send(new UpdateContractCommand(id,dto));
 			return Ok("Contract updated successfully");

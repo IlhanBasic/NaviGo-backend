@@ -9,7 +9,6 @@ namespace NaviGoApi.Application.DTOs.Company
 {
 	public class CompanyUpdateDto
 	{
-		public int Id { get; set; }
 		public string CompanyName { get; set; } = null!;
 		public string PIB { get; set; } = null!;
 		public string Address { get; set; } = null!;

@@ -8,7 +8,6 @@ namespace NaviGoApi.Application.DTOs.Location
 {
 	public class LocationUpdateDto
 	{
-		public int Id { get; set; }
 		public string City { get; set; } = null!;
 		public string Country { get; set; } = null!;
 		public string ZIP { get; set; } = null!;

@@ -12,8 +12,6 @@ namespace NaviGoApi.Application.Validators.Route
 	{
 		public RouteUpdateDtoValidator()
 		{
-			RuleFor(x => x.Id)
-				.GreaterThan(0).WithMessage("Id must be greater than 0.");
 
 			RuleFor(x => x.CompanyId)
 				.GreaterThan(0).WithMessage("CompanyId must be greater than 0.");

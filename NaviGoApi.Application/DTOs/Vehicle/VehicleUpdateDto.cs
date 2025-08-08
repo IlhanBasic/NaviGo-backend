@@ -9,8 +9,6 @@ namespace NaviGoApi.Application.DTOs.Vehicle
 {
 	public class VehicleUpdateDto
 	{
-		public int Id { get; set; }
-
 		public int CompanyId { get; set; }
 
 		public int VehicleTypeId { get; set; }
@@ -28,8 +26,6 @@ namespace NaviGoApi.Application.DTOs.Vehicle
 		public DateTime? InsuranceExpiry { get; set; }
 
 		public int? CurrentLocationId { get; set; }
-
-		public bool IsAvailable { get; set; }
 
 		public string? Categories { get; set; }
 	}

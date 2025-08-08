@@ -29,9 +29,6 @@ namespace NaviGoApi.Application.Validators.User
 
 			RuleFor(x => x.UserRole)
 				.IsInEnum();
-
-			RuleFor(x => x.UserStatus)
-				.IsInEnum();
 			RuleFor(x => x.CompanyId)
 				.Must((dto, companyId) =>
 				{

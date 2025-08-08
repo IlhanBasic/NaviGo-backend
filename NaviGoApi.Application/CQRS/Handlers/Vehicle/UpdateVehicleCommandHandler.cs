@@ -24,11 +24,11 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 
 		public async Task<VehicleDto> Handle(UpdateVehicleCommand request, CancellationToken cancellationToken)
 		{
-			var existingVehicle = await _unitOfWork.Vehicles.GetByIdAsync(request.VehicleUpdateDto.Id);
+			var existingVehicle = await _unitOfWork.Vehicles.GetByIdAsync(request.Id);
 			if (existingVehicle == null)
 			{
 				// Handle not found, e.g. throw exception or return null
-				throw new KeyNotFoundException($"Vehicle with Id {request.VehicleUpdateDto.Id} not found.");
+				throw new KeyNotFoundException($"Vehicle with Id {request.Id} not found.");
 			}
 
 			_mapper.Map(request.VehicleUpdateDto, existingVehicle);

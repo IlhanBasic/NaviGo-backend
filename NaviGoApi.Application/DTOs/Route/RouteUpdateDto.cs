@@ -8,7 +8,6 @@ namespace NaviGoApi.Application.DTOs.Route
 {
 	public class RouteUpdateDto
 	{
-		public int Id { get; set; }
 		public int CompanyId { get; set; }
 		public int StartLocationId { get; set; }
 		public int EndLocationId { get; set; }

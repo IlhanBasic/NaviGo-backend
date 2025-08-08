@@ -37,7 +37,7 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		public async Task<IEnumerable<Vehicle>> GetAvailableVehiclesAsync()
 		{
 			return await _context.Vehicles
-				.Where(v => v.IsAvailable)
+				.Where(v => v.VehicleStatus==VehicleStatus.Free)
 				.AsNoTracking()
 				.ToListAsync();
 		}

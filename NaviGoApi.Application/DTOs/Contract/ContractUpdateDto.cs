@@ -9,7 +9,6 @@ namespace NaviGoApi.Application.DTOs.Contract
 {
 	public class ContractUpdateDto
 	{
-		public int Id { get; set; }
 		public string? Terms { get; set; }
 		public ContractStatus? ContractStatus { get; set; }
 		public decimal? PenaltyRatePerHour { get; set; }

@@ -23,7 +23,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Location
 
 		public async Task<Unit> Handle(UpdateLocationCommand request, CancellationToken cancellationToken)
 		{
-			var location = await _unitOfWork.Locations.GetByIdAsync(request.LocationDto.Id);
+			var location = await _unitOfWork.Locations.GetByIdAsync(request.Id);
 			if(location != null)
 			{
 				_mapper.Map(request.LocationDto, location);

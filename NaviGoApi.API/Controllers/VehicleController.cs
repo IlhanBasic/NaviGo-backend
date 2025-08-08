@@ -52,10 +52,8 @@ namespace NaviGoApi.API.Controllers
 		[HttpPut("{id}")]
 		public async Task<ActionResult<VehicleDto>> Update(int id, [FromBody] VehicleUpdateDto updateDto)
 		{
-			if (id != updateDto.Id)
-				return BadRequest("Id mismatch");
 
-			var command = new UpdateVehicleCommand(updateDto);
+			var command = new UpdateVehicleCommand(id,updateDto);
 			var result = await _mediator.Send(command);
 			return Ok(result);
 		}

@@ -28,8 +28,6 @@ namespace NaviGoApi.Application.DTOs.Vehicle
 
 		public int? CurrentLocationId { get; set; }
 
-		public bool IsAvailable { get; set; }
-
 		public DateTime CreatedAt { get; set; }
 
 		public string? Categories { get; set; }

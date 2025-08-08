@@ -25,6 +25,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 		public async Task<VehicleDto> Handle(AddVehicleCommand request, CancellationToken cancellationToken)
 		{
 			var vehicleEntity = _mapper.Map<Domain.Entities.Vehicle>(request.VehicleCreateDto);
+			vehicleEntity.VehicleStatus = Domain.Entities.VehicleStatus.Free;
 			await _unitOfWork.Vehicles.AddAsync(vehicleEntity);
 			await _unitOfWork.SaveChangesAsync();
 

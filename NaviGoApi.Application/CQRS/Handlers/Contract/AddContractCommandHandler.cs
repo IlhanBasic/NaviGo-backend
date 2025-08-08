@@ -22,7 +22,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 		public async Task<Unit> Handle(AddContractCommand request, CancellationToken cancellationToken)
 		{
 			var contractEntity = _mapper.Map<NaviGoApi.Domain.Entities.Contract>(request.ContractDto);
-
+			contractEntity.ContractStatus = Domain.Entities.ContractStatus.Pending;
 			await _unitOfWork.Contracts.AddAsync(contractEntity);
 			await _unitOfWork.SaveChangesAsync();
 

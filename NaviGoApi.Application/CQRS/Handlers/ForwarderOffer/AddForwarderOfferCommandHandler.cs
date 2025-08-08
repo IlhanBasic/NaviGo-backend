@@ -25,7 +25,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.ForwarderOffer
 		{
 			var entity = _mapper.Map<Domain.Entities.ForwarderOffer>(request.ForwarderOfferDto);
 
-			// Dodaj u repozitorijum
+			entity.ForwarderOfferStatus=Domain.Entities.ForwarderOfferStatus.Pending;
 			await _unitOfWork.ForwarderOffers.AddAsync(entity);
 			await _unitOfWork.SaveChangesAsync();
 

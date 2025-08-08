@@ -127,10 +127,10 @@ namespace NaviGoApi.API.Controllers
 			return Ok(new { message = "Password has been reset successfully." });
 		}
 
-		[HttpPost("change-password")]
-		public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDto request)
+		[HttpPost("change-password/{id}")]
+		public async Task<IActionResult> ChangePassword(int id,[FromBody] ChangePasswordRequestDto request)
 		{
-			var result = await _mediator.Send(new ChangePasswordCommand(request.UserId, request.CurrentPassword, request.NewPassword));
+			var result = await _mediator.Send(new ChangePasswordCommand(id, request.CurrentPassword, request.NewPassword));
 			if (!result)
 				return BadRequest(new { message = "Current password is incorrect or password change failed." });
 			return Ok(new { message = "Password has been changed successfully." });

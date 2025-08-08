@@ -19,15 +19,12 @@ namespace NaviGoApi.Application.DTOs.Vehicle
 
 		public int ManufactureYear { get; set; }
 
-		public VehicleStatus VehicleStatus { get; set; } = VehicleStatus.Free;
 
 		public DateTime? LastInspectionDate { get; set; }
 
 		public DateTime? InsuranceExpiry { get; set; }
 
 		public int? CurrentLocationId { get; set; }
-
-		public bool IsAvailable { get; set; } = true;
 
 		public string? Categories { get; set; }
 	}

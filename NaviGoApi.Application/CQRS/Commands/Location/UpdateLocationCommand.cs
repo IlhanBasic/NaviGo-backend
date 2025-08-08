@@ -11,9 +11,11 @@ namespace NaviGoApi.Application.CQRS.Commands.Location
 	public class UpdateLocationCommand:IRequest<Unit>
 	{
         public LocationUpdateDto LocationDto { get; set; }
-        public UpdateLocationCommand(LocationUpdateDto dto)
+        public int Id { get; set; }
+        public UpdateLocationCommand(int id,LocationUpdateDto dto)
         {
             LocationDto = dto;
+            Id = id;
         }
     }
 }

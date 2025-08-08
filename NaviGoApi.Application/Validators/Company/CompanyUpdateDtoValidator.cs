@@ -12,8 +12,6 @@ namespace NaviGoApi.Application.Validators.Company
 	{
 		public CompanyUpdateDtoValidator()
 		{
-			RuleFor(x => x.Id)
-				.GreaterThan(0).WithMessage("Id must be greater than zero.");
 
 			RuleFor(x => x.CompanyName)
 				.NotEmpty().WithMessage("Company name is required.")

@@ -15,11 +15,7 @@ namespace NaviGoApi.Application.DTOs.User
 		public string FirstName { get; set; }
 		public string LastName { get; set; }
 		public string PhoneNumber { get; set; }
-
-		public UserRole UserRole { get; set; }         // enum
-		public UserStatus UserStatus { get; set; }     // enum
-
-		public bool EmailVerified { get; set; } = false;
+		public UserRole UserRole { get; set; }      
 		public int? CompanyId { get; set; }
 	}
 }

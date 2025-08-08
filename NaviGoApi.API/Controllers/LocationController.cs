@@ -52,10 +52,8 @@ namespace NaviGoApi.API.Controllers
 		[HttpPut("{id}")]
 		public async Task<IActionResult> Update(int id, [FromBody] LocationUpdateDto dto)
 		{
-			if (id != dto.Id)
-				return BadRequest(new { message = "ID in URL does not match ID in body." });
 
-			var command = new UpdateLocationCommand(dto);
+			var command = new UpdateLocationCommand(id,dto);
 			await _mediator.Send(command);
 			return Ok(new { message = "Location updated successfully." });
 		}

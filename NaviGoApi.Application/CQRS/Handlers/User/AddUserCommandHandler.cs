@@ -32,6 +32,11 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			userEntity.PasswordHash = HashPassword(request.UserDto.Password);
 			var verificationToken = System.Guid.NewGuid().ToString();
 			userEntity.EmailVerificationToken = verificationToken;
+			if (userEntity.UserRole == UserRole.SuperAdmin)
+			{
+				userEntity.EmailVerified = true;
+			}
+			userEntity.UserStatus = UserStatus.Active;
 			await _unitOfWork.Users.AddAsync(userEntity);
 			await _unitOfWork.SaveChangesAsync();
 

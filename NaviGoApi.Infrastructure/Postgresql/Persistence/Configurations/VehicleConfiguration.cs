@@ -33,8 +33,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 			builder.Property(v => v.CurrentLocationId)
 				.IsRequired(false);
 
-			builder.Property(v => v.IsAvailable)
-				.IsRequired();
 
 			builder.Property(v => v.CreatedAt)
 				.IsRequired();

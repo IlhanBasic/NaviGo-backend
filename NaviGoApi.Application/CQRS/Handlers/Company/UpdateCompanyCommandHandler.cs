@@ -24,7 +24,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Company
 
 		public async Task<CompanyDto> Handle(UpdateCompanyCommand request, CancellationToken cancellationToken)
 		{
-			var existing = await _unitOfWork.Companies.GetByIdAsync(request.CompanyDto.Id);
+			var existing = await _unitOfWork.Companies.GetByIdAsync(request.Id);
 			if (existing == null)
 			{
 				// Možeš baciti custom exception ili vratiti null, po dogovoru

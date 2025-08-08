@@ -23,8 +23,7 @@ namespace NaviGoApi.Application.MappingProfiles
 			//User mappings
 			CreateMap<UserCreateDto, User>();
 			CreateMap<User, UserDto>()
-				.ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => src.UserRole.ToString()))
-				.ForMember(dest => dest.UserStatus, opt => opt.MapFrom(src => src.UserStatus.ToString()));
+				.ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => src.UserRole.ToString()));
 			//Location mappings
 			CreateMap<Location, LocationDto>().ReverseMap();
 			CreateMap<Location, LocationCreateDto>().ReverseMap();

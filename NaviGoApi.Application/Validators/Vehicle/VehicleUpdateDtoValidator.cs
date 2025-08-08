@@ -12,8 +12,6 @@ namespace NaviGoApi.Application.Validators.Vehicle
 	{
 		public VehicleUpdateDtoValidator()
 		{
-			RuleFor(v => v.Id)
-				.GreaterThan(0).WithMessage("Id must be greater than zero.");
 
 			RuleFor(v => v.CompanyId)
 				.GreaterThan(0).WithMessage("CompanyId must be greater than zero.");
@@ -49,8 +47,6 @@ namespace NaviGoApi.Application.Validators.Vehicle
 				.MaximumLength(200)
 				.WithMessage("Categories can be at most 200 characters.");
 
-			RuleFor(v => v.IsAvailable)
-				.NotNull().WithMessage("IsAvailable must be specified.");
 		}
 	}
 }

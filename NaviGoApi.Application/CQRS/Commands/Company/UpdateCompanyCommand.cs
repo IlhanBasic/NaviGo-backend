@@ -11,10 +11,12 @@ namespace NaviGoApi.Application.CQRS.Commands.Company
 	public class UpdateCompanyCommand : IRequest<CompanyDto>
 	{
 		public CompanyUpdateDto CompanyDto { get; set; }
+		public int Id { get; set; }
 
-		public UpdateCompanyCommand(CompanyUpdateDto companyDto)
+		public UpdateCompanyCommand(int id,CompanyUpdateDto companyDto)
 		{
 			CompanyDto = companyDto;
+			Id=id;
 		}
 	}
 }

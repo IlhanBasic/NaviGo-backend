@@ -9,7 +9,6 @@ namespace NaviGoApi.Application.DTOs.VehicleMaintenance
 {
 	public class VehicleMaintenanceUpdateDto
 	{
-		public int Id { get; set; }
 		public string Description { get; set; } = null!;
 		public DateTime? ResolvedAt { get; set; }
 		public Severity Severity { get; set; }

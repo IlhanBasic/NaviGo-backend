@@ -41,8 +41,6 @@ namespace NaviGoApi.Domain.Entities
 		public int? CurrentLocationId { get; set; }
 		public Location? CurrentLocation { get; set; }
 
-		public bool IsAvailable { get; set; } = true;
-
 		public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
 		// Ovo polje je CSV string sa kategorijama vozila

@@ -26,6 +26,5 @@ namespace NaviGoApi.Application.DTOs.Driver
 
 		public DateTime HireDate { get; set; }
 
-		public DriverStatus DriverStatus { get; set; } = DriverStatus.Available;
 	}
 }

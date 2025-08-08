@@ -38,9 +38,6 @@ namespace NaviGoApi.Application.Validators.Driver
 				.LessThanOrEqualTo(DateTime.Today)
 				.WithMessage("HireDate cannot be in the future.");
 
-			RuleFor(x => x.DriverStatus)
-				.IsInEnum()
-				.WithMessage("Invalid DriverStatus value.");
 		}
 	}
 }

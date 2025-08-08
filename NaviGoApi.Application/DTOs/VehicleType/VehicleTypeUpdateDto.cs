@@ -8,7 +8,6 @@ namespace NaviGoApi.Application.DTOs.VehicleType
 {
 	public class VehicleTypeUpdateDto
 	{
-		public int Id { get; set; }
 		public string TypeName { get; set; } = null!;
 		public string? Description { get; set; }
 		public bool RequiresSpecialLicense { get; set; }
