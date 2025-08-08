@@ -35,9 +35,9 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 
 		public IVehicleTypeRepository VehicleTypes  { get; }
 
-	public IShipmentDocumentRepository ShipmentDocuments { get; }
+		public IShipmentDocumentRepository ShipmentDocuments { get; }
 
-	public IShipmentStatusHistoryRepository ShipmentStatusHistories { get; }
+		public IShipmentStatusHistoryRepository ShipmentStatusHistories { get; }
 
 		public IPickupChangeRepository PickupChanges { get; }
 
@@ -48,6 +48,7 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		public IDelayPenaltyRepository DelayPenalties { get; }
 
 		public IRoutePriceRepository RoutePrices { get; }
+		public IUserLocationRepository UserLocations { get; }
 		public UnitOfWork(
 			ApplicationDbContext context,
 			ICompanyRepository companyRepository, 
@@ -67,7 +68,8 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			IUserRepository userRepository,
 			IVehicleMaintenanceRepository vehicleMaintenanceRepository,
 			IVehicleTypeRepository vehicleTypeRepository,
-			IVehicleRepository vehicleRepository
+			IVehicleRepository vehicleRepository,
+			IUserLocationRepository userLocationRepository
 			)
         {
 			_context = context;
@@ -89,6 +91,7 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			VehicleMaintenances = vehicleMaintenanceRepository;
 			VehicleTypes = vehicleTypeRepository;
 			Vehicles = vehicleRepository;
+			UserLocations= userLocationRepository;
         }
         public async Task<int> SaveChangesAsync()
 		{

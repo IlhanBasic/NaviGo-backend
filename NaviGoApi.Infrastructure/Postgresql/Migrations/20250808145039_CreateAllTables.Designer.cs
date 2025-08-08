@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NaviGoApi.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250808082419_CreateAllTables")]
+    [Migration("20250808145039_CreateAllTables")]
     partial class CreateAllTables
     {
         /// <inheritdoc />
@@ -766,6 +766,37 @@ namespace NaviGoApi.Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("NaviGoApi.Domain.Entities.UserLocation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AccessTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)");
+
+                    b.Property<string>("Region")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserLocations", (string)null);
+                });
+
             modelBuilder.Entity("NaviGoApi.Domain.Entities.Vehicle", b =>
                 {
                     b.Property<int>("Id")
@@ -1137,6 +1168,17 @@ namespace NaviGoApi.Infrastructure.Migrations
                     b.Navigation("Company");
                 });
 
+            modelBuilder.Entity("NaviGoApi.Domain.Entities.UserLocation", b =>
+                {
+                    b.HasOne("NaviGoApi.Domain.Entities.User", "User")
+                        .WithMany("UserLocations")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("NaviGoApi.Domain.Entities.Vehicle", b =>
                 {
                     b.HasOne("NaviGoApi.Domain.Entities.Company", "Company")
@@ -1248,6 +1290,8 @@ namespace NaviGoApi.Infrastructure.Migrations
                     b.Navigation("ShipmentDocumentsVerified");
 
                     b.Navigation("ShipmentStatusChanges");
+
+                    b.Navigation("UserLocations");
 
                     b.Navigation("VehicleMaintenancesReported");
                 });

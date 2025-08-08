@@ -28,6 +28,7 @@ namespace NaviGoApi.Domain.Interfaces
 		ICargoTypeRepository CargoTypes { get; }
 		IDelayPenaltyRepository DelayPenalties { get; }
 		IRoutePriceRepository RoutePrices { get; }
+		IUserLocationRepository UserLocations { get; }
 		Task<int> SaveChangesAsync();
 
 	}

@@ -257,6 +257,28 @@ namespace NaviGoApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "UserLocations",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<int>(type: "integer", nullable: false),
+                    IpAddress = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: false),
+                    Region = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    AccessTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserLocations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserLocations_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Contracts",
                 columns: table => new
                 {
@@ -726,6 +748,11 @@ namespace NaviGoApi.Infrastructure.Migrations
                 column: "ShipmentId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_UserLocations_UserId",
+                table: "UserLocations",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Users_CompanyId",
                 table: "Users",
                 column: "CompanyId");
@@ -782,6 +809,9 @@ namespace NaviGoApi.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "ShipmentStatusHistories");
+
+            migrationBuilder.DropTable(
+                name: "UserLocations");
 
             migrationBuilder.DropTable(
                 name: "VehicleMaintenances");

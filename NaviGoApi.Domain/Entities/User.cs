@@ -60,6 +60,7 @@ namespace NaviGoApi.Domain.Entities
 		public ICollection<ShipmentDocument> ShipmentDocumentsVerified { get; set; } = new List<ShipmentDocument>();
 
 		public ICollection<ShipmentStatusHistory> ShipmentStatusChanges { get; set; } = new List<ShipmentStatusHistory>();
+		public ICollection<UserLocation> UserLocations { get; set; } = new List<UserLocation>();
 	}
 
 }

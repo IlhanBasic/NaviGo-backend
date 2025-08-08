@@ -25,7 +25,7 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence
 		public DbSet<Route> Routes { get; set; }
 		public DbSet<RoutePrice> RoutesPrices { get; set; }
 
-
+		public DbSet<UserLocation> UserLocations { get; set; }
 		public DbSet<Shipment> Shipments { get; set; }
 		public DbSet<ShipmentDocument> ShipmentDocuments { get; set; }
 		public DbSet<Vehicle> Vehicles { get; set; }
