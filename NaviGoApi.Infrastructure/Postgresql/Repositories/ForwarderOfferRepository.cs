@@ -1,53 +1,83 @@
-﻿using NaviGoApi.Domain.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
-using System;
+using NaviGoApi.Infrastructure.Postgresql.Persistence;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
 	public class ForwarderOfferRepository : IForwarderOfferRepository
 	{
-		public Task AddAsync(ForwarderOffer offer)
+		private readonly ApplicationDbContext _context;
+
+		public ForwarderOfferRepository(ApplicationDbContext context)
 		{
-			throw new NotImplementedException();
+			_context = context;
+		}
+
+		public async Task AddAsync(ForwarderOffer offer)
+		{
+			await _context.ForwarderOffers.AddAsync(offer);
+			await _context.SaveChangesAsync();
 		}
 
 		public void Delete(ForwarderOffer offer)
 		{
-			throw new NotImplementedException();
+			_context.ForwarderOffers.Remove(offer);
+			_context.SaveChanges();
 		}
 
-		public Task<IEnumerable<ForwarderOffer>> GetActiveOffersAsync()
+		public async Task<IEnumerable<ForwarderOffer>> GetActiveOffersAsync()
 		{
-			throw new NotImplementedException();
+			var now = DateTime.UtcNow;
+			return await _context.ForwarderOffers
+				.Where(o => o.ForwarderOfferStatus == ForwarderOfferStatus.Pending
+						 && o.ExpiresAt > now)
+				.Include(o => o.Route)
+				.Include(o => o.Forwarder)
+				.ToListAsync();
 		}
 
-		public Task<IEnumerable<ForwarderOffer>> GetAllAsync()
+		public async Task<IEnumerable<ForwarderOffer>> GetAllAsync()
 		{
-			throw new NotImplementedException();
+			return await _context.ForwarderOffers
+				.Include(o => o.Route)
+				.Include(o => o.Forwarder)
+				.ToListAsync();
 		}
 
-		public Task<IEnumerable<ForwarderOffer>> GetByForwarderIdAsync(int forwarderId)
+		public async Task<IEnumerable<ForwarderOffer>> GetByForwarderIdAsync(int forwarderId)
 		{
-			throw new NotImplementedException();
+			return await _context.ForwarderOffers
+				.Where(o => o.ForwarderId == forwarderId)
+				.Include(o => o.Route)
+				.Include(o => o.Forwarder)
+				.ToListAsync();
 		}
 
-		public Task<ForwarderOffer?> GetByIdAsync(int id)
+		public async Task<ForwarderOffer?> GetByIdAsync(int id)
 		{
-			throw new NotImplementedException();
+			return await _context.ForwarderOffers
+				.Include(o => o.Route)
+				.Include(o => o.Forwarder)
+				.FirstOrDefaultAsync(o => o.Id == id);
 		}
 
-		public Task<IEnumerable<ForwarderOffer>> GetByRouteIdAsync(int routeId)
+		public async Task<IEnumerable<ForwarderOffer>> GetByRouteIdAsync(int routeId)
 		{
-			throw new NotImplementedException();
+			return await _context.ForwarderOffers
+				.Where(o => o.RouteId == routeId)
+				.Include(o => o.Route)
+				.Include(o => o.Forwarder)
+				.ToListAsync();
 		}
 
 		public void Update(ForwarderOffer offer)
 		{
-			throw new NotImplementedException();
+			_context.ForwarderOffers.Update(offer);
+			_context.SaveChanges();
 		}
 	}
 }
