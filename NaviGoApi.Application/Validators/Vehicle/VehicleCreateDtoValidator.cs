@@ -24,6 +24,8 @@ namespace NaviGoApi.Application.Validators.Vehicle
 
 			RuleFor(v => v.CapacityKg)
 				.GreaterThan(0).WithMessage("CapacityKg must be greater than zero.");
+			RuleFor(v => v.EngineCapacityCc)
+				.GreaterThan(0).WithMessage("EngineCapacityCc must be greater than zero.");
 
 			RuleFor(v => v.ManufactureYear)
 				.InclusiveBetween(1900, DateTime.UtcNow.Year).WithMessage($"ManufactureYear must be between 1900 and {DateTime.UtcNow.Year}.");
@@ -37,6 +39,11 @@ namespace NaviGoApi.Application.Validators.Vehicle
 
 			RuleFor(v => v.Categories)
 				.MaximumLength(200).WithMessage("Categories can be at most 200 characters.");
+			RuleFor(v => v.Brand)
+				.MaximumLength(200).WithMessage("Brand can be at most 200 characters.");
+			RuleFor(v => v.Model)
+				.MaximumLength(200).WithMessage("Model can be at most 200 characters.");
+
 		}
 	}
 

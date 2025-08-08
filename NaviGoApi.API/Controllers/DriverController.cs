@@ -38,6 +38,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		// POST: api/driver
+		[HttpPost]
 		public async Task<IActionResult> Create([FromBody] DriverCreateDto dto)
 		{
 			await _mediator.Send(new AddDriverCommand(dto));

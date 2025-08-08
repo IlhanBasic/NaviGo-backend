@@ -9,7 +9,9 @@ namespace NaviGoApi.Application.DTOs.Vehicle
 	public class VehicleDto
 	{
 		public int Id { get; set; }
-
+		public string Brand { get; set; }
+		public string Model { get; set; }
+		public int EngineCapacityCc { get; set; }
 		public int CompanyId { get; set; }
 
 		public int VehicleTypeId { get; set; }

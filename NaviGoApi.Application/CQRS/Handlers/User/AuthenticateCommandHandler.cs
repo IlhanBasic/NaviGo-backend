@@ -30,9 +30,9 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 		public async Task<(string accessToken, string refreshToken)?> Handle(AuthenticateCommand request, CancellationToken cancellationToken)
 		{
 			var user = await _unitOfWork.Users.GetByEmailAsync(request.Email);
-			if (user == null)
+			if (user == null || user.EmailVerified==false)
 				return null;
-
+			
 			var hashedPassword = HashPassword(request.Password);
 			if (user.PasswordHash != hashedPassword)
 				return null;

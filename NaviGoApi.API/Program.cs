@@ -18,6 +18,7 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 	options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.Configure<ApiSettings>(builder.Configuration.GetSection("ApiSettings"));
 //INTERFACES + REPOSITORIES FOR POSTGRESQL
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICargoTypeRepository, CargoTypeRepository>();

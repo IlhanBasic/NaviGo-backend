@@ -25,7 +25,7 @@ namespace NaviGoApi.Application.DTOs.Contract
 		public DateTime ContractDate { get; set; }
 		public string Terms { get; set; }
 
-		public ContractStatus ContractStatus { get; set; }
+		public string ContractStatus { get; set; }
 		public decimal PenaltyRatePerHour { get; set; }
 		public decimal MaxPenaltyPercent { get; set; }
 

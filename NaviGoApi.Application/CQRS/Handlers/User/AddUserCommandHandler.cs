@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using MediatR;
+using Microsoft.Extensions.Options;
 using NaviGoApi.Application.CQRS.Commands.User;
 using NaviGoApi.Application.DTOs.User;
 using NaviGoApi.Application.Services;
+using NaviGoApi.Application.Settings;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System.Security.Cryptography;
@@ -17,12 +19,13 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IMapper _mapper;
 		private readonly IEmailService _emailService;
-
-		public AddUserCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, IEmailService emailService)
+		private readonly string _apiBaseUrl;
+		public AddUserCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, IEmailService emailService, IOptions<ApiSettings> apiSettings)
 		{
 			_unitOfWork = unitOfWork;
 			_mapper = mapper;
 			_emailService = emailService;
+			_apiBaseUrl = apiSettings.Value.BaseUrl;
 		}
 
 		public async Task<UserDto> Handle(AddUserCommand request, CancellationToken cancellationToken)
@@ -40,7 +43,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			await _unitOfWork.Users.AddAsync(userEntity);
 			await _unitOfWork.SaveChangesAsync();
 
-			var verificationLink = $"https://localhost:7028/api/User/verify-email?token={verificationToken}";
+			var verificationLink = $"{_apiBaseUrl}/api/User/verify-email?token={verificationToken}";
 			// Pošalji email sa linkom za verifikaciju
 			await _emailService.SendVerificationEmailAsync(userEntity.Email, verificationLink);
 

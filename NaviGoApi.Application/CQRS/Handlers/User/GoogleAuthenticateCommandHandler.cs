@@ -45,22 +45,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 
 			if (user == null)
 			{
-				// Ako korisnik ne postoji, napravi novog
-				user = new global::NaviGoApi.Domain.Entities.User
-				{
-					Email = payload.Email,
-					FirstName = payload.GivenName ?? "GoogleUser",
-					LastName = payload.FamilyName ?? "Account",
-					UserRole = UserRole.RegularUser,
-					PasswordHash = "GoogleAuthUser",
-					PhoneNumber="0644344056",
-					EmailVerified = true,
-					CompanyId=null
-
-				};
-
-				await _unitOfWork.Users.AddAsync(user);
-				await _unitOfWork.SaveChangesAsync();
+				return null;
 			}
 
 			// Nastavi dalje sa refresh tokenom i jwt tokenom kao i ranije

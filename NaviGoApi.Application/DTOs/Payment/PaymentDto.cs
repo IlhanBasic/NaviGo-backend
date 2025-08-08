@@ -13,7 +13,7 @@ namespace NaviGoApi.Application.DTOs.Payment
 		public int ContractId { get; set; }
 		public decimal Amount { get; set; }
 		public DateTime PaymentDate { get; set; }
-		public PaymentStatus PaymentStatus { get; set; }
+		public string PaymentStatus { get; set; }
 		public string? ReceiptUrl { get; set; }
 		public int ClientId { get; set; }
 	}

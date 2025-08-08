@@ -20,14 +20,17 @@ namespace NaviGoApi.Application.CQRS.Handlers.VehicleMaintenance
             _mapper = mapper;
 			_unitOfWork = unitOfWork;
         }
-        public async Task<Unit> Handle(UpdateVehicleMaintenanceCommand request, CancellationToken cancellationToken)
+		public async Task<Unit> Handle(UpdateVehicleMaintenanceCommand request, CancellationToken cancellationToken)
 		{
 			var vehiclemaintenance = await _unitOfWork.VehicleMaintenances.GetByIdAsync(request.Id);
-			if (vehiclemaintenance != null)
-			{
-				await _unitOfWork.VehicleMaintenances.UpdateAsync(vehiclemaintenance);
-				await _unitOfWork.SaveChangesAsync();
-			}
+			if (vehiclemaintenance == null)
+				throw new KeyNotFoundException($"VehicleMaintenance with ID {request.Id} not found.");
+
+			// Mapiraj vrednosti iz DTO-a u postojeći entitet
+			_mapper.Map(request.Dto, vehiclemaintenance);
+
+			await _unitOfWork.VehicleMaintenances.UpdateAsync(vehiclemaintenance);
+			await _unitOfWork.SaveChangesAsync();
 
 			return Unit.Value;
 		}
