@@ -32,7 +32,14 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 
 			builder.Property(v => v.CurrentLocationId)
 				.IsRequired(false);
-
+			builder.Property(v => v.Brand)
+				.IsRequired()
+				.HasMaxLength(100);
+			builder.Property(v => v.Model)
+				.IsRequired()
+				.HasMaxLength(100);
+			builder.Property(v => v.EngineCapacityCc)
+				.IsRequired();
 
 			builder.Property(v => v.CreatedAt)
 				.IsRequired();
