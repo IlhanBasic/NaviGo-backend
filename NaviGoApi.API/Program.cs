@@ -53,7 +53,15 @@ builder.Services.AddMediatR(typeof(GetAllUserQuery).Assembly);
 builder.Services.AddHttpClient<IGeoLocationService, GeoLocationService>();
 builder.Services.AddHttpClient();
 
-
+builder.Services.AddCors(options =>
+{
+	options.AddPolicy("AllowAll", policy =>
+	{
+		policy.AllowAnyOrigin()
+			  .AllowAnyMethod()
+			  .AllowAnyHeader();
+	});
+});
 var jwtSecret = builder.Configuration["JWT_SECRET"];
 var key = Encoding.ASCII.GetBytes(jwtSecret!);
 
