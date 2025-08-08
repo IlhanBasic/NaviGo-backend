@@ -1,53 +1,78 @@
 ﻿using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
-using System;
+using NaviGoApi.Infrastructure.Postgresql.Persistence;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
 	public class PaymentRepository : IPaymentRepository
 	{
-		public Task AddAsync(Payment payment)
+		private readonly ApplicationDbContext _context;
+
+		public PaymentRepository(ApplicationDbContext context)
 		{
-			throw new NotImplementedException();
+			_context = context;
+		}
+
+		public async Task AddAsync(Payment payment)
+		{
+			await _context.Payments.AddAsync(payment);
 		}
 
 		public void Delete(Payment payment)
 		{
-			throw new NotImplementedException();
+			_context.Payments.Remove(payment);
 		}
 
-		public Task<IEnumerable<Payment>> GetAllAsync()
+		public async Task<IEnumerable<Payment>> GetAllAsync()
 		{
-			throw new NotImplementedException();
+			return await _context.Payments
+				.Include(p => p.Client)
+				.Include(p => p.Contract)
+				.ToListAsync();
 		}
 
-		public Task<IEnumerable<Payment>> GetByClientIdAsync(int clientId)
+		public async Task<IEnumerable<Payment>> GetByClientIdAsync(int clientId)
 		{
-			throw new NotImplementedException();
+			return await _context.Payments
+				.Where(p => p.ClientId == clientId)
+				.Include(p => p.Client)
+				.Include(p => p.Contract)
+				.ToListAsync();
 		}
 
-		public Task<IEnumerable<Payment>> GetByContractIdAsync(int contractId)
+		public async Task<IEnumerable<Payment>> GetByContractIdAsync(int contractId)
 		{
-			throw new NotImplementedException();
+			return await _context.Payments
+				.Where(p => p.ContractId == contractId)
+				.Include(p => p.Client)
+				.Include(p => p.Contract)
+				.ToListAsync();
 		}
 
-		public Task<Payment?> GetByIdAsync(int id)
+		public async Task<Payment?> GetByIdAsync(int id)
 		{
-			throw new NotImplementedException();
+			return await _context.Payments
+				.Include(p => p.Client)
+				.Include(p => p.Contract)
+				.FirstOrDefaultAsync(p => p.Id == id);
 		}
 
-		public Task<IEnumerable<Payment>> GetPendingPaymentsAsync()
+		public async Task<IEnumerable<Payment>> GetPendingPaymentsAsync()
 		{
-			throw new NotImplementedException();
+			return await _context.Payments
+				.Where(p => p.PaymentStatus == PaymentStatus.Pending)
+				.Include(p => p.Client)
+				.Include(p => p.Contract)
+				.ToListAsync();
 		}
 
 		public void Update(Payment payment)
 		{
-			throw new NotImplementedException();
+			_context.Payments.Update(payment);
 		}
 	}
 }

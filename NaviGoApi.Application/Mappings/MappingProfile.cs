@@ -4,6 +4,7 @@ using NaviGoApi.Application.DTOs.Company;
 using NaviGoApi.Application.DTOs.Contract;
 using NaviGoApi.Application.DTOs.Driver;
 using NaviGoApi.Application.DTOs.Location;
+using NaviGoApi.Application.DTOs.Payment;
 using NaviGoApi.Application.DTOs.Route;
 using NaviGoApi.Application.DTOs.RoutePrice;
 using NaviGoApi.Application.DTOs.User;
@@ -106,7 +107,13 @@ namespace NaviGoApi.Application.MappingProfiles
 				.ForMember(dest => dest.ClientFullName, opt => opt.MapFrom(src => src.Client != null ? $"{src.Client.FirstName} {src.Client.LastName}" : null))
 				.ForMember(dest => dest.ForwarderCompanyName, opt => opt.MapFrom(src => src.Forwarder != null ? src.Forwarder.CompanyName : null))
 				.ForMember(dest => dest.RouteName, opt => opt.MapFrom(src => src.Route != null ? $"{src.Route.StartLocation.FullAddress} - {src.Route.EndLocation.FullAddress}" : null));
+			// Payment mappings
+			CreateMap<PaymentCreateDto, Payment>()
+				.ForMember(dest => dest.PaymentStatus, opt => opt.Ignore());  // postavi PaymentStatus u backend-u
 
+			CreateMap<PaymentUpdateDto, Payment>();
+
+			CreateMap<Payment, PaymentDto>();
 		}
 	}
 }
