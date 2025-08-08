@@ -23,8 +23,7 @@ namespace NaviGoApi.API.Controllers
 		[HttpGet]
 		public async Task<ActionResult<IEnumerable<VehicleDto>>> GetAll()
 		{
-			var query = new GetAllVehiclesQuery();
-			var result = await _mediator.Send(query);
+			var result = await _mediator.Send(new GetAllVehiclesQuery());
 			return Ok(result);
 		}
 
@@ -32,10 +31,9 @@ namespace NaviGoApi.API.Controllers
 		[HttpGet("{id}")]
 		public async Task<ActionResult<VehicleDto>> GetById(int id)
 		{
-			var query = new GetVehicleByIdQuery(id);
-			var result = await _mediator.Send(query);
+			var result = await _mediator.Send(new GetVehicleByIdQuery(id));
 			if (result == null)
-				return NotFound();
+				return NotFound(new { message = $"Vehicle with ID {id} not found." });
 			return Ok(result);
 		}
 
@@ -43,27 +41,26 @@ namespace NaviGoApi.API.Controllers
 		[HttpPost]
 		public async Task<ActionResult<VehicleDto>> Create([FromBody] VehicleCreateDto createDto)
 		{
-			var command = new AddVehicleCommand(createDto);
-			var result = await _mediator.Send(command);
-			return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+			var createdVehicle = await _mediator.Send(new AddVehicleCommand(createDto));
+			return CreatedAtAction(nameof(GetById), new { id = createdVehicle.Id }, createdVehicle);
 		}
 
 		// PUT: api/vehicle/{id}
 		[HttpPut("{id}")]
 		public async Task<ActionResult<VehicleDto>> Update(int id, [FromBody] VehicleUpdateDto updateDto)
 		{
+			var updatedVehicle = await _mediator.Send(new UpdateVehicleCommand(id, updateDto));
+			if (updatedVehicle == null)
+				return NotFound(new { message = $"Vehicle with ID {id} not found." });
 
-			var command = new UpdateVehicleCommand(id,updateDto);
-			var result = await _mediator.Send(command);
-			return Ok(result);
+			return Ok(updatedVehicle);
 		}
 
 		// DELETE: api/vehicle/{id}
 		[HttpDelete("{id}")]
 		public async Task<IActionResult> Delete(int id)
 		{
-			var command = new DeleteVehicleCommand(id);
-			await _mediator.Send(command);
+			await _mediator.Send(new DeleteVehicleCommand(id));
 			return NoContent();
 		}
 	}

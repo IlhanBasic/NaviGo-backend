@@ -5,6 +5,7 @@ using NaviGoApi.Application.CQRS.Commands.Route;
 using NaviGoApi.Application.CQRS.Queries.Route;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System;
 
 namespace NaviGoApi.API.Controllers
 {
@@ -33,7 +34,7 @@ namespace NaviGoApi.API.Controllers
 		{
 			var route = await _mediator.Send(new GetRouteByIdQuery(id));
 			if (route == null)
-				return NotFound();
+				return NotFound(new { error = "NotFound", message = $"Route with ID {id} not found." });
 			return Ok(route);
 		}
 
@@ -42,23 +43,37 @@ namespace NaviGoApi.API.Controllers
 		public async Task<IActionResult> Create([FromBody] RouteCreateDto routeDto)
 		{
 			await _mediator.Send(new AddRouteCommand(routeDto));
-			return StatusCode(201);
+			return StatusCode(201, new { message = "Route created successfully." });
 		}
 
 		// PUT: api/Route/{id}
 		[HttpPut("{id}")]
 		public async Task<IActionResult> Update(int id, [FromBody] RouteUpdateDto routeDto)
 		{
-			await _mediator.Send(new UpdateRouteCommand(id, routeDto));
-			return NoContent();
+			try
+			{
+				await _mediator.Send(new UpdateRouteCommand(id, routeDto));
+				return Ok(new { message = "Route updated successfully." });
+			}
+			catch (KeyNotFoundException)
+			{
+				return NotFound(new { error = "NotFound", message = $"Route with ID {id} not found." });
+			}
 		}
 
 		// DELETE: api/Route/{id}
 		[HttpDelete("{id}")]
 		public async Task<IActionResult> Delete(int id)
 		{
-			await _mediator.Send(new DeleteRouteCommand(id));
-			return NoContent();
+			try
+			{
+				await _mediator.Send(new DeleteRouteCommand(id));
+				return Ok(new { message = "Route deleted successfully." });
+			}
+			catch (KeyNotFoundException)
+			{
+				return NotFound(new { error = "NotFound", message = $"Route with ID {id} not found." });
+			}
 		}
 	}
 }

@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.Location;
 using NaviGoApi.Application.CQRS.Queries.Location;
 using NaviGoApi.Application.DTOs.Location;
+using System;
+using System.Threading.Tasks;
 
 namespace NaviGoApi.API.Controllers
 {
@@ -21,8 +23,7 @@ namespace NaviGoApi.API.Controllers
 		[HttpPost]
 		public async Task<IActionResult> Create([FromBody] LocationCreateDto dto)
 		{
-			var command = new AddLocationCommand(dto);
-			await _mediator.Send(command);
+			await _mediator.Send(new AddLocationCommand(dto));
 			return Ok(new { message = "Location created successfully." });
 		}
 
@@ -30,8 +31,7 @@ namespace NaviGoApi.API.Controllers
 		[HttpGet]
 		public async Task<IActionResult> GetAll()
 		{
-			var query = new GetAllLocationQuery();
-			var result = await _mediator.Send(query);
+			var result = await _mediator.Send(new GetAllLocationQuery());
 			return Ok(result);
 		}
 
@@ -39,9 +39,7 @@ namespace NaviGoApi.API.Controllers
 		[HttpGet("{id}")]
 		public async Task<IActionResult> GetById(int id)
 		{
-			var query = new GetLocationByIdQuery(id);
-			var result = await _mediator.Send(query);
-
+			var result = await _mediator.Send(new GetLocationByIdQuery(id));
 			if (result == null)
 				return NotFound(new { message = $"Location with ID {id} not found." });
 
@@ -52,19 +50,30 @@ namespace NaviGoApi.API.Controllers
 		[HttpPut("{id}")]
 		public async Task<IActionResult> Update(int id, [FromBody] LocationUpdateDto dto)
 		{
-
-			var command = new UpdateLocationCommand(id,dto);
-			await _mediator.Send(command);
-			return Ok(new { message = "Location updated successfully." });
+			try
+			{
+				await _mediator.Send(new UpdateLocationCommand(id, dto));
+				return Ok(new { message = "Location updated successfully." });
+			}
+			catch (KeyNotFoundException)
+			{
+				return NotFound(new { error = "NotFound", message = $"Location with ID {id} not found." });
+			}
 		}
 
 		// DELETE: api/location/{id}
 		[HttpDelete("{id}")]
 		public async Task<IActionResult> Delete(int id)
 		{
-			var command = new DeleteLocationCommand(id);
-			await _mediator.Send(command);
-			return Ok(new { message = "Location deleted successfully." });
+			try
+			{
+				await _mediator.Send(new DeleteLocationCommand(id));
+				return Ok(new { message = "Location deleted successfully." });
+			}
+			catch (KeyNotFoundException)
+			{
+				return NotFound(new { error = "NotFound", message = $"Location with ID {id} not found." });
+			}
 		}
 	}
 }

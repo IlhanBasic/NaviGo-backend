@@ -1,5 +1,4 @@
 ﻿using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.VehicleType;
 using NaviGoApi.Application.CQRS.Queries.VehicleType;
@@ -31,7 +30,8 @@ namespace NaviGoApi.API.Controllers
 		{
 			var result = await _mediator.Send(new GetVehicleTypeByIdQuery(id));
 			if (result == null)
-				return NotFound();
+				return NotFound(new { error = "NotFound", message = $"Vehicle type with ID {id} was not found." });
+
 			return Ok(result);
 		}
 
@@ -39,21 +39,22 @@ namespace NaviGoApi.API.Controllers
 		public async Task<IActionResult> Create([FromBody] VehicleTypeCreateDto dto)
 		{
 			await _mediator.Send(new AddVehicleTypeCommand(dto));
-			return StatusCode(201); // Created
+			return StatusCode(201, new { message = "Vehicle type created successfully." });
 		}
 
 		[HttpPut("{id}")]
 		public async Task<IActionResult> Update(int id, [FromBody] VehicleTypeUpdateDto dto)
 		{
+			// Pretpostavljam da command baca izuzetak ili handler interno proverava postojanje entiteta.
 			await _mediator.Send(new UpdateVehicleTypeCommand(id, dto));
-			return NoContent();
+			return Ok(new { message = $"Vehicle type with ID {id} updated successfully." });
 		}
 
 		[HttpDelete("{id}")]
 		public async Task<IActionResult> Delete(int id)
 		{
 			await _mediator.Send(new DeleteVehicleTypeCommand(id));
-			return NoContent();
+			return Ok(new { message = $"Vehicle type with ID {id} deleted successfully." });
 		}
 	}
 }

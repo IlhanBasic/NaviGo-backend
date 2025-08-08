@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.Driver;
 using NaviGoApi.Application.CQRS.Queries.Driver;
 using NaviGoApi.Application.DTOs.Driver;
+using System.Collections.Generic; // za KeyNotFoundException
 
 namespace NaviGoApi.API.Controllers
 {
@@ -30,32 +31,48 @@ namespace NaviGoApi.API.Controllers
 		public async Task<IActionResult> GetById(int id)
 		{
 			var result = await _mediator.Send(new GetDriverByIdQuery(id));
-			return result is not null ? Ok(result) : NotFound();
+			if (result == null)
+				return NotFound(new { error = "NotFound", message = $"Driver with ID {id} not found." });
+
+			return Ok(result);
 		}
 
 		// POST: api/driver
-		[HttpPost]
 		public async Task<IActionResult> Create([FromBody] DriverCreateDto dto)
 		{
-			var result = await _mediator.Send(new AddDriverCommand(dto));
-			return Ok(result);
+			await _mediator.Send(new AddDriverCommand(dto));
+			return Ok(new { message = "Driver created successfully." });
 		}
+
 
 		// PUT: api/driver/5
 		[HttpPut("{id}")]
 		public async Task<IActionResult> Update(int id, [FromBody] DriverUpdateDto dto)
 		{
-
-			var result = await _mediator.Send(new UpdateDriverCommand(id,dto));
-			return NoContent();
+			try
+			{
+				await _mediator.Send(new UpdateDriverCommand(id, dto));
+				return Ok(new { message = "Driver updated successfully." });
+			}
+			catch (KeyNotFoundException)
+			{
+				return NotFound(new { error = "NotFound", message = $"Driver with ID {id} not found." });
+			}
 		}
 
 		// DELETE: api/driver/5
 		[HttpDelete("{id}")]
 		public async Task<IActionResult> Delete(int id)
 		{
-			var result = await _mediator.Send(new DeleteDriverCommand(id));
-			return NoContent();
+			try
+			{
+				await _mediator.Send(new DeleteDriverCommand(id));
+				return Ok(new { message = "Driver deleted successfully." });
+			}
+			catch (KeyNotFoundException)
+			{
+				return NotFound(new { error = "NotFound", message = $"Driver with ID {id} not found." });
+			}
 		}
 	}
 }

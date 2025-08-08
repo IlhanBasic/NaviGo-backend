@@ -5,6 +5,7 @@ using NaviGoApi.Application.CQRS.Queries.RoutePrice;
 using NaviGoApi.Application.DTOs.RoutePrice;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System;
 
 namespace NaviGoApi.API.Controllers
 {
@@ -23,8 +24,7 @@ namespace NaviGoApi.API.Controllers
 		[HttpGet]
 		public async Task<ActionResult<IEnumerable<RoutePriceDto>>> GetAll()
 		{
-			var query = new GetAllRoutePriceQuery();
-			var result = await _mediator.Send(query);
+			var result = await _mediator.Send(new GetAllRoutePriceQuery());
 			return Ok(result);
 		}
 
@@ -32,10 +32,10 @@ namespace NaviGoApi.API.Controllers
 		[HttpGet("{id}")]
 		public async Task<ActionResult<RoutePriceDto>> GetById(int id)
 		{
-			var query = new GetRoutePriceByIdQuery(id);
-			var result = await _mediator.Send(query);
+			var result = await _mediator.Send(new GetRoutePriceByIdQuery(id));
 			if (result == null)
-				return NotFound();
+				return NotFound(new { error = "NotFound", message = $"Route price with ID {id} not found." });
+
 			return Ok(result);
 		}
 
@@ -43,27 +43,38 @@ namespace NaviGoApi.API.Controllers
 		[HttpPost]
 		public async Task<IActionResult> Create([FromBody] RoutePriceCreateDto dto)
 		{
-			var command = new AddRoutePriceCommand(dto);
-			await _mediator.Send(command);
-			return Ok();
+			await _mediator.Send(new AddRoutePriceCommand(dto));
+			return Ok(new { message = "Route price created successfully." });
 		}
 
 		// PUT: api/RoutePrice/{id}
 		[HttpPut("{id}")]
 		public async Task<IActionResult> Update(int id, [FromBody] RoutePriceUpdateDto dto)
 		{
-			var command = new UpdateRoutePriceCommand(id, dto);
-			await _mediator.Send(command);
-			return NoContent();
+			try
+			{
+				await _mediator.Send(new UpdateRoutePriceCommand(id, dto));
+				return Ok(new { message = "Route price updated successfully." });
+			}
+			catch (KeyNotFoundException)
+			{
+				return NotFound(new { error = "NotFound", message = $"Route price with ID {id} not found." });
+			}
 		}
 
 		// DELETE: api/RoutePrice/{id}
 		[HttpDelete("{id}")]
 		public async Task<IActionResult> Delete(int id)
 		{
-			var command = new DeleteRoutePriceCommand(id);
-			await _mediator.Send(command);
-			return NoContent();
+			try
+			{
+				await _mediator.Send(new DeleteRoutePriceCommand(id));
+				return Ok(new { message = "Route price deleted successfully." });
+			}
+			catch (KeyNotFoundException)
+			{
+				return NotFound(new { error = "NotFound", message = $"Route price with ID {id} not found." });
+			}
 		}
 	}
 }

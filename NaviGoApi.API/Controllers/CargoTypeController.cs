@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.CargoType;
 using NaviGoApi.Application.CQRS.Queries.CargoType;
 using NaviGoApi.Application.DTOs.CargoType;
+using System.Collections.Generic; // Za KeyNotFoundException
 
 namespace NaviGoApi.API.Controllers
 {
@@ -28,7 +29,8 @@ namespace NaviGoApi.API.Controllers
 		public async Task<IActionResult> GetById(int id)
 		{
 			var result = await _mediator.Send(new GetCargoTypeByIdQuery(id));
-			if (result == null) return NotFound();
+			if (result == null)
+				return NotFound(new { error = "NotFound", message = $"Cargo type with ID {id} not found." });
 			return Ok(result);
 		}
 
@@ -42,15 +44,29 @@ namespace NaviGoApi.API.Controllers
 		[HttpPut("{id}")]
 		public async Task<IActionResult> Update(int id, [FromBody] CargoTypeUpdateDto dto)
 		{
-			await _mediator.Send(new UpdateCargoTypeCommand(id, dto));
-			return NoContent();
+			try
+			{
+				await _mediator.Send(new UpdateCargoTypeCommand(id, dto));
+				return NoContent();
+			}
+			catch (KeyNotFoundException)
+			{
+				return NotFound(new { error = "NotFound", message = $"Cargo type with ID {id} not found." });
+			}
 		}
 
 		[HttpDelete("{id}")]
 		public async Task<IActionResult> Delete(int id)
 		{
-			await _mediator.Send(new DeleteCargoTypeCommand(id));
-			return NoContent();
+			try
+			{
+				await _mediator.Send(new DeleteCargoTypeCommand(id));
+				return NoContent();
+			}
+			catch (KeyNotFoundException)
+			{
+				return NotFound(new { error = "NotFound", message = $"Cargo type with ID {id} not found." });
+			}
 		}
 	}
 }

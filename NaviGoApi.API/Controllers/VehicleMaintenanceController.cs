@@ -19,46 +19,45 @@ namespace NaviGoApi.API.Controllers
 			_mediator = mediator;
 		}
 
+		// GET: api/vehiclemaintenance
 		[HttpGet]
 		public async Task<ActionResult<IEnumerable<VehicleMaintenanceDto>>> GetAll()
 		{
-			var query = new GetAllVehicleMaintenanceQuery();
-			var result = await _mediator.Send(query);
+			var result = await _mediator.Send(new GetAllVehicleMaintenanceQuery());
 			return Ok(result);
 		}
 
+		// GET: api/vehiclemaintenance/{id}
 		[HttpGet("{id}")]
 		public async Task<ActionResult<VehicleMaintenanceDto>> GetById(int id)
 		{
-			var query = new GetVehicleMaintenanceByIdQuery(id);
-			var result = await _mediator.Send(query);
+			var result = await _mediator.Send(new GetVehicleMaintenanceByIdQuery(id));
 			if (result == null)
-				return NotFound();
+				return NotFound(new { message = $"VehicleMaintenance with ID {id} not found." });
 			return Ok(result);
 		}
 
+		// POST: api/vehiclemaintenance
 		[HttpPost]
-		public async Task<ActionResult<VehicleMaintenanceDto>> Create(VehicleMaintenanceCreateDto dto)
+		public async Task<IActionResult> Create([FromBody] VehicleMaintenanceCreateDto dto)
 		{
-			var command = new AddVehicleMaintenanceCommand(dto);
-			var result = await _mediator.Send(command);
-			return Ok(result);
+			await _mediator.Send(new AddVehicleMaintenanceCommand(dto));
+			return StatusCode(201); // Created, ali bez lokacije i bez podataka
 		}
 
+		// PUT: api/vehiclemaintenance/{id}
 		[HttpPut("{id}")]
-		public async Task<ActionResult> Update(int id, VehicleMaintenanceUpdateDto dto)
+		public async Task<IActionResult> Update(int id, [FromBody] VehicleMaintenanceUpdateDto dto)
 		{
-
-			var command = new UpdateVehicleMaintenanceCommand(id, dto);
-			await _mediator.Send(command);
+			await _mediator.Send(new UpdateVehicleMaintenanceCommand(id, dto));
 			return NoContent();
 		}
 
+		// DELETE: api/vehiclemaintenance/{id}
 		[HttpDelete("{id}")]
-		public async Task<ActionResult> Delete(int id)
+		public async Task<IActionResult> Delete(int id)
 		{
-			var command = new DeleteVehicleMaintenanceCommand(id);
-			await _mediator.Send(command);
+			await _mediator.Send(new DeleteVehicleMaintenanceCommand(id));
 			return NoContent();
 		}
 	}

@@ -25,7 +25,11 @@ namespace NaviGoApi.API.Controllers
 		{
 			var result = await _mediator.Send(new AuthenticateCommand(request.Email, request.Password));
 			if (result == null)
-				return Unauthorized(new { message = "Invalid credentials" });
+				return Unauthorized(new
+				{
+					error = "Unauthorized",
+					message = "Invalid email or password. Please check your credentials and try again."
+				});
 
 			return Ok(new
 			{
@@ -45,7 +49,11 @@ namespace NaviGoApi.API.Controllers
 			var result = await _mediator.Send(new RefreshTokenCommand(request.Token, ipAddress));
 
 			if (result == null)
-				return Unauthorized(new { message = "Invalid or expired refresh token" });
+				return Unauthorized(new
+				{
+					error = "Unauthorized",
+					message = "The refresh token is invalid or has expired. Please login again."
+				});
 
 			return Ok(new
 			{
@@ -53,12 +61,20 @@ namespace NaviGoApi.API.Controllers
 				refreshToken = result.Value.refreshToken
 			});
 		}
+
+		/// <summary>
+		/// Login with Google token and receive JWT tokens.
+		/// </summary>
 		[HttpPost("google-login")]
 		public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequestDto request)
 		{
 			var result = await _mediator.Send(new GoogleAuthenticateCommand(request.IdToken));
 			if (result == null)
-				return Unauthorized(new { message = "Invalid Google token" });
+				return Unauthorized(new
+				{
+					error = "Unauthorized",
+					message = "Invalid Google token provided. Please try again."
+				});
 
 			return Ok(new
 			{
@@ -66,6 +82,5 @@ namespace NaviGoApi.API.Controllers
 				refreshToken = result.Value.refreshToken
 			});
 		}
-
 	}
 }

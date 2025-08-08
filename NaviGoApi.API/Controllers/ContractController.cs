@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.Contract;
 using NaviGoApi.Application.CQRS.Queries.Contract;
 using NaviGoApi.Application.DTOs.Contract;
-using System.Threading.Tasks;
+using System.Collections.Generic; // Za KeyNotFoundException
 
 namespace NaviGoApi.API.Controllers
 {
@@ -32,7 +32,7 @@ namespace NaviGoApi.API.Controllers
 		{
 			var result = await _mediator.Send(new GetContractByIdQuery(id));
 			if (result == null)
-				return NotFound();
+				return NotFound(new { error = "NotFound", message = $"Contract with ID {id} not found." });
 			return Ok(result);
 		}
 
@@ -41,24 +41,37 @@ namespace NaviGoApi.API.Controllers
 		public async Task<IActionResult> Create([FromBody] ContractCreateDto dto)
 		{
 			await _mediator.Send(new AddContractCommand(dto));
-			return Ok("Contract created successfully");
+			return Ok(new { message = "Contract created successfully." });
 		}
 
 		// PUT: api/contract/{id}
 		[HttpPut("{id:int}")]
 		public async Task<IActionResult> Update(int id, [FromBody] ContractUpdateDto dto)
 		{
-
-			await _mediator.Send(new UpdateContractCommand(id,dto));
-			return Ok("Contract updated successfully");
+			try
+			{
+				await _mediator.Send(new UpdateContractCommand(id, dto));
+				return Ok(new { message = "Contract updated successfully." });
+			}
+			catch (KeyNotFoundException)
+			{
+				return NotFound(new { error = "NotFound", message = $"Contract with ID {id} not found." });
+			}
 		}
 
 		// DELETE: api/contract/{id}
 		[HttpDelete("{id:int}")]
 		public async Task<IActionResult> Delete(int id)
 		{
-			await _mediator.Send(new DeleteContractCommand(id));
-			return Ok("Contract deleted successfully");
+			try
+			{
+				await _mediator.Send(new DeleteContractCommand(id));
+				return Ok(new { message = "Contract deleted successfully." });
+			}
+			catch (KeyNotFoundException)
+			{
+				return NotFound(new { error = "NotFound", message = $"Contract with ID {id} not found." });
+			}
 		}
 	}
 }
