@@ -10,7 +10,7 @@ namespace NaviGoApi.Domain.Interfaces
 	public interface IShipmentStatusHistoryRepository
 	{
 		Task<IEnumerable<ShipmentStatusHistory>> GetAllAsync();
-		Task<ShipmentStatusHistory?> GetByIdAsync(Guid id);
+		Task<ShipmentStatusHistory?> GetByIdAsync(int id);
 		Task AddAsync(ShipmentStatusHistory history);
 		Task UpdateAsync(ShipmentStatusHistory history);
 		Task DeleteAsync(int id);

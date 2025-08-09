@@ -10,7 +10,7 @@ namespace NaviGoApi.Domain.Interfaces
 	public interface IShipmentDocumentRepository
 	{
 		Task<IEnumerable<ShipmentDocument>> GetAllAsync();
-		Task<ShipmentDocument?> GetByIdAsync(Guid id);
+		Task<ShipmentDocument?> GetByIdAsync(int id);
 		Task AddAsync(ShipmentDocument document);
 		Task UpdateAsync(ShipmentDocument document);
 		Task DeleteAsync(int id);

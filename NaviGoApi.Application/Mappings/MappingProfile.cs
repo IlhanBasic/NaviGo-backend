@@ -9,6 +9,8 @@ using NaviGoApi.Application.DTOs.Payment;
 using NaviGoApi.Application.DTOs.Route;
 using NaviGoApi.Application.DTOs.RoutePrice;
 using NaviGoApi.Application.DTOs.Shipment;
+using NaviGoApi.Application.DTOs.ShipmentDocument;
+using NaviGoApi.Application.DTOs.ShipmentStatusHistory;
 using NaviGoApi.Application.DTOs.User;
 using NaviGoApi.Application.DTOs.Vehicle;
 using NaviGoApi.Application.DTOs.VehicleMaintenance;
@@ -118,6 +120,20 @@ namespace NaviGoApi.Application.MappingProfiles
 				.ForMember(dest => dest.CargoTypeName, opt => opt.MapFrom(src => src.CargoType != null ? src.CargoType.TypeName : null));
 			CreateMap<ShipmentCreateDto, Shipment>();
 			CreateMap<ShipmentUpdateDto, Shipment>();
+			// Shipment Document mappings
+			CreateMap<ShipmentDocumentCreateDto, ShipmentDocument>();
+
+			CreateMap<ShipmentDocumentUpdateDto, ShipmentDocument>();
+
+			CreateMap<ShipmentDocument, ShipmentDocumentDto>()
+				.ForMember(dest => dest.DocumentType, opt => opt.MapFrom(src => src.DocumentType.ToString()));
+			// ShipmentStatusHistory mappings
+			CreateMap<ShipmentStatusHistoryCreateDto, ShipmentStatusHistory>();
+
+			CreateMap<ShipmentStatusHistoryUpdateDto, ShipmentStatusHistory>();
+
+			CreateMap<ShipmentStatusHistory, ShipmentStatusHistoryDto>()
+				.ForMember(dest => dest.ShipmentStatus, opt => opt.MapFrom(src => src.ShipmentStatus.ToString()));
 		}
 	}
 }

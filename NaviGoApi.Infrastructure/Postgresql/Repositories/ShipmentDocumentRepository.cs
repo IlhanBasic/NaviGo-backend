@@ -1,38 +1,48 @@
-﻿using NaviGoApi.Domain.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
+using NaviGoApi.Infrastructure.Postgresql.Persistence;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
 	public class ShipmentDocumentRepository : IShipmentDocumentRepository
 	{
-		public Task AddAsync(ShipmentDocument document)
+		private readonly ApplicationDbContext _context;
+		public ShipmentDocumentRepository(ApplicationDbContext context)
 		{
-			throw new NotImplementedException();
+			_context = context;
 		}
 
-		public Task DeleteAsync(int id)
+		public async Task AddAsync(ShipmentDocument document)
 		{
-			throw new NotImplementedException();
+			await _context.ShipmentDocuments.AddAsync(document);
 		}
 
-		public Task<IEnumerable<ShipmentDocument>> GetAllAsync()
+		public async Task DeleteAsync(int id)
 		{
-			throw new NotImplementedException();
+			var entity = await _context.ShipmentDocuments.FindAsync(id);
+			if (entity != null)
+			{
+				_context.ShipmentDocuments.Remove(entity);
+			}
 		}
 
-		public Task<ShipmentDocument?> GetByIdAsync(Guid id)
+		public async Task<IEnumerable<ShipmentDocument>> GetAllAsync()
 		{
-			throw new NotImplementedException();
+			return await _context.ShipmentDocuments.AsNoTracking().ToListAsync();
 		}
 
-		public Task UpdateAsync(ShipmentDocument document)
+		public async Task<ShipmentDocument?> GetByIdAsync(int id)
 		{
-			throw new NotImplementedException();
+			return await _context.ShipmentDocuments.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+		}
+
+		public async Task UpdateAsync(ShipmentDocument document)
+		{
+			_context.ShipmentDocuments.Update(document);
 		}
 	}
 }

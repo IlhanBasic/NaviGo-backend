@@ -1,12 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
+using NaviGoApi.Application.DTOs.ShipmentStatusHistory;
 
 namespace NaviGoApi.Application.CQRS.Queries.ShipmentStatusHistory
 {
-	internal class GetShipmentStatusHistoryByIdQuery
+	public class GetShipmentStatusHistoryByIdQuery : IRequest<ShipmentStatusHistoryDto?>
 	{
+		public int Id { get; set; }
+
+		public GetShipmentStatusHistoryByIdQuery(int id)
+		{
+			Id = id;
+		}
 	}
 }

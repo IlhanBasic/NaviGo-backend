@@ -6,7 +6,13 @@ using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.DTOs.ShipmentStatusHistory
 {
-	internal class ShipmentStatusHistoryDto
+	public class ShipmentStatusHistoryDto
 	{
+		public int Id { get; set; }
+		public int ShipmentId { get; set; }
+		public string ShipmentStatus { get; set; } = null!;
+		public DateTime ChangedAt { get; set; }
+		public int ChangedByUserId { get; set; }
+		public string? Notes { get; set; }
 	}
 }

@@ -1,12 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
+using NaviGoApi.Application.DTOs.ShipmentStatusHistory;
 
 namespace NaviGoApi.Application.CQRS.Commands.ShipmentStatusHistory
 {
-	internal class UpdateShipmentStatusHistoryCommand
+	public class UpdateShipmentStatusHistoryCommand : IRequest<Unit>
 	{
+		public int Id { get; set; }
+		public ShipmentStatusHistoryUpdateDto ShipmentStatusHistoryDto { get; set; }
+
+		public UpdateShipmentStatusHistoryCommand(int id, ShipmentStatusHistoryUpdateDto dto)
+		{
+			Id = id;
+			ShipmentStatusHistoryDto = dto;
+		}
 	}
 }
