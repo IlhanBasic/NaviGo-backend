@@ -6,6 +6,7 @@ using NaviGoApi.Application.DTOs.Driver;
 using NaviGoApi.Application.DTOs.ForwarderOffer;
 using NaviGoApi.Application.DTOs.Location;
 using NaviGoApi.Application.DTOs.Payment;
+using NaviGoApi.Application.DTOs.PickupChange;
 using NaviGoApi.Application.DTOs.Route;
 using NaviGoApi.Application.DTOs.RoutePrice;
 using NaviGoApi.Application.DTOs.Shipment;
@@ -134,6 +135,10 @@ namespace NaviGoApi.Application.MappingProfiles
 
 			CreateMap<ShipmentStatusHistory, ShipmentStatusHistoryDto>()
 				.ForMember(dest => dest.ShipmentStatus, opt => opt.MapFrom(src => src.ShipmentStatus.ToString()));
+			// PickupChange mappings
+			CreateMap<PickupChangeCreateDto, PickupChange>();
+			CreateMap<PickupChangeUpdateDto, PickupChange>();
+			CreateMap<PickupChange, PickupChangeDto>();
 		}
 	}
 }

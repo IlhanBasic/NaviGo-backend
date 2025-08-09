@@ -1,38 +1,50 @@
-﻿using NaviGoApi.Domain.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
+using NaviGoApi.Infrastructure.Postgresql.Persistence;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
 	public class PickupChangeRepository : IPickupChangeRepository
 	{
-		public Task AddAsync(PickupChange change)
+		private readonly ApplicationDbContext _context;
+		public PickupChangeRepository(ApplicationDbContext context)
 		{
-			throw new NotImplementedException();
+			_context = context;
 		}
 
-		public Task DeleteAsync(int id)
+		public async Task AddAsync(PickupChange change)
 		{
-			throw new NotImplementedException();
+			await _context.PickupChanges.AddAsync(change);
 		}
 
-		public Task<IEnumerable<PickupChange>> GetAllAsync()
+		public async Task DeleteAsync(int id)
 		{
-			throw new NotImplementedException();
+			var entity = await _context.PickupChanges.FindAsync(id);
+			if (entity != null)
+			{
+				_context.PickupChanges.Remove(entity);
+			}
 		}
 
-		public Task<PickupChange?> GetByIdAsync(Guid id)
+		public async Task<IEnumerable<PickupChange>> GetAllAsync()
 		{
-			throw new NotImplementedException();
+			return await _context.PickupChanges.ToListAsync();
 		}
 
-		public Task UpdateAsync(PickupChange change)
+		// Corrected version for int id:
+		public async Task<PickupChange?> GetByIdAsync(int id)
 		{
-			throw new NotImplementedException();
+			return await _context.PickupChanges.FindAsync(id);
+		}
+
+		public async Task UpdateAsync(PickupChange change)
+		{
+			_context.PickupChanges.Update(change);
+			await Task.CompletedTask; // No actual async operation needed here
 		}
 	}
 }

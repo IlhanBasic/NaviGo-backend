@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
 
 namespace NaviGoApi.Application.CQRS.Commands.PickupChange
 {
-	internal class DeletePickupChangeCommand
+	public class DeletePickupChangeCommand : IRequest
 	{
+		public int Id { get; }
+
+		public DeletePickupChangeCommand(int id)
+		{
+			Id = id;
+		}
 	}
 }

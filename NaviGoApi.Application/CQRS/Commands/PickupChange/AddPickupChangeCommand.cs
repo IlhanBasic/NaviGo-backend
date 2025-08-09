@@ -1,12 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
+using NaviGoApi.Application.DTOs.PickupChange;
 
 namespace NaviGoApi.Application.CQRS.Commands.PickupChange
 {
-	internal class AddPickupChangeCommand
+	public class AddPickupChangeCommand : IRequest<int>
 	{
+		public PickupChangeCreateDto PickupChangeDto { get; }
+
+		public AddPickupChangeCommand(PickupChangeCreateDto dto)
+		{
+			PickupChangeDto = dto;
+		}
 	}
 }

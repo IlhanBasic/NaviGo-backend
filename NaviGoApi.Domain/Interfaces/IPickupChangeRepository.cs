@@ -10,7 +10,7 @@ namespace NaviGoApi.Domain.Interfaces
 	public interface IPickupChangeRepository
 	{
 		Task<IEnumerable<PickupChange>> GetAllAsync();
-		Task<PickupChange?> GetByIdAsync(Guid id);
+		Task<PickupChange?> GetByIdAsync(int id);
 		Task AddAsync(PickupChange change);
 		Task UpdateAsync(PickupChange change);
 		Task DeleteAsync(int id);

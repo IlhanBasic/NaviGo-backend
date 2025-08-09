@@ -6,7 +6,12 @@ using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.DTOs.PickupChange
 {
-	internal class PickupChangeUpdateDto
+	public class PickupChangeUpdateDto
 	{
+		public DateTime OldTime { get; set; }
+		public DateTime NewTime { get; set; }
+		public int ChangeCount { get; set; }
+		public decimal AdditionalFee { get; set; }
+		public int PickupChangesStatus { get; set; }
 	}
 }
