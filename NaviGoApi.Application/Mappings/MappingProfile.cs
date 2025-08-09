@@ -2,6 +2,7 @@
 using NaviGoApi.Application.DTOs.CargoType;
 using NaviGoApi.Application.DTOs.Company;
 using NaviGoApi.Application.DTOs.Contract;
+using NaviGoApi.Application.DTOs.DelayPenalty;
 using NaviGoApi.Application.DTOs.Driver;
 using NaviGoApi.Application.DTOs.ForwarderOffer;
 using NaviGoApi.Application.DTOs.Location;
@@ -139,6 +140,12 @@ namespace NaviGoApi.Application.MappingProfiles
 			CreateMap<PickupChangeCreateDto, PickupChange>();
 			CreateMap<PickupChangeUpdateDto, PickupChange>();
 			CreateMap<PickupChange, PickupChangeDto>();
+			// DelayPenalty mappings
+			CreateMap<DelayPenaltyCreateDto, DelayPenalty>();
+			CreateMap<DelayPenaltyUpdateDto, DelayPenalty>();
+			CreateMap<DelayPenalty, DelayPenaltyDto>()
+				.ForMember(dest => dest.DelayPenaltiesStatus, opt => opt.MapFrom(src => src.DelayPenaltiesStatus.ToString()));
+
 		}
 	}
 }

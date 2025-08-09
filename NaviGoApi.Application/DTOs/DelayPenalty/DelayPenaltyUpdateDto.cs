@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NaviGoApi.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,11 @@ using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.DTOs.DelayPenalty
 {
-	internal class DelayPenaltyUpdateDto
+	public class DelayPenaltyUpdateDto
 	{
+		public DateTime CalculatedAt { get; set; }
+		public int DelayHours { get; set; }
+		public decimal PenaltyAmount { get; set; }
+		public DelayPenaltyStatus DelayPenaltiesStatus { get; set; }
 	}
 }

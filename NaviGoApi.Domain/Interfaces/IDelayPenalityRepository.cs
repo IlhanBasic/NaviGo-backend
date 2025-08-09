@@ -10,7 +10,7 @@ namespace NaviGoApi.Domain.Interfaces
 	public interface IDelayPenaltyRepository
 	{
 		Task<IEnumerable<DelayPenalty>> GetAllAsync();
-		Task<DelayPenalty?> GetByIdAsync(Guid id);
+		Task<DelayPenalty?> GetByIdAsync(int id);
 		Task AddAsync(DelayPenalty penalty);
 		Task UpdateAsync(DelayPenalty penalty);
 		Task DeleteAsync(int id);

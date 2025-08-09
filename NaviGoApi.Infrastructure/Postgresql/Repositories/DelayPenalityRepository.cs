@@ -1,38 +1,51 @@
 ﻿using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
-using System;
+using NaviGoApi.Infrastructure.Postgresql.Persistence;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
 	public class DelayPenalityRepository : IDelayPenaltyRepository
 	{
-		public Task AddAsync(DelayPenalty penalty)
+		private readonly ApplicationDbContext _context;
+
+		public DelayPenalityRepository(ApplicationDbContext context)
 		{
-			throw new NotImplementedException();
+			_context = context;
 		}
 
-		public Task DeleteAsync(int id)
+		public async Task AddAsync(DelayPenalty penalty)
 		{
-			throw new NotImplementedException();
+			await _context.DelayPenalties.AddAsync(penalty);
+			await _context.SaveChangesAsync();
 		}
 
-		public Task<IEnumerable<DelayPenalty>> GetAllAsync()
+		public async Task DeleteAsync(int id)
 		{
-			throw new NotImplementedException();
+			var entity = await _context.DelayPenalties.FindAsync(id);
+			if (entity != null)
+			{
+				_context.DelayPenalties.Remove(entity);
+				await _context.SaveChangesAsync();
+			}
 		}
 
-		public Task<DelayPenalty?> GetByIdAsync(Guid id)
+		public async Task<IEnumerable<DelayPenalty>> GetAllAsync()
 		{
-			throw new NotImplementedException();
+			return await _context.DelayPenalties.ToListAsync();
 		}
 
-		public Task UpdateAsync(DelayPenalty penalty)
+		public async Task<DelayPenalty?> GetByIdAsync(int id)
 		{
-			throw new NotImplementedException();
+			return await _context.DelayPenalties.FindAsync(id);
+		}
+
+		public async Task UpdateAsync(DelayPenalty penalty)
+		{
+			_context.DelayPenalties.Update(penalty);
+			await _context.SaveChangesAsync();
 		}
 	}
 }

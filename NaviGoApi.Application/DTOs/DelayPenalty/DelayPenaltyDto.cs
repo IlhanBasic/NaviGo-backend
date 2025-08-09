@@ -6,7 +6,13 @@ using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.DTOs.DelayPenalty
 {
-	internal class DelayPenaltyDto
+	public class DelayPenaltyDto
 	{
+		public int Id { get; set; }
+		public int ShipmentId { get; set; }
+		public DateTime CalculatedAt { get; set; }
+		public int DelayHours { get; set; }
+		public decimal PenaltyAmount { get; set; }
+		public string DelayPenaltiesStatus { get; set; } =String.Empty;
 	}
 }

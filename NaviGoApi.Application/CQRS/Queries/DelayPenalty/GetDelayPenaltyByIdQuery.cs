@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
+using NaviGoApi.Application.DTOs.DelayPenalty;
 
 namespace NaviGoApi.Application.CQRS.Queries.DelayPenalty
 {
-	internal class GetDelayPenaltyByIdQuery
+	public class GetDelayPenaltyByIdQuery : IRequest<DelayPenaltyDto?>
 	{
+		public int Id { get; }
+		public GetDelayPenaltyByIdQuery(int id)
+		{
+			Id = id;
+		}
 	}
 }
