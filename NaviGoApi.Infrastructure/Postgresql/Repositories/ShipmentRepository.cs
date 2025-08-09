@@ -1,48 +1,81 @@
-﻿using NaviGoApi.Domain.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
-using System;
+using NaviGoApi.Infrastructure.Postgresql.Persistence;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
 	public class ShipmentRepository : IShipmentRepository
 	{
-		public Task AddAsync(Shipment shipment)
+		private readonly ApplicationDbContext _context;
+
+		public ShipmentRepository(ApplicationDbContext context)
 		{
-			throw new NotImplementedException();
+			_context = context;
+		}
+
+		public async Task AddAsync(Shipment shipment)
+		{
+			await _context.Shipments.AddAsync(shipment);
 		}
 
 		public void Delete(Shipment shipment)
 		{
-			throw new NotImplementedException();
+			_context.Shipments.Remove(shipment);
 		}
 
-		public Task<IEnumerable<Shipment>> GetAllAsync()
+		public async Task<IEnumerable<Shipment>> GetAllAsync()
 		{
-			throw new NotImplementedException();
+			return await _context.Shipments
+				.Include(s => s.Contract)
+				.Include(s => s.Vehicle)
+				.Include(s => s.Driver)
+				.Include(s => s.CargoType)
+				.AsNoTracking()
+				.ToListAsync();
 		}
 
-		public Task<IEnumerable<Shipment>> GetByContractIdAsync(int contractId)
+		public async Task<IEnumerable<Shipment>> GetByContractIdAsync(int contractId)
 		{
-			throw new NotImplementedException();
+			return await _context.Shipments
+				.Where(s => s.ContractId == contractId)
+				.Include(s => s.Contract)
+				.Include(s => s.Vehicle)
+				.Include(s => s.Driver)
+				.Include(s => s.CargoType)
+				.AsNoTracking()
+				.ToListAsync();
 		}
 
-		public Task<Shipment?> GetByIdAsync(int id)
+		public async Task<Shipment?> GetByIdAsync(int id)
 		{
-			throw new NotImplementedException();
+			return await _context.Shipments
+				.Include(s => s.Contract)
+				.Include(s => s.Vehicle)
+				.Include(s => s.Driver)
+				.Include(s => s.CargoType)
+				.AsNoTracking()
+				.FirstOrDefaultAsync(s => s.Id == id);
 		}
 
-		public Task<IEnumerable<Shipment>> GetByStatusAsync(ShipmentStatus status)
+		public async Task<IEnumerable<Shipment>> GetByStatusAsync(ShipmentStatus status)
 		{
-			throw new NotImplementedException();
+			return await _context.Shipments
+				.Where(s => s.Status == status)
+				.Include(s => s.Contract)
+				.Include(s => s.Vehicle)
+				.Include(s => s.Driver)
+				.Include(s => s.CargoType)
+				.AsNoTracking()
+				.ToListAsync();
 		}
 
 		public void Update(Shipment shipment)
 		{
-			throw new NotImplementedException();
+			_context.Shipments.Update(shipment);
 		}
 	}
 }

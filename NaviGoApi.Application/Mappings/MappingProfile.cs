@@ -8,6 +8,7 @@ using NaviGoApi.Application.DTOs.Location;
 using NaviGoApi.Application.DTOs.Payment;
 using NaviGoApi.Application.DTOs.Route;
 using NaviGoApi.Application.DTOs.RoutePrice;
+using NaviGoApi.Application.DTOs.Shipment;
 using NaviGoApi.Application.DTOs.User;
 using NaviGoApi.Application.DTOs.Vehicle;
 using NaviGoApi.Application.DTOs.VehicleMaintenance;
@@ -107,6 +108,16 @@ namespace NaviGoApi.Application.MappingProfiles
 				.ForMember(dest => dest.ForwarderOfferStatus, opt => opt.MapFrom(src => src.ForwarderOfferStatus.ToString()))
 				.ForMember(dest => dest.RouteName, opt => opt.MapFrom(src => src.Route != null ? $"{src.Route.StartLocation.FullAddress} - {src.Route.EndLocation.FullAddress}" : null))
 				.ForMember(dest => dest.ForwarderCompanyName, opt => opt.MapFrom(src => src.Forwarder != null ? src.Forwarder.CompanyName : null));
+			// Shipment mappings
+			CreateMap<Shipment, ShipmentDto>()
+				.ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+				.ForMember(dest => dest.ContractNumber, opt => opt.MapFrom(src => src.Contract != null ? src.Contract.ContractNumber : null))
+				.ForMember(dest => dest.VehicleRegistration, opt => opt.MapFrom(src => src.Vehicle != null ? src.Vehicle.RegistrationNumber : null))
+				.ForMember(dest => dest.DriverName, opt => opt.MapFrom(src =>
+					src.Driver != null ? $"{src.Driver.FirstName} {src.Driver.LastName}" : null))
+				.ForMember(dest => dest.CargoTypeName, opt => opt.MapFrom(src => src.CargoType != null ? src.CargoType.TypeName : null));
+			CreateMap<ShipmentCreateDto, Shipment>();
+			CreateMap<ShipmentUpdateDto, Shipment>();
 		}
 	}
 }
