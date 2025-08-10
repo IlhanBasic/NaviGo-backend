@@ -12,8 +12,6 @@ namespace NaviGoApi.Application.Validators.Shipment
 	{
 		public ShipmentUpdateDtoValidator()
 		{
-			RuleFor(x => x.Id)
-				.GreaterThan(0).WithMessage("Id must be greater than 0.");
 
 			RuleFor(x => x.ContractId)
 				.GreaterThan(0).WithMessage("ContractId must be greater than 0.");

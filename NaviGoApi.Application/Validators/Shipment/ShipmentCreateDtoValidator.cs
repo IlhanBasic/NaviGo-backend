@@ -30,9 +30,6 @@ namespace NaviGoApi.Application.Validators.Shipment
 			RuleFor(x => x.Priority)
 				.InclusiveBetween(1, 5).WithMessage("Priority must be between 1 and 5.");
 
-			RuleFor(x => x.Status)
-				.IsInEnum().WithMessage("Invalid shipment status.");
-
 			RuleFor(x => x.ScheduledDeparture)
 				.LessThan(x => x.ScheduledArrival)
 				.WithMessage("Scheduled departure must be before scheduled arrival.");

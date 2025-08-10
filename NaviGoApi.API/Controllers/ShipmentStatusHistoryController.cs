@@ -24,7 +24,7 @@ namespace NaviGoApi.API.Controllers
 		public async Task<IActionResult> GetAll()
 		{
 			var histories = await _mediator.Send(new GetAllShipmentStatusHistoryQuery());
-			return Ok(new { message = "Shipment status histories retrieved successfully.", data = histories });
+			return Ok(new { message = "Shipment status histories retrieved successfully."});
 		}
 
 		// GET: api/ShipmentStatusHistory/5
@@ -35,7 +35,7 @@ namespace NaviGoApi.API.Controllers
 			if (history == null)
 				return NotFound(new { message = $"Shipment status history with id {id} not found." });
 
-			return Ok(new { message = "Shipment status history retrieved successfully.", data = history });
+			return Ok(new { message = "Shipment status history retrieved successfully."});
 		}
 
 		// POST: api/ShipmentStatusHistory

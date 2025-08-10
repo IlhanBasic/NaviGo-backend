@@ -120,8 +120,8 @@ namespace NaviGoApi.Application.MappingProfiles
 				.ForMember(dest => dest.DriverName, opt => opt.MapFrom(src =>
 					src.Driver != null ? $"{src.Driver.FirstName} {src.Driver.LastName}" : null))
 				.ForMember(dest => dest.CargoTypeName, opt => opt.MapFrom(src => src.CargoType != null ? src.CargoType.TypeName : null));
-			CreateMap<ShipmentCreateDto, Shipment>();
-			CreateMap<ShipmentUpdateDto, Shipment>();
+			CreateMap<Shipment, ShipmentCreateDto>().ReverseMap();
+			CreateMap<Shipment,ShipmentUpdateDto>().ReverseMap();
 			// Shipment Document mappings
 			CreateMap<ShipmentDocumentCreateDto, ShipmentDocument>();
 

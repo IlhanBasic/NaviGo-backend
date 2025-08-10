@@ -13,6 +13,7 @@ namespace NaviGoApi.Application.DTOs.Vehicle
 		public string Brand { get; set; }
 		public string Model { get; set; }
 		public int EngineCapacityCc { get; set; }
+		public string? VehiclePicture {  get; set; }
 		public int VehicleTypeId { get; set; }
 
 		public string RegistrationNumber { get; set; } = null!;

@@ -24,6 +24,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 		public async Task<Unit> Handle(AddShipmentCommand request, CancellationToken cancellationToken)
 		{
 			var shipment = _mapper.Map<Domain.Entities.Shipment>(request.ShipmentDto);
+			shipment.Status = Domain.Entities.ShipmentStatus.Scheduled;
 			await _unitOfWork.Shipments.AddAsync(shipment);
 			await _unitOfWork.SaveChangesAsync();
 			return Unit.Value;

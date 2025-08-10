@@ -9,7 +9,6 @@ namespace NaviGoApi.Application.DTOs.Shipment
 {
 	public class ShipmentUpdateDto
 	{
-		public int Id { get; set; }
 		public int ContractId { get; set; }
 		public int VehicleId { get; set; }
 		public int DriverId { get; set; }

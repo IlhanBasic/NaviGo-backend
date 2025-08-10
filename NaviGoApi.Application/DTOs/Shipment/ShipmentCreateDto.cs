@@ -16,7 +16,6 @@ namespace NaviGoApi.Application.DTOs.Shipment
 		public double WeightKg { get; set; }
 		public int Priority { get; set; }
 		public string? Description { get; set; }
-		public ShipmentStatus Status { get; set; }
 
 		public DateTime ScheduledDeparture { get; set; }
 		public DateTime ScheduledArrival { get; set; }

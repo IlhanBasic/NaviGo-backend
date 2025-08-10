@@ -27,7 +27,6 @@ namespace NaviGoApi.API.Controllers
 			return Ok(new
 			{
 				Message = "Shipments retrieved successfully.",
-				Data = result
 			});
 		}
 
@@ -46,8 +45,7 @@ namespace NaviGoApi.API.Controllers
 
 			return Ok(new
 			{
-				Message = "Shipment retrieved successfully.",
-				Data = result
+				Message = "Shipment retrieved successfully."
 			});
 		}
 
