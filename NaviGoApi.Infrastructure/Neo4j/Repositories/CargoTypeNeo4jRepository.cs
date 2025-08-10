@@ -2,10 +2,11 @@
 using System.Threading.Tasks;
 using Neo4j.Driver;
 using NaviGoApi.Domain.Entities;
+using NaviGoApi.Domain.Interfaces;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
-	public class CargoTypeNeo4jRepository
+	public class CargoTypeNeo4jRepository : ICargoTypeRepository
 	{
 		private readonly IDriver _driver;
 
@@ -16,129 +17,141 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 
 		public async Task AddAsync(CargoType cargoType)
 		{
-			await using var session = _driver.AsyncSession();
-
 			var query = @"
-                CREATE (c:CargoType {
-                    Id: $id,
-                    TypeName: $typeName,
-                    Description: $description,
-                    HazardLevel: $hazardLevel,
-                    RequiresSpecialEquipment: $requiresSpecialEquipment
-                })";
+                CREATE (ct:CargoType { 
+                    Id: $Id, 
+                    TypeName: $TypeName, 
+                    Description: $Description, 
+                    HazardLevel: $HazardLevel, 
+                    RequiresSpecialEquipment: $RequiresSpecialEquipment 
+                })
+            ";
 
-			var parameters = new Dictionary<string, object>
+			var session = _driver.AsyncSession();
+			try
 			{
-				["id"] = cargoType.Id,
-				["typeName"] = cargoType.TypeName,
-				["description"] = cargoType.Description ?? "",
-				["hazardLevel"] = cargoType.HazardLevel,
-				["requiresSpecialEquipment"] = cargoType.RequiresSpecialEquipment
-			};
+				await session.RunAsync(query, new
+				{
+					Id = cargoType.Id,
+					TypeName = cargoType.TypeName,
+					Description = cargoType.Description,
+					HazardLevel = cargoType.HazardLevel,
+					RequiresSpecialEquipment = cargoType.RequiresSpecialEquipment
+				});
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
 
-			await session.WriteTransactionAsync(async tx =>
+		public async Task DeleteAsync(CargoType cargoType)
+		{
+			var query = @"
+                MATCH (ct:CargoType { Id: $Id })
+                DETACH DELETE ct
+            ";
+
+			var session = _driver.AsyncSession();
+			try
 			{
-				await tx.RunAsync(query, parameters);
-			});
+				await session.RunAsync(query, new { Id = cargoType.Id });
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
 
 		public async Task<IEnumerable<CargoType>> GetAllAsync()
 		{
-			await using var session = _driver.AsyncSession();
-
-			var query = "MATCH (c:CargoType) RETURN c";
-
-			var result = await session.ReadTransactionAsync(async tx =>
+			var query = @"MATCH (ct:CargoType) RETURN ct";
+			var session = _driver.AsyncSession();
+			try
 			{
-				var cursor = await tx.RunAsync(query);
-				var records = await cursor.ToListAsync();
-
+				var result = await session.RunAsync(query);
 				var list = new List<CargoType>();
-				foreach (var record in records)
+
+				await result.ForEachAsync(record =>
 				{
-					var node = record["c"].As<INode>();
-
-					var cargoType = new CargoType
+					var node = record["ct"].As<INode>();
+					list.Add(new CargoType
 					{
-						Id = (int)(long)node.Properties["Id"], // Neo4j int comes as long
-						TypeName = (string)node.Properties["TypeName"],
-						Description = node.Properties.ContainsKey("Description") ? (string)node.Properties["Description"] : null,
-						HazardLevel = (int)(long)node.Properties["HazardLevel"],
-						RequiresSpecialEquipment = (bool)node.Properties["RequiresSpecialEquipment"]
-					};
+						Id = node["Id"].As<int>(),
+						TypeName = node["TypeName"].As<string>(),
+						Description = node["Description"].As<string?>(),
+						HazardLevel = node["HazardLevel"].As<int>(),
+						RequiresSpecialEquipment = node["RequiresSpecialEquipment"].As<bool>()
+					});
+				});
 
-					list.Add(cargoType);
-				}
 				return list;
-			});
-
-			return result;
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
 
 		public async Task<CargoType?> GetByIdAsync(int id)
 		{
-			await using var session = _driver.AsyncSession();
+			var query = @"
+        MATCH (ct:CargoType { Id: $Id })
+        RETURN ct
+    ";
 
-			var query = "MATCH (c:CargoType {Id: $id}) RETURN c LIMIT 1";
-
-			var result = await session.ReadTransactionAsync(async tx =>
+			var session = _driver.AsyncSession();
+			try
 			{
-				var cursor = await tx.RunAsync(query, new { id });
-				var hasRecord = await cursor.FetchAsync();
-				if (!hasRecord) return null;
+				var result = await session.RunAsync(query, new { Id = id });
+				var records = await result.ToListAsync();
+				var record = records.FirstOrDefault();
 
-				var record = cursor.Current;
-				var node = record["c"].As<INode>();
+				if (record == null)
+					return null;
 
+				var node = record["ct"].As<INode>();
 				return new CargoType
 				{
-					Id = (int)(long)node.Properties["Id"],
-					TypeName = (string)node.Properties["TypeName"],
-					Description = node.Properties.ContainsKey("Description") ? (string)node.Properties["Description"] : null,
-					HazardLevel = (int)(long)node.Properties["HazardLevel"],
-					RequiresSpecialEquipment = (bool)node.Properties["RequiresSpecialEquipment"]
+					Id = node["Id"].As<int>(),
+					TypeName = node["TypeName"].As<string>(),
+					Description = node["Description"].As<string?>(),
+					HazardLevel = node["HazardLevel"].As<int>(),
+					RequiresSpecialEquipment = node["RequiresSpecialEquipment"].As<bool>()
 				};
-			});
-
-			return result;
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
 
 		public async Task UpdateAsync(CargoType cargoType)
 		{
-			await using var session = _driver.AsyncSession();
-
 			var query = @"
-                MATCH (c:CargoType {Id: $id})
-                SET c.TypeName = $typeName,
-                    c.Description = $description,
-                    c.HazardLevel = $hazardLevel,
-                    c.RequiresSpecialEquipment = $requiresSpecialEquipment";
+                MATCH (ct:CargoType { Id: $Id })
+                SET ct.TypeName = $TypeName,
+                    ct.Description = $Description,
+                    ct.HazardLevel = $HazardLevel,
+                    ct.RequiresSpecialEquipment = $RequiresSpecialEquipment
+            ";
 
-			var parameters = new Dictionary<string, object>
+			var session = _driver.AsyncSession();
+			try
 			{
-				["id"] = cargoType.Id,
-				["typeName"] = cargoType.TypeName,
-				["description"] = cargoType.Description ?? "",
-				["hazardLevel"] = cargoType.HazardLevel,
-				["requiresSpecialEquipment"] = cargoType.RequiresSpecialEquipment
-			};
-
-			await session.WriteTransactionAsync(async tx =>
+				await session.RunAsync(query, new
+				{
+					Id = cargoType.Id,
+					TypeName = cargoType.TypeName,
+					Description = cargoType.Description,
+					HazardLevel = cargoType.HazardLevel,
+					RequiresSpecialEquipment = cargoType.RequiresSpecialEquipment
+				});
+			}
+			finally
 			{
-				await tx.RunAsync(query, parameters);
-			});
-		}
-
-		public async Task DeleteAsync(int id)
-		{
-			await using var session = _driver.AsyncSession();
-
-			var query = "MATCH (c:CargoType {Id: $id}) DETACH DELETE c";
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, new { id });
-			});
+				await session.CloseAsync();
+			}
 		}
 	}
 }

@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Neo4j.Driver;
 using NaviGoApi.Domain.Entities;
+using NaviGoApi.Domain.Interfaces;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
-	public class RoutePriceNeo4jRepository
+	public class RoutePriceNeo4jRepository : IRoutePriceRepository
 	{
 		private readonly IDriver _driver;
 
@@ -18,154 +20,79 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		public async Task AddAsync(RoutePrice price)
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (r:Route {Id: $routeId}), (vt:VehicleType {Id: $vehicleTypeId})
-                CREATE (rp:RoutePrice {
-                    Id: $id,
-                    PricePerKm: $pricePerKm,
-                    MinimumPrice: $minimumPrice
-                })
-                CREATE (rp)-[:BELONGS_TO_ROUTE]->(r)
-                CREATE (rp)-[:FOR_VEHICLE_TYPE]->(vt)
-            ";
-
-			var parameters = new Dictionary<string, object>
-			{
-				["id"] = price.Id,
-				["routeId"] = price.RouteId,
-				["vehicleTypeId"] = price.VehicleTypeId,
-				["pricePerKm"] = price.PricePerKm,
-				["minimumPrice"] = price.MinimumPrice
-			};
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, parameters);
-			});
-		}
-
-		public async Task UpdateAsync(RoutePrice price)
-		{
-			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (rp:RoutePrice {Id: $id})
-                SET rp.PricePerKm = $pricePerKm,
-                    rp.MinimumPrice = $minimumPrice
-            ";
-
-			var parameters = new Dictionary<string, object>
-			{
-				["id"] = price.Id,
-				["pricePerKm"] = price.PricePerKm,
-				["minimumPrice"] = price.MinimumPrice
-			};
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, parameters);
-			});
+			await session.RunAsync(@"
+				CREATE (rp:RoutePrice {
+					Id: $Id,
+					RouteId: $RouteId,
+					VehicleTypeId: $VehicleTypeId,
+					PricePerKm: $PricePerKm,
+					MinimumPrice: $MinimumPrice
+				})",
+				new
+				{
+					price.Id,
+					price.RouteId,
+					price.VehicleTypeId,
+					price.PricePerKm,
+					price.MinimumPrice
+				});
 		}
 
 		public async Task DeleteAsync(int id)
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = "MATCH (rp:RoutePrice {Id: $id}) DETACH DELETE rp";
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, new { id });
-			});
-		}
-
-		public async Task<RoutePrice?> GetByIdAsync(int id)
-		{
-			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (rp:RoutePrice {Id: $id})
-                OPTIONAL MATCH (rp)-[:BELONGS_TO_ROUTE]->(r:Route)
-                OPTIONAL MATCH (rp)-[:FOR_VEHICLE_TYPE]->(vt:VehicleType)
-                RETURN rp, r, vt
-                LIMIT 1
-            ";
-
-			return await session.ReadTransactionAsync(async tx =>
-			{
-				var cursor = await tx.RunAsync(query, new { id });
-				if (!await cursor.FetchAsync()) return null;
-
-				var record = cursor.Current;
-
-				var rpNode = record["rp"].As<INode>();
-				var rNode = record["r"]?.As<INode>();
-				var vtNode = record["vt"]?.As<INode>();
-
-				var routePrice = new RoutePrice
-				{
-					Id = (int)(long)rpNode.Properties["Id"],
-					PricePerKm = Convert.ToDecimal((double)rpNode.Properties["PricePerKm"]),
-					MinimumPrice = Convert.ToDecimal((double)rpNode.Properties["MinimumPrice"]),
-					RouteId = rNode != null ? (int)(long)rNode.Properties["Id"] : 0,
-					VehicleTypeId = vtNode != null ? (int)(long)vtNode.Properties["Id"] : 0,
-				};
-
-				if (rNode != null)
-					routePrice.Route = new Route { Id = (int)(long)rNode.Properties["Id"] };
-
-				if (vtNode != null)
-					routePrice.VehicleType = new VehicleType { Id = (int)(long)vtNode.Properties["Id"] };
-
-				return routePrice;
-			});
+			await session.RunAsync(@"
+				MATCH (rp:RoutePrice {Id: $Id})
+				DETACH DELETE rp",
+				new { Id = id });
 		}
 
 		public async Task<IEnumerable<RoutePrice>> GetAllAsync()
 		{
 			await using var session = _driver.AsyncSession();
+			var cursor = await session.RunAsync("MATCH (rp:RoutePrice) RETURN rp");
+			var records = await cursor.ToListAsync();
+			return records.Select(r => MapNodeToEntity(r["rp"].As<INode>())).ToList();
+		}
 
-			var query = @"
-                MATCH (rp:RoutePrice)
-                OPTIONAL MATCH (rp)-[:BELONGS_TO_ROUTE]->(r:Route)
-                OPTIONAL MATCH (rp)-[:FOR_VEHICLE_TYPE]->(vt:VehicleType)
-                RETURN rp, r, vt
-            ";
+		public async Task<RoutePrice?> GetByIdAsync(int id)
+		{
+			await using var session = _driver.AsyncSession();
+			var cursor = await session.RunAsync("MATCH (rp:RoutePrice {Id: $Id}) RETURN rp", new { Id = id });
+			var records = await cursor.ToListAsync();
+			if (records.Count == 0) return null;
+			return MapNodeToEntity(records[0]["rp"].As<INode>());
+		}
 
-			return await session.ReadTransactionAsync(async tx =>
-			{
-				var cursor = await tx.RunAsync(query);
-				var records = await cursor.ToListAsync();
-
-				var list = new List<RoutePrice>();
-
-				foreach (var record in records)
+		public async Task UpdateAsync(RoutePrice price)
+		{
+			await using var session = _driver.AsyncSession();
+			await session.RunAsync(@"
+				MATCH (rp:RoutePrice {Id: $Id})
+				SET rp.RouteId = $RouteId,
+					rp.VehicleTypeId = $VehicleTypeId,
+					rp.PricePerKm = $PricePerKm,
+					rp.MinimumPrice = $MinimumPrice",
+				new
 				{
-					var rpNode = record["rp"].As<INode>();
-					var rNode = record["r"]?.As<INode>();
-					var vtNode = record["vt"]?.As<INode>();
+					price.Id,
+					price.RouteId,
+					price.VehicleTypeId,
+					price.PricePerKm,
+					price.MinimumPrice
+				});
+		}
 
-					var routePrice = new RoutePrice
-					{
-						Id = (int)(long)rpNode.Properties["Id"],
-						PricePerKm = Convert.ToDecimal((double)rpNode.Properties["PricePerKm"]),
-						MinimumPrice = Convert.ToDecimal((double)rpNode.Properties["MinimumPrice"]),
-						RouteId = rNode != null ? (int)(long)rNode.Properties["Id"] : 0,
-						VehicleTypeId = vtNode != null ? (int)(long)vtNode.Properties["Id"] : 0,
-					};
-
-					if (rNode != null)
-						routePrice.Route = new Route { Id = (int)(long)rNode.Properties["Id"] };
-
-					if (vtNode != null)
-						routePrice.VehicleType = new VehicleType { Id = (int)(long)vtNode.Properties["Id"] };
-
-					list.Add(routePrice);
-				}
-
-				return list;
-			});
+		private RoutePrice MapNodeToEntity(INode node)
+		{
+			return new RoutePrice
+			{
+				Id = node.Properties["Id"].As<int>(),
+				RouteId = node.Properties["RouteId"].As<int>(),
+				VehicleTypeId = node.Properties["VehicleTypeId"].As<int>(),
+				PricePerKm = Convert.ToDecimal(node.Properties["PricePerKm"]),
+				MinimumPrice = Convert.ToDecimal(node.Properties["MinimumPrice"])
+			};
 		}
 	}
 }

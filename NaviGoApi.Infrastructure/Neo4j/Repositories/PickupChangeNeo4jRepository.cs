@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Neo4j.Driver;
 using NaviGoApi.Domain.Entities;
+using NaviGoApi.Domain.Interfaces;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
-	public class PickupChangeNeo4jRepository
+	public class PickupChangeNeo4jRepository : IPickupChangeRepository
 	{
 		private readonly IDriver _driver;
 
@@ -18,165 +20,96 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		public async Task AddAsync(PickupChange change)
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                CREATE (pc:PickupChange {
-                    Id: $id,
-                    ShipmentId: $shipmentId,
-                    ClientId: $clientId,
-                    OldTime: $oldTime,
-                    NewTime: $newTime,
-                    ChangeCount: $changeCount,
-                    AdditionalFee: $additionalFee,
-                    PickupChangesStatus: $status
-                })
-                WITH pc
-                MATCH (s:Shipment {Id: $shipmentId}), (u:User {Id: $clientId})
-                CREATE (pc)-[:FOR_SHIPMENT]->(s)
-                CREATE (pc)-[:BY_CLIENT]->(u)
-            ";
-
-			var parameters = new Dictionary<string, object>
-			{
-				["id"] = change.Id,
-				["shipmentId"] = change.ShipmentId,
-				["clientId"] = change.ClientId,
-				["oldTime"] = change.OldTime.ToString("o"),
-				["newTime"] = change.NewTime.ToString("o"),
-				["changeCount"] = change.ChangeCount,
-				["additionalFee"] = change.AdditionalFee,
-				["status"] = change.PickupChangesStatus
-			};
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, parameters);
-			});
+			await session.RunAsync(@"
+				CREATE (pc:PickupChange {
+					Id: $Id,
+					ShipmentId: $ShipmentId,
+					ClientId: $ClientId,
+					OldTime: datetime($OldTime),
+					NewTime: datetime($NewTime),
+					ChangeCount: $ChangeCount,
+					AdditionalFee: $AdditionalFee,
+					PickupChangesStatus: $PickupChangesStatus
+				})",
+				new
+				{
+					change.Id,
+					change.ShipmentId,
+					change.ClientId,
+					OldTime = change.OldTime.ToString("o"),
+					NewTime = change.NewTime.ToString("o"),
+					change.ChangeCount,
+					change.AdditionalFee,
+					change.PickupChangesStatus
+				});
 		}
 
 		public async Task DeleteAsync(int id)
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = "MATCH (pc:PickupChange {Id: $id}) DETACH DELETE pc";
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, new { id });
-			});
+			await session.RunAsync(@"
+				MATCH (pc:PickupChange {Id: $Id})
+				DETACH DELETE pc",
+				new { Id = id });
 		}
 
 		public async Task<IEnumerable<PickupChange>> GetAllAsync()
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (pc:PickupChange)-[:FOR_SHIPMENT]->(s:Shipment),
-                      (pc)-[:BY_CLIENT]->(u:User)
-                RETURN pc, s, u
-            ";
-
-			return await session.ReadTransactionAsync(async tx =>
-			{
-				var cursor = await tx.RunAsync(query);
-				var records = await cursor.ToListAsync();
-
-				var list = new List<PickupChange>();
-
-				foreach (var record in records)
-				{
-					var nodePickupChange = record["pc"].As<INode>();
-					var nodeShipment = record["s"].As<INode>();
-					var nodeClient = record["u"].As<INode>();
-
-					var pickupChange = MapNodeToPickupChange(nodePickupChange);
-					pickupChange.Shipment = new Shipment { Id = (int)(long)nodeShipment.Properties["Id"] };
-					pickupChange.Client = new User { Id = (int)(long)nodeClient.Properties["Id"] };
-
-					list.Add(pickupChange);
-				}
-
-				return list;
-			});
+			var cursor = await session.RunAsync("MATCH (pc:PickupChange) RETURN pc");
+			var records = await cursor.ToListAsync();
+			return records.Select(r => MapNodeToEntity(r["pc"].As<INode>())).ToList();
 		}
 
 		public async Task<PickupChange?> GetByIdAsync(int id)
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (pc:PickupChange {Id: $id})-[:FOR_SHIPMENT]->(s:Shipment),
-                      (pc)-[:BY_CLIENT]->(u:User)
-                RETURN pc, s, u
-                LIMIT 1
-            ";
-
-			return await session.ReadTransactionAsync(async tx =>
-			{
-				var cursor = await tx.RunAsync(query, new { id });
-				var hasRecord = await cursor.FetchAsync();
-
-				if (!hasRecord) return null;
-
-				var record = cursor.Current;
-
-				var nodePickupChange = record["pc"].As<INode>();
-				var nodeShipment = record["s"].As<INode>();
-				var nodeClient = record["u"].As<INode>();
-
-				var pickupChange = MapNodeToPickupChange(nodePickupChange);
-				pickupChange.Shipment = new Shipment { Id = (int)(long)nodeShipment.Properties["Id"] };
-				pickupChange.Client = new User { Id = (int)(long)nodeClient.Properties["Id"] };
-
-				return pickupChange;
-			});
+			var cursor = await session.RunAsync(@"
+				MATCH (pc:PickupChange {Id: $Id})
+				RETURN pc",
+				new { Id = id });
+			var records = await cursor.ToListAsync();
+			if (records.Count == 0) return null;
+			return MapNodeToEntity(records[0]["pc"].As<INode>());
 		}
 
 		public async Task UpdateAsync(PickupChange change)
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (pc:PickupChange {Id: $id})
-                SET pc.ShipmentId = $shipmentId,
-                    pc.ClientId = $clientId,
-                    pc.OldTime = $oldTime,
-                    pc.NewTime = $newTime,
-                    pc.ChangeCount = $changeCount,
-                    pc.AdditionalFee = $additionalFee,
-                    pc.PickupChangesStatus = $status
-            ";
-
-			var parameters = new Dictionary<string, object>
-			{
-				["id"] = change.Id,
-				["shipmentId"] = change.ShipmentId,
-				["clientId"] = change.ClientId,
-				["oldTime"] = change.OldTime.ToString("o"),
-				["newTime"] = change.NewTime.ToString("o"),
-				["changeCount"] = change.ChangeCount,
-				["additionalFee"] = change.AdditionalFee,
-				["status"] = change.PickupChangesStatus
-			};
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, parameters);
-			});
+			await session.RunAsync(@"
+				MATCH (pc:PickupChange {Id: $Id})
+				SET pc.ShipmentId = $ShipmentId,
+					pc.ClientId = $ClientId,
+					pc.OldTime = datetime($OldTime),
+					pc.NewTime = datetime($NewTime),
+					pc.ChangeCount = $ChangeCount,
+					pc.AdditionalFee = $AdditionalFee,
+					pc.PickupChangesStatus = $PickupChangesStatus",
+				new
+				{
+					change.Id,
+					change.ShipmentId,
+					change.ClientId,
+					OldTime = change.OldTime.ToString("o"),
+					NewTime = change.NewTime.ToString("o"),
+					change.ChangeCount,
+					change.AdditionalFee,
+					change.PickupChangesStatus
+				});
 		}
 
-		private PickupChange MapNodeToPickupChange(INode node)
+		private PickupChange MapNodeToEntity(INode node)
 		{
 			return new PickupChange
 			{
-				Id = (int)(long)node.Properties["Id"],
-				ShipmentId = (int)(long)node.Properties["ShipmentId"],
-				ClientId = (int)(long)node.Properties["ClientId"],
-				OldTime = DateTime.Parse((string)node.Properties["OldTime"]),
-				NewTime = DateTime.Parse((string)node.Properties["NewTime"]),
-				ChangeCount = (int)(long)node.Properties["ChangeCount"],
-				AdditionalFee = Convert.ToDecimal((double)node.Properties["AdditionalFee"]),
-				PickupChangesStatus = (int)(long)node.Properties["PickupChangesStatus"]
+				Id = node.Properties["Id"].As<int>(),
+				ShipmentId = node.Properties["ShipmentId"].As<int>(),
+				ClientId = node.Properties["ClientId"].As<int>(),
+				OldTime = DateTime.Parse(node.Properties["OldTime"].As<string>()),
+				NewTime = DateTime.Parse(node.Properties["NewTime"].As<string>()),
+				ChangeCount = node.Properties["ChangeCount"].As<int>(),
+				AdditionalFee = Convert.ToDecimal(node.Properties["AdditionalFee"]),
+				PickupChangesStatus = node.Properties["PickupChangesStatus"].As<int>()
 			};
 		}
 	}

@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Neo4j.Driver;
 using NaviGoApi.Domain.Entities;
+using NaviGoApi.Domain.Interfaces;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
-	public class ShipmentDocumentNeo4jRepository
+	public class ShipmentDocumentNeo4jRepository : IShipmentDocumentRepository
 	{
 		private readonly IDriver _driver;
 
@@ -17,173 +18,157 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 
 		public async Task AddAsync(ShipmentDocument document)
 		{
-			await using var session = _driver.AsyncSession();
-
 			var query = @"
-                MATCH (s:Shipment {Id: $shipmentId})
-                CREATE (doc:ShipmentDocument {
-                    Id: $id,
-                    DocumentType: $documentType,
-                    FileUrl: $fileUrl,
-                    UploadDate: datetime($uploadDate),
-                    Verified: $verified,
-                    VerifiedByUserId: $verifiedByUserId,
-                    ExpiryDate: $expiryDate
-                })
-                CREATE (doc)-[:BELONGS_TO]->(s)
-            ";
+                CREATE (d:ShipmentDocument {
+                    id: $id,
+                    shipmentId: $shipmentId,
+                    documentType: $documentType,
+                    fileUrl: $fileUrl,
+                    uploadDate: datetime($uploadDate),
+                    verified: $verified,
+                    verifiedByUserId: $verifiedByUserId,
+                    expiryDate: $expiryDate
+                })";
 
-			var parameters = new Dictionary<string, object>
+			var session = _driver.AsyncSession();
+			try
 			{
-				["id"] = document.Id,
-				["shipmentId"] = document.ShipmentId,
-				["documentType"] = (int)document.DocumentType,
-				["fileUrl"] = document.FileUrl,
-				["uploadDate"] = document.UploadDate.ToString("o"), // ISO 8601 format
-				["verified"] = document.Verified,
-				["verifiedByUserId"] = document.VerifiedByUserId ?? 0,
-				["expiryDate"] = document.ExpiryDate?.ToString("o") ?? null
-			};
-
-			await session.WriteTransactionAsync(async tx =>
+				await session.RunAsync(query, new
+				{
+					id = document.Id,
+					shipmentId = document.ShipmentId,
+					documentType = (int)document.DocumentType,
+					fileUrl = document.FileUrl,
+					uploadDate = document.UploadDate.ToString("o"), // ISO 8601 format
+					verified = document.Verified,
+					verifiedByUserId = document.VerifiedByUserId,
+					expiryDate = document.ExpiryDate?.ToString("o")
+				});
+			}
+			finally
 			{
-				await tx.RunAsync(query, parameters);
-			});
-		}
-
-		public async Task UpdateAsync(ShipmentDocument document)
-		{
-			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (doc:ShipmentDocument {Id: $id})
-                SET doc.DocumentType = $documentType,
-                    doc.FileUrl = $fileUrl,
-                    doc.UploadDate = datetime($uploadDate),
-                    doc.Verified = $verified,
-                    doc.VerifiedByUserId = $verifiedByUserId,
-                    doc.ExpiryDate = $expiryDate
-            ";
-
-			var parameters = new Dictionary<string, object>
-			{
-				["id"] = document.Id,
-				["documentType"] = (int)document.DocumentType,
-				["fileUrl"] = document.FileUrl,
-				["uploadDate"] = document.UploadDate.ToString("o"),
-				["verified"] = document.Verified,
-				["verifiedByUserId"] = document.VerifiedByUserId ?? 0,
-				["expiryDate"] = document.ExpiryDate?.ToString("o") ?? null
-			};
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, parameters);
-			});
+				await session.CloseAsync();
+			}
 		}
 
 		public async Task DeleteAsync(int id)
 		{
-			await using var session = _driver.AsyncSession();
+			var query = "MATCH (d:ShipmentDocument {id: $id}) DETACH DELETE d";
 
-			var query = "MATCH (doc:ShipmentDocument {Id: $id}) DETACH DELETE doc";
-
-			await session.WriteTransactionAsync(async tx =>
+			var session = _driver.AsyncSession();
+			try
 			{
-				await tx.RunAsync(query, new { id });
-			});
-		}
-
-		public async Task<ShipmentDocument?> GetByIdAsync(int id)
-		{
-			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (doc:ShipmentDocument {Id: $id})
-                OPTIONAL MATCH (doc)-[:BELONGS_TO]->(s:Shipment)
-                RETURN doc, s
-                LIMIT 1
-            ";
-
-			return await session.ReadTransactionAsync(async tx =>
+				await session.RunAsync(query, new { id });
+			}
+			finally
 			{
-				var cursor = await tx.RunAsync(query, new { id });
-				if (!await cursor.FetchAsync()) return null;
-
-				var record = cursor.Current;
-
-				var docNode = record["doc"].As<INode>();
-				var shipmentNode = record["s"]?.As<INode>();
-
-				var document = new ShipmentDocument
-				{
-					Id = (int)(long)docNode.Properties["Id"],
-					ShipmentId = shipmentNode != null ? (int)(long)shipmentNode.Properties["Id"] : 0,
-					DocumentType = (DocumentType)(int)(long)docNode.Properties["DocumentType"],
-					FileUrl = (string)docNode.Properties["FileUrl"],
-					UploadDate = DateTime.Parse((string)docNode.Properties["UploadDate"]),
-					Verified = (bool)docNode.Properties["Verified"],
-					VerifiedByUserId = docNode.Properties.ContainsKey("VerifiedByUserId") ? (int?)(long)docNode.Properties["VerifiedByUserId"] : null,
-					ExpiryDate = docNode.Properties.ContainsKey("ExpiryDate") && docNode.Properties["ExpiryDate"] != null
-						? DateTime.Parse((string)docNode.Properties["ExpiryDate"])
-						: null
-				};
-
-				if (shipmentNode != null)
-				{
-					document.Shipment = new Shipment { Id = (int)(long)shipmentNode.Properties["Id"] };
-				}
-
-				return document;
-			});
+				await session.CloseAsync();
+			}
 		}
 
 		public async Task<IEnumerable<ShipmentDocument>> GetAllAsync()
 		{
-			await using var session = _driver.AsyncSession();
+			var query = "MATCH (d:ShipmentDocument) RETURN d";
 
-			var query = @"
-                MATCH (doc:ShipmentDocument)
-                OPTIONAL MATCH (doc)-[:BELONGS_TO]->(s:Shipment)
-                RETURN doc, s
-            ";
-
-			return await session.ReadTransactionAsync(async tx =>
+			var session = _driver.AsyncSession();
+			try
 			{
-				var cursor = await tx.RunAsync(query);
+				var cursor = await session.RunAsync(query);
 				var records = await cursor.ToListAsync();
 
-				var list = new List<ShipmentDocument>();
+				var result = new List<ShipmentDocument>();
 
 				foreach (var record in records)
 				{
-					var docNode = record["doc"].As<INode>();
-					var shipmentNode = record["s"]?.As<INode>();
-
-					var document = new ShipmentDocument
-					{
-						Id = (int)(long)docNode.Properties["Id"],
-						ShipmentId = shipmentNode != null ? (int)(long)shipmentNode.Properties["Id"] : 0,
-						DocumentType = (DocumentType)(int)(long)docNode.Properties["DocumentType"],
-						FileUrl = (string)docNode.Properties["FileUrl"],
-						UploadDate = DateTime.Parse((string)docNode.Properties["UploadDate"]),
-						Verified = (bool)docNode.Properties["Verified"],
-						VerifiedByUserId = docNode.Properties.ContainsKey("VerifiedByUserId") ? (int?)(long)docNode.Properties["VerifiedByUserId"] : null,
-						ExpiryDate = docNode.Properties.ContainsKey("ExpiryDate") && docNode.Properties["ExpiryDate"] != null
-							? DateTime.Parse((string)docNode.Properties["ExpiryDate"])
-							: null
-					};
-
-					if (shipmentNode != null)
-					{
-						document.Shipment = new Shipment { Id = (int)(long)shipmentNode.Properties["Id"] };
-					}
-
-					list.Add(document);
+					var node = record["d"].As<INode>();
+					var document = MapNodeToShipmentDocument(node);
+					result.Add(document);
 				}
 
-				return list;
-			});
+				return result;
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+		public async Task<ShipmentDocument?> GetByIdAsync(int id)
+		{
+			var query = "MATCH (d:ShipmentDocument {id: $id}) RETURN d LIMIT 1";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var cursor = await session.RunAsync(query, new { id });
+
+				// Koristi MoveNextAsync i Current za dohvat rezultata
+				if (await cursor.FetchAsync())
+				{
+					var record = cursor.Current;
+					var node = record["d"].As<INode>();
+					return MapNodeToShipmentDocument(node);
+				}
+
+				return null;
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+		public async Task UpdateAsync(ShipmentDocument document)
+		{
+			var query = @"
+                MATCH (d:ShipmentDocument {id: $id})
+                SET d.shipmentId = $shipmentId,
+                    d.documentType = $documentType,
+                    d.fileUrl = $fileUrl,
+                    d.uploadDate = datetime($uploadDate),
+                    d.verified = $verified,
+                    d.verifiedByUserId = $verifiedByUserId,
+                    d.expiryDate = $expiryDate";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				await session.RunAsync(query, new
+				{
+					id = document.Id,
+					shipmentId = document.ShipmentId,
+					documentType = (int)document.DocumentType,
+					fileUrl = document.FileUrl,
+					uploadDate = document.UploadDate.ToString("o"),
+					verified = document.Verified,
+					verifiedByUserId = document.VerifiedByUserId,
+					expiryDate = document.ExpiryDate?.ToString("o")
+				});
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+		// Helper method to map Neo4j node properties to ShipmentDocument entity
+		private ShipmentDocument MapNodeToShipmentDocument(INode node)
+		{
+			return new ShipmentDocument
+			{
+				Id = Convert.ToInt32(node.Properties["id"]),
+				ShipmentId = Convert.ToInt32(node.Properties["shipmentId"]),
+				DocumentType = (DocumentType)Convert.ToInt32(node.Properties["documentType"]),
+				FileUrl = node.Properties["fileUrl"]?.ToString() ?? string.Empty,
+				UploadDate = DateTime.Parse(node.Properties["uploadDate"].ToString()),
+				Verified = Convert.ToBoolean(node.Properties["verified"]),
+				VerifiedByUserId = node.Properties.ContainsKey("verifiedByUserId") && node.Properties["verifiedByUserId"] != null
+					? (int?)Convert.ToInt32(node.Properties["verifiedByUserId"])
+					: null,
+				ExpiryDate = node.Properties.ContainsKey("expiryDate") && node.Properties["expiryDate"] != null
+					? (DateTime?)DateTime.Parse(node.Properties["expiryDate"].ToString())
+					: null
+			};
 		}
 	}
 }

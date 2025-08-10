@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Neo4j.Driver;
 using NaviGoApi.Domain.Entities;
+using NaviGoApi.Domain.Interfaces;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
-	public class LocationNeo4jRepository
+	public class LocationNeo4jRepository : ILocationRepository
 	{
 		private readonly IDriver _driver;
 
@@ -18,142 +20,94 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		public async Task AddAsync(Location location)
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                CREATE (loc:Location {
-                    Id: $id,
-                    City: $city,
-                    Country: $country,
-                    ZIP: $zip,
-                    Latitude: $latitude,
-                    Longitude: $longitude,
-                    FullAddress: $fullAddress
-                })
-            ";
-
-			var parameters = new Dictionary<string, object>
-			{
-				["id"] = location.Id,
-				["city"] = location.City,
-				["country"] = location.Country,
-				["zip"] = location.ZIP,
-				["latitude"] = location.Latitude,
-				["longitude"] = location.Longitude,
-				["fullAddress"] = location.FullAddress
-			};
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, parameters);
-			});
+			await session.RunAsync(@"
+				CREATE (l:Location {
+					Id: $Id,
+					City: $City,
+					Country: $Country,
+					ZIP: $ZIP,
+					Latitude: $Latitude,
+					Longitude: $Longitude,
+					FullAddress: $FullAddress
+				})",
+				new
+				{
+					location.Id,
+					location.City,
+					location.Country,
+					location.ZIP,
+					location.Latitude,
+					location.Longitude,
+					location.FullAddress
+				});
 		}
 
 		public async Task DeleteAsync(int id)
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (loc:Location {Id: $id})
-                DETACH DELETE loc
-            ";
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, new { id });
-			});
+			await session.RunAsync(@"
+				MATCH (l:Location {Id: $Id})
+				DETACH DELETE l",
+				new { Id = id });
 		}
 
 		public async Task<IEnumerable<Location>> GetAllAsync()
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (loc:Location)
-                RETURN loc
-            ";
-
-			return await session.ReadTransactionAsync(async tx =>
-			{
-				var cursor = await tx.RunAsync(query);
-				var records = await cursor.ToListAsync();
-
-				var locations = new List<Location>();
-
-				foreach (var record in records)
-				{
-					var node = record["loc"].As<INode>();
-					locations.Add(MapNodeToLocation(node));
-				}
-
-				return locations;
-			});
+			var cursor = await session.RunAsync("MATCH (l:Location) RETURN l");
+			var records = await cursor.ToListAsync();
+			return records.Select(r => MapNodeToEntity(r["l"].As<INode>())).ToList();
 		}
 
 		public async Task<Location?> GetByIdAsync(int id)
 		{
 			await using var session = _driver.AsyncSession();
+			var cursor = await session.RunAsync(@"
+				MATCH (l:Location {Id: $Id})
+				RETURN l",
+				new { Id = id });
 
-			var query = @"
-                MATCH (loc:Location {Id: $id})
-                RETURN loc
-                LIMIT 1
-            ";
+			var records = await cursor.ToListAsync();
+			if (records.Count == 0)
+				return null;
 
-			return await session.ReadTransactionAsync(async tx =>
-			{
-				var cursor = await tx.RunAsync(query, new { id });
-				var hasRecord = await cursor.FetchAsync();
-
-				if (!hasRecord) return null;
-
-				var record = cursor.Current;
-				var node = record["loc"].As<INode>();
-				return MapNodeToLocation(node);
-			});
+			return MapNodeToEntity(records[0]["l"].As<INode>());
 		}
 
 		public async Task UpdateAsync(Location location)
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (loc:Location {Id: $id})
-                SET loc.City = $city,
-                    loc.Country = $country,
-                    loc.ZIP = $zip,
-                    loc.Latitude = $latitude,
-                    loc.Longitude = $longitude,
-                    loc.FullAddress = $fullAddress
-            ";
-
-			var parameters = new Dictionary<string, object>
-			{
-				["id"] = location.Id,
-				["city"] = location.City,
-				["country"] = location.Country,
-				["zip"] = location.ZIP,
-				["latitude"] = location.Latitude,
-				["longitude"] = location.Longitude,
-				["fullAddress"] = location.FullAddress
-			};
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, parameters);
-			});
+			await session.RunAsync(@"
+				MATCH (l:Location {Id: $Id})
+				SET l.City = $City,
+					l.Country = $Country,
+					l.ZIP = $ZIP,
+					l.Latitude = $Latitude,
+					l.Longitude = $Longitude,
+					l.FullAddress = $FullAddress",
+				new
+				{
+					location.Id,
+					location.City,
+					location.Country,
+					location.ZIP,
+					location.Latitude,
+					location.Longitude,
+					location.FullAddress
+				});
 		}
 
-		private Location MapNodeToLocation(INode node)
+		private Location MapNodeToEntity(INode node)
 		{
 			return new Location
 			{
-				Id = (int)(long)node.Properties["Id"],
-				City = (string)node.Properties["City"],
-				Country = (string)node.Properties["Country"],
-				ZIP = (string)node.Properties["ZIP"],
-				Latitude = Convert.ToDouble(node.Properties["Latitude"]),
-				Longitude = Convert.ToDouble(node.Properties["Longitude"]),
-				FullAddress = (string)node.Properties["FullAddress"]
+				Id = node.Properties["Id"].As<int>(),
+				City = node.Properties["City"].As<string>(),
+				Country = node.Properties["Country"].As<string>(),
+				ZIP = node.Properties["ZIP"].As<string>(),
+				Latitude = node.Properties["Latitude"].As<double>(),
+				Longitude = node.Properties["Longitude"].As<double>(),
+				FullAddress = node.Properties["FullAddress"].As<string>()
 			};
 		}
 	}

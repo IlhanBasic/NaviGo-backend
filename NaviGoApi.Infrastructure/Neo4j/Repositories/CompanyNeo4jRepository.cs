@@ -2,10 +2,12 @@
 using System.Threading.Tasks;
 using Neo4j.Driver;
 using NaviGoApi.Domain.Entities;
+using NaviGoApi.Domain.Interfaces;
+using System.Linq;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
-	public class CompanyNeo4jRepository
+	public class CompanyNeo4jRepository : ICompanyRepository
 	{
 		private readonly IDriver _driver;
 
@@ -16,204 +18,213 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 
 		public async Task AddAsync(Company company)
 		{
-			await using var session = _driver.AsyncSession();
-
 			var query = @"
                 CREATE (c:Company {
-                    Id: $id,
-                    CompanyName: $companyName,
-                    PIB: $pib,
-                    Address: $address,
-                    LogoUrl: $logoUrl,
-                    ContactEmail: $contactEmail,
-                    Website: $website,
-                    Description: $description,
-                    CompanyType: $companyType,
-                    CompanyStatus: $companyStatus,
-                    MaxCommissionRate: $maxCommissionRate,
-                    SaldoAmount: $saldoAmount,
-                    CreatedAt: $createdAt,
-                    ProofFileUrl: $proofFileUrl
-                })";
+                    Id: $Id,
+                    CompanyName: $CompanyName,
+                    PIB: $PIB,
+                    Address: $Address,
+                    LogoUrl: $LogoUrl,
+                    ContactEmail: $ContactEmail,
+                    Website: $Website,
+                    Description: $Description,
+                    CompanyType: $CompanyType,
+                    CompanyStatus: $CompanyStatus,
+                    MaxCommissionRate: $MaxCommissionRate,
+                    SaldoAmount: $SaldoAmount,
+                    CreatedAt: $CreatedAt,
+                    ProofFileUrl: $ProofFileUrl
+                })
+            ";
 
-			var parameters = new Dictionary<string, object>
+			var session = _driver.AsyncSession();
+			try
 			{
-				["id"] = company.Id,
-				["companyName"] = company.CompanyName,
-				["pib"] = company.PIB,
-				["address"] = company.Address,
-				["logoUrl"] = company.LogoUrl ?? "",
-				["contactEmail"] = company.ContactEmail,
-				["website"] = company.Website ?? "",
-				["description"] = company.Description ?? "",
-				["companyType"] = (int)company.CompanyType,
-				["companyStatus"] = (int)company.CompanyStatus,
-				["maxCommissionRate"] = company.MaxCommissionRate ?? 0m,
-				["saldoAmount"] = company.SaldoAmount ?? 0m,
-				["createdAt"] = company.CreatedAt.ToString("o"), // ISO 8601
-				["proofFileUrl"] = company.ProofFileUrl ?? ""
-			};
+				await session.RunAsync(query, new
+				{
+					company.Id,
+					company.CompanyName,
+					company.PIB,
+					company.Address,
+					company.LogoUrl,
+					company.ContactEmail,
+					company.Website,
+					company.Description,
+					CompanyType = (int)company.CompanyType,
+					CompanyStatus = (int)company.CompanyStatus,
+					company.MaxCommissionRate,
+					company.SaldoAmount,
+					company.CreatedAt,
+					company.ProofFileUrl
+				});
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
 
-			await session.WriteTransactionAsync(async tx =>
+		public async Task DeleteAsync(Company company)
+		{
+			var query = @"MATCH (c:Company { Id: $Id }) DETACH DELETE c";
+			var session = _driver.AsyncSession();
+			try
 			{
-				await tx.RunAsync(query, parameters);
-			});
+				await session.RunAsync(query, new { company.Id });
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
 
 		public async Task<IEnumerable<Company>> GetAllAsync()
 		{
-			await using var session = _driver.AsyncSession();
-
-			var query = "MATCH (c:Company) RETURN c";
-
-			return await session.ReadTransactionAsync(async tx =>
+			var query = @"MATCH (c:Company) RETURN c";
+			var session = _driver.AsyncSession();
+			try
 			{
-				var cursor = await tx.RunAsync(query);
-				var records = await cursor.ToListAsync();
-				var companies = new List<Company>();
+				var result = await session.RunAsync(query);
+				var list = new List<Company>();
 
-				foreach (var record in records)
+				await result.ForEachAsync(record =>
 				{
 					var node = record["c"].As<INode>();
-					companies.Add(MapNodeToCompany(node));
-				}
+					list.Add(MapCompanyNode(node));
+				});
 
-				return companies;
-			});
+				return list;
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
 
 		public async Task<Company?> GetByIdAsync(int id)
 		{
-			await using var session = _driver.AsyncSession();
-
-			var query = "MATCH (c:Company {Id: $id}) RETURN c LIMIT 1";
-
-			return await session.ReadTransactionAsync(async tx =>
+			var query = @"MATCH (c:Company { Id: $Id }) RETURN c";
+			var session = _driver.AsyncSession();
+			try
 			{
-				var cursor = await tx.RunAsync(query, new { id });
-				var hasRecord = await cursor.FetchAsync();
-				if (!hasRecord) return null;
+				var result = await session.RunAsync(query, new { Id = id });
+				var records = await result.ToListAsync();
+				var record = records.FirstOrDefault();
 
-				var record = cursor.Current;
-				var node = record["c"].As<INode>();
+				if (record == null) return null;
 
-				return MapNodeToCompany(node);
-			});
+				return MapCompanyNode(record["c"].As<INode>());
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
 
 		public async Task<Company?> GetByNameAsync(string name)
 		{
-			await using var session = _driver.AsyncSession();
-
-			var query = "MATCH (c:Company {CompanyName: $name}) RETURN c LIMIT 1";
-
-			return await session.ReadTransactionAsync(async tx =>
+			var query = @"MATCH (c:Company { CompanyName: $CompanyName }) RETURN c";
+			var session = _driver.AsyncSession();
+			try
 			{
-				var cursor = await tx.RunAsync(query, new { name });
-				var hasRecord = await cursor.FetchAsync();
-				if (!hasRecord) return null;
+				var result = await session.RunAsync(query, new { CompanyName = name });
+				var records = await result.ToListAsync();
+				var record = records.FirstOrDefault();
 
-				var record = cursor.Current;
-				var node = record["c"].As<INode>();
+				if (record == null) return null;
 
-				return MapNodeToCompany(node);
-			});
+				return MapCompanyNode(record["c"].As<INode>());
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
 
 		public async Task<Company?> GetByPibAsync(string pib)
 		{
-			await using var session = _driver.AsyncSession();
-
-			var query = "MATCH (c:Company {PIB: $pib}) RETURN c LIMIT 1";
-
-			return await session.ReadTransactionAsync(async tx =>
+			var query = @"MATCH (c:Company { PIB: $PIB }) RETURN c";
+			var session = _driver.AsyncSession();
+			try
 			{
-				var cursor = await tx.RunAsync(query, new { pib });
-				var hasRecord = await cursor.FetchAsync();
-				if (!hasRecord) return null;
+				var result = await session.RunAsync(query, new { PIB = pib });
+				var records = await result.ToListAsync();
+				var record = records.FirstOrDefault();
 
-				var record = cursor.Current;
-				var node = record["c"].As<INode>();
+				if (record == null) return null;
 
-				return MapNodeToCompany(node);
-			});
+				return MapCompanyNode(record["c"].As<INode>());
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
 
 		public async Task UpdateAsync(Company company)
 		{
-			await using var session = _driver.AsyncSession();
-
 			var query = @"
-                MATCH (c:Company {Id: $id})
-                SET c.CompanyName = $companyName,
-                    c.PIB = $pib,
-                    c.Address = $address,
-                    c.LogoUrl = $logoUrl,
-                    c.ContactEmail = $contactEmail,
-                    c.Website = $website,
-                    c.Description = $description,
-                    c.CompanyType = $companyType,
-                    c.CompanyStatus = $companyStatus,
-                    c.MaxCommissionRate = $maxCommissionRate,
-                    c.SaldoAmount = $saldoAmount,
-                    c.CreatedAt = $createdAt,
-                    c.ProofFileUrl = $proofFileUrl";
+                MATCH (c:Company { Id: $Id })
+                SET c.CompanyName = $CompanyName,
+                    c.PIB = $PIB,
+                    c.Address = $Address,
+                    c.LogoUrl = $LogoUrl,
+                    c.ContactEmail = $ContactEmail,
+                    c.Website = $Website,
+                    c.Description = $Description,
+                    c.CompanyType = $CompanyType,
+                    c.CompanyStatus = $CompanyStatus,
+                    c.MaxCommissionRate = $MaxCommissionRate,
+                    c.SaldoAmount = $SaldoAmount,
+                    c.CreatedAt = $CreatedAt,
+                    c.ProofFileUrl = $ProofFileUrl
+            ";
 
-			var parameters = new Dictionary<string, object>
+			var session = _driver.AsyncSession();
+			try
 			{
-				["id"] = company.Id,
-				["companyName"] = company.CompanyName,
-				["pib"] = company.PIB,
-				["address"] = company.Address,
-				["logoUrl"] = company.LogoUrl ?? "",
-				["contactEmail"] = company.ContactEmail,
-				["website"] = company.Website ?? "",
-				["description"] = company.Description ?? "",
-				["companyType"] = (int)company.CompanyType,
-				["companyStatus"] = (int)company.CompanyStatus,
-				["maxCommissionRate"] = company.MaxCommissionRate ?? 0m,
-				["saldoAmount"] = company.SaldoAmount ?? 0m,
-				["createdAt"] = company.CreatedAt.ToString("o"),
-				["proofFileUrl"] = company.ProofFileUrl ?? ""
-			};
-
-			await session.WriteTransactionAsync(async tx =>
+				await session.RunAsync(query, new
+				{
+					company.Id,
+					company.CompanyName,
+					company.PIB,
+					company.Address,
+					company.LogoUrl,
+					company.ContactEmail,
+					company.Website,
+					company.Description,
+					CompanyType = (int)company.CompanyType,
+					CompanyStatus = (int)company.CompanyStatus,
+					company.MaxCommissionRate,
+					company.SaldoAmount,
+					company.CreatedAt,
+					company.ProofFileUrl
+				});
+			}
+			finally
 			{
-				await tx.RunAsync(query, parameters);
-			});
+				await session.CloseAsync();
+			}
 		}
 
-		public async Task DeleteAsync(int id)
-		{
-			await using var session = _driver.AsyncSession();
-
-			var query = "MATCH (c:Company {Id: $id}) DETACH DELETE c";
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, new { id });
-			});
-		}
-
-		// Helper to map Neo4j node to Company entity
-		private Company MapNodeToCompany(INode node)
+		private Company MapCompanyNode(INode node)
 		{
 			return new Company
 			{
-				Id = (int)(long)node.Properties["Id"],
-				CompanyName = (string)node.Properties["CompanyName"],
-				PIB = (string)node.Properties["PIB"],
-				Address = (string)node.Properties["Address"],
-				LogoUrl = node.Properties.ContainsKey("LogoUrl") ? (string)node.Properties["LogoUrl"] : null,
-				ContactEmail = (string)node.Properties["ContactEmail"],
-				Website = node.Properties.ContainsKey("Website") ? (string)node.Properties["Website"] : null,
-				Description = node.Properties.ContainsKey("Description") ? (string)node.Properties["Description"] : null,
-				CompanyType = (CompanyType)(int)(long)node.Properties["CompanyType"],
-				CompanyStatus = (CompanyStatus)(int)(long)node.Properties["CompanyStatus"],
-				MaxCommissionRate = node.Properties.ContainsKey("MaxCommissionRate") ? (decimal)(double)node.Properties["MaxCommissionRate"] : null,
-				SaldoAmount = node.Properties.ContainsKey("SaldoAmount") ? (decimal)(double)node.Properties["SaldoAmount"] : null,
-				CreatedAt = node.Properties.ContainsKey("CreatedAt") ? DateTime.Parse((string)node.Properties["CreatedAt"]) : DateTime.MinValue,
-				ProofFileUrl = node.Properties.ContainsKey("ProofFileUrl") ? (string)node.Properties["ProofFileUrl"] : null
+				Id = node["Id"].As<int>(),
+				CompanyName = node["CompanyName"].As<string>(),
+				PIB = node["PIB"].As<string>(),
+				Address = node["Address"].As<string>(),
+				LogoUrl = node.Properties.ContainsKey("LogoUrl") ? node["LogoUrl"].As<string?>() : null,
+				ContactEmail = node["ContactEmail"].As<string>(),
+				Website = node.Properties.ContainsKey("Website") ? node["Website"].As<string?>() : null,
+				Description = node.Properties.ContainsKey("Description") ? node["Description"].As<string?>() : null,
+				CompanyType = (CompanyType)node["CompanyType"].As<int>(),
+				CompanyStatus = (CompanyStatus)node["CompanyStatus"].As<int>(),
+				MaxCommissionRate = node.Properties.ContainsKey("MaxCommissionRate") ? node["MaxCommissionRate"].As<decimal?>() : null,
+				SaldoAmount = node.Properties.ContainsKey("SaldoAmount") ? node["SaldoAmount"].As<decimal?>() : null,
+				CreatedAt = node["CreatedAt"].As<DateTime>(),
+				ProofFileUrl = node.Properties.ContainsKey("ProofFileUrl") ? node["ProofFileUrl"].As<string?>() : null
 			};
 		}
 	}

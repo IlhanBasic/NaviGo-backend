@@ -7,7 +7,7 @@ using NaviGoApi.Domain.Interfaces;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
-	internal class VehicleNeo4jRepository 
+	public class VehicleNeo4jRepository : IVehicleRepository
 	{
 		private readonly IDriver _driver;
 
@@ -19,47 +19,47 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		public async Task AddAsync(Vehicle vehicle)
 		{
 			var query = @"
-                CREATE (v:Vehicle {
-                    Id: $id,
-                    CompanyId: $companyId,
-                    Brand: $brand,
-                    Model: $model,
-                    EngineCapacityCc: $engineCapacityCc,
-                    VehicleTypeId: $vehicleTypeId,
-                    RegistrationNumber: $registrationNumber,
-                    CapacityKg: $capacityKg,
-                    ManufactureYear: $manufactureYear,
-                    VehicleStatus: $vehicleStatus,
-                    LastInspectionDate: $lastInspectionDate,
-                    InsuranceExpiry: $insuranceExpiry,
-                    CurrentLocationId: $currentLocationId,
-                    CreatedAt: $createdAt,
-                    Categories: $categories
-                })";
+				CREATE (v:Vehicle {
+					id: $id,
+					companyId: $companyId,
+					brand: $brand,
+					model: $model,
+					engineCapacityCc: $engineCapacityCc,
+					vehiclePicture: $vehiclePicture,
+					vehicleTypeId: $vehicleTypeId,
+					registrationNumber: $registrationNumber,
+					capacityKg: $capacityKg,
+					manufactureYear: $manufactureYear,
+					vehicleStatus: $vehicleStatus,
+					lastInspectionDate: datetime($lastInspectionDate),
+					insuranceExpiry: datetime($insuranceExpiry),
+					currentLocationId: $currentLocationId,
+					createdAt: datetime($createdAt),
+					categories: $categories
+				})";
 
-			var parameters = new Dictionary<string, object?>
-			{
-				{ "id", vehicle.Id },
-				{ "companyId", vehicle.CompanyId },
-				{ "brand", vehicle.Brand },
-				{ "model", vehicle.Model },
-				{ "engineCapacityCc", vehicle.EngineCapacityCc },
-				{ "vehicleTypeId", vehicle.VehicleTypeId },
-				{ "registrationNumber", vehicle.RegistrationNumber },
-				{ "capacityKg", vehicle.CapacityKg },
-				{ "manufactureYear", vehicle.ManufactureYear },
-				{ "vehicleStatus", (int)vehicle.VehicleStatus },
-				{ "lastInspectionDate", vehicle.LastInspectionDate?.ToString("o") },
-				{ "insuranceExpiry", vehicle.InsuranceExpiry?.ToString("o") },
-				{ "currentLocationId", vehicle.CurrentLocationId },
-				{ "createdAt", vehicle.CreatedAt.ToString("o") },
-				{ "categories", vehicle.Categories ?? "" }
-			};
-
-			await using var session = _driver.AsyncSession();
+			var session = _driver.AsyncSession();
 			try
 			{
-				await session.RunAsync(query, parameters);
+				await session.RunAsync(query, new
+				{
+					id = vehicle.Id,
+					companyId = vehicle.CompanyId,
+					brand = vehicle.Brand,
+					model = vehicle.Model,
+					engineCapacityCc = vehicle.EngineCapacityCc,
+					vehiclePicture = vehicle.VehiclePicture ?? "",
+					vehicleTypeId = vehicle.VehicleTypeId,
+					registrationNumber = vehicle.RegistrationNumber,
+					capacityKg = vehicle.CapacityKg,
+					manufactureYear = vehicle.ManufactureYear,
+					vehicleStatus = vehicle.VehicleStatus.ToString(),
+					lastInspectionDate = vehicle.LastInspectionDate?.ToString("o"),
+					insuranceExpiry = vehicle.InsuranceExpiry?.ToString("o"),
+					currentLocationId = vehicle.CurrentLocationId,
+					createdAt = vehicle.CreatedAt.ToString("o"),
+					categories = vehicle.Categories ?? ""
+				});
 			}
 			finally
 			{
@@ -67,14 +67,11 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			}
 		}
 
-		// Implementacija Delete po interfejsu, prima Vehicle, a ti si koristio int id - ispravljeno:
-		public async void Delete(Vehicle vehicle)
+		public async Task DeleteAsync(Vehicle vehicle)
 		{
-			var query = @"
-                MATCH (v:Vehicle {Id: $id})
-                DETACH DELETE v";
+			var query = @"MATCH (v:Vehicle {id: $id}) DETACH DELETE v";
 
-			await using var session = _driver.AsyncSession();
+			var session = _driver.AsyncSession();
 			try
 			{
 				await session.RunAsync(query, new { id = vehicle.Id });
@@ -88,93 +85,95 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		public async Task<IEnumerable<Vehicle>> GetAllAsync()
 		{
 			var query = @"MATCH (v:Vehicle) RETURN v";
-			var vehicles = new List<Vehicle>();
 
-			await using var session = _driver.AsyncSession();
+			var session = _driver.AsyncSession();
 			try
 			{
-				var cursor = await session.RunAsync(query);
-				while (await cursor.FetchAsync())
+				var result = await session.RunAsync(query);
+				var list = new List<Vehicle>();
+
+				await result.ForEachAsync(record =>
 				{
-					var node = cursor.Current["v"].As<INode>();
-					vehicles.Add(MapNodeToVehicle(node));
-				}
+					var node = record["v"].As<INode>();
+					list.Add(NodeToEntity(node));
+				});
+
+				return list;
 			}
 			finally
 			{
 				await session.CloseAsync();
 			}
-			return vehicles;
 		}
 
 		public async Task<IEnumerable<Vehicle>> GetAvailableVehiclesAsync()
 		{
 			var query = @"
-                MATCH (v:Vehicle)
-                WHERE v.VehicleStatus = $status
-                RETURN v";
+				MATCH (v:Vehicle)
+				WHERE v.vehicleStatus = $status
+				RETURN v";
 
-			var vehicles = new List<Vehicle>();
-
-			await using var session = _driver.AsyncSession();
+			var session = _driver.AsyncSession();
 			try
 			{
-				var cursor = await session.RunAsync(query, new { status = (int)VehicleStatus.Free });
-				while (await cursor.FetchAsync())
+				var result = await session.RunAsync(query, new { status = VehicleStatus.Free.ToString() });
+				var list = new List<Vehicle>();
+
+				await result.ForEachAsync(record =>
 				{
-					var node = cursor.Current["v"].As<INode>();
-					vehicles.Add(MapNodeToVehicle(node));
-				}
+					var node = record["v"].As<INode>();
+					list.Add(NodeToEntity(node));
+				});
+
+				return list;
 			}
 			finally
 			{
 				await session.CloseAsync();
 			}
-			return vehicles;
 		}
 
 		public async Task<IEnumerable<Vehicle>> GetByCompanyIdAsync(int companyId)
 		{
 			var query = @"
-                MATCH (v:Vehicle {CompanyId: $companyId})
-                RETURN v";
+				MATCH (v:Vehicle)
+				WHERE v.companyId = $companyId
+				RETURN v";
 
-			var vehicles = new List<Vehicle>();
-
-			await using var session = _driver.AsyncSession();
+			var session = _driver.AsyncSession();
 			try
 			{
-				var cursor = await session.RunAsync(query, new { companyId });
-				while (await cursor.FetchAsync())
+				var result = await session.RunAsync(query, new { companyId });
+				var list = new List<Vehicle>();
+
+				await result.ForEachAsync(record =>
 				{
-					var node = cursor.Current["v"].As<INode>();
-					vehicles.Add(MapNodeToVehicle(node));
-				}
+					var node = record["v"].As<INode>();
+					list.Add(NodeToEntity(node));
+				});
+
+				return list;
 			}
 			finally
 			{
 				await session.CloseAsync();
 			}
-			return vehicles;
 		}
 
 		public async Task<Vehicle?> GetByIdAsync(int id)
 		{
-			var query = @"
-                MATCH (v:Vehicle {Id: $id})
-                RETURN v
-                LIMIT 1";
+			var query = @"MATCH (v:Vehicle {id: $id}) RETURN v LIMIT 1";
 
-			await using var session = _driver.AsyncSession();
+			var session = _driver.AsyncSession();
 			try
 			{
-				var cursor = await session.RunAsync(query, new { id });
-				if (await cursor.FetchAsync())
-				{
-					var node = cursor.Current["v"].As<INode>();
-					return MapNodeToVehicle(node);
-				}
-				return null;
+				var result = await session.RunAsync(query, new { id });
+
+				var found = await result.FetchAsync();
+				if (!found) return null;
+
+				var node = result.Current["v"].As<INode>();
+				return NodeToEntity(node);
 			}
 			finally
 			{
@@ -182,48 +181,46 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			}
 		}
 
-		public async void Update(Vehicle vehicle)
+		public async Task UpdateAsync(Vehicle vehicle)
 		{
 			var query = @"
-                MATCH (v:Vehicle {Id: $id})
-                SET v.CompanyId = $companyId,
-                    v.Brand = $brand,
-                    v.Model = $model,
-                    v.EngineCapacityCc = $engineCapacityCc,
-                    v.VehicleTypeId = $vehicleTypeId,
-                    v.RegistrationNumber = $registrationNumber,
-                    v.CapacityKg = $capacityKg,
-                    v.ManufactureYear = $manufactureYear,
-                    v.VehicleStatus = $vehicleStatus,
-                    v.LastInspectionDate = $lastInspectionDate,
-                    v.InsuranceExpiry = $insuranceExpiry,
-                    v.CurrentLocationId = $currentLocationId,
-                    v.CreatedAt = $createdAt,
-                    v.Categories = $categories";
+				MATCH (v:Vehicle {id: $id})
+				SET v.companyId = $companyId,
+					v.brand = $brand,
+					v.model = $model,
+					v.engineCapacityCc = $engineCapacityCc,
+					v.vehiclePicture = $vehiclePicture,
+					v.vehicleTypeId = $vehicleTypeId,
+					v.registrationNumber = $registrationNumber,
+					v.capacityKg = $capacityKg,
+					v.manufactureYear = $manufactureYear,
+					v.vehicleStatus = $vehicleStatus,
+					v.lastInspectionDate = datetime($lastInspectionDate),
+					v.insuranceExpiry = datetime($insuranceExpiry),
+					v.currentLocationId = $currentLocationId,
+					v.categories = $categories";
 
-			var parameters = new Dictionary<string, object?>
-			{
-				{ "id", vehicle.Id },
-				{ "companyId", vehicle.CompanyId },
-				{ "brand", vehicle.Brand },
-				{ "model", vehicle.Model },
-				{ "engineCapacityCc", vehicle.EngineCapacityCc },
-				{ "vehicleTypeId", vehicle.VehicleTypeId },
-				{ "registrationNumber", vehicle.RegistrationNumber },
-				{ "capacityKg", vehicle.CapacityKg },
-				{ "manufactureYear", vehicle.ManufactureYear },
-				{ "vehicleStatus", (int)vehicle.VehicleStatus },
-				{ "lastInspectionDate", vehicle.LastInspectionDate?.ToString("o") },
-				{ "insuranceExpiry", vehicle.InsuranceExpiry?.ToString("o") },
-				{ "currentLocationId", vehicle.CurrentLocationId },
-				{ "createdAt", vehicle.CreatedAt.ToString("o") },
-				{ "categories", vehicle.Categories ?? "" }
-			};
-
-			await using var session = _driver.AsyncSession();
+			var session = _driver.AsyncSession();
 			try
 			{
-				await session.RunAsync(query, parameters);
+				await session.RunAsync(query, new
+				{
+					id = vehicle.Id,
+					companyId = vehicle.CompanyId,
+					brand = vehicle.Brand,
+					model = vehicle.Model,
+					engineCapacityCc = vehicle.EngineCapacityCc,
+					vehiclePicture = vehicle.VehiclePicture ?? "",
+					vehicleTypeId = vehicle.VehicleTypeId,
+					registrationNumber = vehicle.RegistrationNumber,
+					capacityKg = vehicle.CapacityKg,
+					manufactureYear = vehicle.ManufactureYear,
+					vehicleStatus = vehicle.VehicleStatus.ToString(),
+					lastInspectionDate = vehicle.LastInspectionDate?.ToString("o"),
+					insuranceExpiry = vehicle.InsuranceExpiry?.ToString("o"),
+					currentLocationId = vehicle.CurrentLocationId,
+					categories = vehicle.Categories ?? ""
+				});
 			}
 			finally
 			{
@@ -231,31 +228,25 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			}
 		}
 
-		private Vehicle MapNodeToVehicle(INode node)
+		private Vehicle NodeToEntity(INode node)
 		{
 			return new Vehicle
 			{
-				Id = (int)(long)node.Properties["Id"],
-				CompanyId = (int)(long)node.Properties["CompanyId"],
-				Brand = node.Properties["Brand"].As<string>(),
-				Model = node.Properties["Model"].As<string>(),
-				EngineCapacityCc = (int)(long)node.Properties["EngineCapacityCc"],
-				VehicleTypeId = (int)(long)node.Properties["VehicleTypeId"],
-				RegistrationNumber = node.Properties["RegistrationNumber"].As<string>(),
-				CapacityKg = (int)(long)node.Properties["CapacityKg"],
-				ManufactureYear = (int)(long)node.Properties["ManufactureYear"],
-				VehicleStatus = (VehicleStatus)(int)(long)node.Properties["VehicleStatus"],
-				LastInspectionDate = node.Properties.ContainsKey("LastInspectionDate") && node.Properties["LastInspectionDate"] != null
-					? DateTime.Parse(node.Properties["LastInspectionDate"].As<string>())
-					: (DateTime?)null,
-				InsuranceExpiry = node.Properties.ContainsKey("InsuranceExpiry") && node.Properties["InsuranceExpiry"] != null
-					? DateTime.Parse(node.Properties["InsuranceExpiry"].As<string>())
-					: (DateTime?)null,
-				CurrentLocationId = node.Properties.ContainsKey("CurrentLocationId") && node.Properties["CurrentLocationId"] != null
-					? (int?)(long)node.Properties["CurrentLocationId"]
-					: null,
-				CreatedAt = DateTime.Parse(node.Properties["CreatedAt"].As<string>()),
-				Categories = node.Properties.ContainsKey("Categories") ? node.Properties["Categories"].As<string>() : null
+				Id = node.Properties.ContainsKey("id") ? Convert.ToInt32(node.Properties["id"]) : 0,
+				CompanyId = node.Properties.ContainsKey("companyId") ? Convert.ToInt32(node.Properties["companyId"]) : 0,
+				Brand = node.Properties.ContainsKey("brand") ? node.Properties["brand"].ToString()! : string.Empty,
+				Model = node.Properties.ContainsKey("model") ? node.Properties["model"].ToString()! : string.Empty,
+				EngineCapacityCc = node.Properties.ContainsKey("engineCapacityCc") ? Convert.ToInt32(node.Properties["engineCapacityCc"]) : 0,
+				VehiclePicture = node.Properties.ContainsKey("vehiclePicture") ? node.Properties["vehiclePicture"].ToString() : "",
+				VehicleTypeId = node.Properties.ContainsKey("vehicleTypeId") ? Convert.ToInt32(node.Properties["vehicleTypeId"]) : 0,
+				RegistrationNumber = node.Properties.ContainsKey("registrationNumber") ? node.Properties["registrationNumber"].ToString()! : string.Empty,
+				CapacityKg = node.Properties.ContainsKey("capacityKg") ? Convert.ToInt32(node.Properties["capacityKg"]) : 0,
+				ManufactureYear = node.Properties.ContainsKey("manufactureYear") ? Convert.ToInt32(node.Properties["manufactureYear"]) : 0,
+				VehicleStatus = node.Properties.ContainsKey("vehicleStatus") ? Enum.Parse<VehicleStatus>(node.Properties["vehicleStatus"].ToString()!) : VehicleStatus.Free,
+				LastInspectionDate = node.Properties.ContainsKey("lastInspectionDate") && node.Properties["lastInspectionDate"] != null ? DateTime.Parse(node.Properties["lastInspectionDate"].ToString()!) : null,
+				InsuranceExpiry = node.Properties.ContainsKey("insuranceExpiry") && node.Properties["insuranceExpiry"] != null ? DateTime.Parse(node.Properties["insuranceExpiry"].ToString()!) : null,
+				CurrentLocationId = node.Properties.ContainsKey("currentLocationId") && node.Properties["currentLocationId"] != null ? (int?)Convert.ToInt32(node.Properties["currentLocationId"]) : null,
+				Categories = node.Properties.ContainsKey("categories") ? node.Properties["categories"].ToString() : null
 			};
 		}
 	}

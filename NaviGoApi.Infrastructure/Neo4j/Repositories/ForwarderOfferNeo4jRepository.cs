@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Neo4j.Driver;
 using NaviGoApi.Domain.Entities;
+using NaviGoApi.Domain.Interfaces;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
-	public class ForwarderOfferNeo4jRepository
+	public class ForwarderOfferNeo4jRepository : IForwarderOfferRepository
 	{
 		private readonly IDriver _driver;
 
@@ -18,238 +20,143 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		public async Task AddAsync(ForwarderOffer offer)
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                CREATE (fo:ForwarderOffer {
-                    Id: $id,
-                    RouteId: $routeId,
-                    ForwarderId: $forwarderId,
-                    CommissionRate: $commissionRate,
-                    ForwarderOfferStatus: $status,
-                    RejectionReason: $rejectionReason,
-                    CreatedAt: $createdAt,
-                    ExpiresAt: $expiresAt,
-                    DiscountRate: $discountRate
-                })
-                WITH fo
-                MATCH (r:Route {Id: $routeId}), (f:Company {Id: $forwarderId})
-                CREATE (fo)-[:FOR_ROUTE]->(r)
-                CREATE (fo)-[:BY_FORWARDER]->(f)
-            ";
-
-			var parameters = new Dictionary<string, object>
-			{
-				["id"] = offer.Id,
-				["routeId"] = offer.RouteId,
-				["forwarderId"] = offer.ForwarderId,
-				["commissionRate"] = offer.CommissionRate,
-				["status"] = (int)offer.ForwarderOfferStatus,
-				["rejectionReason"] = offer.RejectionReason ?? "",
-				["createdAt"] = offer.CreatedAt.ToString("o"),
-				["expiresAt"] = offer.ExpiresAt.ToString("o"),
-				["discountRate"] = offer.DiscountRate
-			};
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, parameters);
-			});
+			await session.RunAsync(@"
+                CREATE (o:ForwarderOffer {
+                    Id: $Id,
+                    RouteId: $RouteId,
+                    ForwarderId: $ForwarderId,
+                    CommissionRate: $CommissionRate,
+                    ForwarderOfferStatus: $ForwarderOfferStatus,
+                    RejectionReason: $RejectionReason,
+                    CreatedAt: $CreatedAt,
+                    ExpiresAt: $ExpiresAt,
+                    DiscountRate: $DiscountRate
+                })",
+				new
+				{
+					offer.Id,
+					offer.RouteId,
+					offer.ForwarderId,
+					offer.CommissionRate,
+					ForwarderOfferStatus = (int)offer.ForwarderOfferStatus,
+					offer.RejectionReason,
+					offer.CreatedAt,
+					offer.ExpiresAt,
+					offer.DiscountRate
+				});
 		}
 
-		public async Task DeleteAsync(int id)
+		public async Task DeleteAsync(ForwarderOffer offer)
 		{
 			await using var session = _driver.AsyncSession();
+			await session.RunAsync(@"
+                MATCH (o:ForwarderOffer {Id: $Id})
+                DETACH DELETE o",
+				new { offer.Id });
+		}
 
-			var query = "MATCH (fo:ForwarderOffer {Id: $id}) DETACH DELETE fo";
+		public async Task<IEnumerable<ForwarderOffer>> GetActiveOffersAsync()
+		{
+			await using var session = _driver.AsyncSession();
+			var now = DateTime.UtcNow;
 
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, new { id });
-			});
+			var cursor = await session.RunAsync(@"
+                MATCH (o:ForwarderOffer)
+                WHERE o.ForwarderOfferStatus = $Status AND o.ExpiresAt > $Now
+                RETURN o",
+				new { Status = (int)ForwarderOfferStatus.Pending, Now = now });
+
+			var records = await cursor.ToListAsync();
+			return records.Select(r => MapNodeToEntity(r["o"].As<INode>())).ToList();
 		}
 
 		public async Task<IEnumerable<ForwarderOffer>> GetAllAsync()
 		{
 			await using var session = _driver.AsyncSession();
+			var cursor = await session.RunAsync("MATCH (o:ForwarderOffer) RETURN o");
 
-			var query = @"
-                MATCH (fo:ForwarderOffer)-[:FOR_ROUTE]->(r:Route),
-                      (fo)-[:BY_FORWARDER]->(f:Company)
-                RETURN fo, r, f
-            ";
-
-			return await session.ReadTransactionAsync(async tx =>
-			{
-				var cursor = await tx.RunAsync(query);
-				var records = await cursor.ToListAsync();
-
-				var offers = new List<ForwarderOffer>();
-
-				foreach (var record in records)
-				{
-					var nodeOffer = record["fo"].As<INode>();
-					var nodeRoute = record["r"].As<INode>();
-					var nodeForwarder = record["f"].As<INode>();
-
-					var offer = MapNodeToForwarderOffer(nodeOffer);
-					offer.Route = new Route { Id = (int)(long)nodeRoute.Properties["Id"] };
-					offer.Forwarder = new Company { Id = (int)(long)nodeForwarder.Properties["Id"] };
-
-					offers.Add(offer);
-				}
-
-				return offers;
-			});
-		}
-
-		public async Task<ForwarderOffer?> GetByIdAsync(int id)
-		{
-			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (fo:ForwarderOffer {Id: $id})-[:FOR_ROUTE]->(r:Route),
-                      (fo)-[:BY_FORWARDER]->(f:Company)
-                RETURN fo, r, f
-                LIMIT 1
-            ";
-
-			return await session.ReadTransactionAsync(async tx =>
-			{
-				var cursor = await tx.RunAsync(query, new { id });
-				var hasRecord = await cursor.FetchAsync();
-
-				if (!hasRecord) return null;
-
-				var record = cursor.Current;
-
-				var nodeOffer = record["fo"].As<INode>();
-				var nodeRoute = record["r"].As<INode>();
-				var nodeForwarder = record["f"].As<INode>();
-
-				var offer = MapNodeToForwarderOffer(nodeOffer);
-				offer.Route = new Route { Id = (int)(long)nodeRoute.Properties["Id"] };
-				offer.Forwarder = new Company { Id = (int)(long)nodeForwarder.Properties["Id"] };
-
-				return offer;
-			});
+			var records = await cursor.ToListAsync();
+			return records.Select(r => MapNodeToEntity(r["o"].As<INode>())).ToList();
 		}
 
 		public async Task<IEnumerable<ForwarderOffer>> GetByForwarderIdAsync(int forwarderId)
 		{
 			await using var session = _driver.AsyncSession();
+			var cursor = await session.RunAsync(@"
+                MATCH (o:ForwarderOffer {ForwarderId: $ForwarderId})
+                RETURN o",
+				new { ForwarderId = forwarderId });
 
-			var query = @"
-                MATCH (fo:ForwarderOffer {ForwarderId: $forwarderId})-[:FOR_ROUTE]->(r:Route),
-                      (fo)-[:BY_FORWARDER]->(f:Company)
-                RETURN fo, r, f
-            ";
+			var records = await cursor.ToListAsync();
+			return records.Select(r => MapNodeToEntity(r["o"].As<INode>())).ToList();
+		}
 
-			return await session.ReadTransactionAsync(async tx =>
-			{
-				var cursor = await tx.RunAsync(query, new { forwarderId });
-				var records = await cursor.ToListAsync();
+		public async Task<ForwarderOffer?> GetByIdAsync(int id)
+		{
+			await using var session = _driver.AsyncSession();
+			var cursor = await session.RunAsync(@"
+                MATCH (o:ForwarderOffer {Id: $Id})
+                RETURN o",
+				new { Id = id });
 
-				var offers = new List<ForwarderOffer>();
+			var records = await cursor.ToListAsync();
+			if (records.Count == 0) return null;
 
-				foreach (var record in records)
-				{
-					var nodeOffer = record["fo"].As<INode>();
-					var nodeRoute = record["r"].As<INode>();
-					var nodeForwarder = record["f"].As<INode>();
-
-					var offer = MapNodeToForwarderOffer(nodeOffer);
-					offer.Route = new Route { Id = (int)(long)nodeRoute.Properties["Id"] };
-					offer.Forwarder = new Company { Id = (int)(long)nodeForwarder.Properties["Id"] };
-
-					offers.Add(offer);
-				}
-
-				return offers;
-			});
+			return MapNodeToEntity(records[0]["o"].As<INode>());
 		}
 
 		public async Task<IEnumerable<ForwarderOffer>> GetByRouteIdAsync(int routeId)
 		{
 			await using var session = _driver.AsyncSession();
+			var cursor = await session.RunAsync(@"
+                MATCH (o:ForwarderOffer {RouteId: $RouteId})
+                RETURN o",
+				new { RouteId = routeId });
 
-			var query = @"
-                MATCH (fo:ForwarderOffer {RouteId: $routeId})-[:FOR_ROUTE]->(r:Route),
-                      (fo)-[:BY_FORWARDER]->(f:Company)
-                RETURN fo, r, f
-            ";
-
-			return await session.ReadTransactionAsync(async tx =>
-			{
-				var cursor = await tx.RunAsync(query, new { routeId });
-				var records = await cursor.ToListAsync();
-
-				var offers = new List<ForwarderOffer>();
-
-				foreach (var record in records)
-				{
-					var nodeOffer = record["fo"].As<INode>();
-					var nodeRoute = record["r"].As<INode>();
-					var nodeForwarder = record["f"].As<INode>();
-
-					var offer = MapNodeToForwarderOffer(nodeOffer);
-					offer.Route = new Route { Id = (int)(long)nodeRoute.Properties["Id"] };
-					offer.Forwarder = new Company { Id = (int)(long)nodeForwarder.Properties["Id"] };
-
-					offers.Add(offer);
-				}
-
-				return offers;
-			});
+			var records = await cursor.ToListAsync();
+			return records.Select(r => MapNodeToEntity(r["o"].As<INode>())).ToList();
 		}
 
 		public async Task UpdateAsync(ForwarderOffer offer)
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (fo:ForwarderOffer {Id: $id})
-                SET fo.RouteId = $routeId,
-                    fo.ForwarderId = $forwarderId,
-                    fo.CommissionRate = $commissionRate,
-                    fo.ForwarderOfferStatus = $status,
-                    fo.RejectionReason = $rejectionReason,
-                    fo.CreatedAt = $createdAt,
-                    fo.ExpiresAt = $expiresAt,
-                    fo.DiscountRate = $discountRate
-            ";
-
-			var parameters = new Dictionary<string, object>
-			{
-				["id"] = offer.Id,
-				["routeId"] = offer.RouteId,
-				["forwarderId"] = offer.ForwarderId,
-				["commissionRate"] = offer.CommissionRate,
-				["status"] = (int)offer.ForwarderOfferStatus,
-				["rejectionReason"] = offer.RejectionReason ?? "",
-				["createdAt"] = offer.CreatedAt.ToString("o"),
-				["expiresAt"] = offer.ExpiresAt.ToString("o"),
-				["discountRate"] = offer.DiscountRate
-			};
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, parameters);
-			});
+			await session.RunAsync(@"
+                MATCH (o:ForwarderOffer {Id: $Id})
+                SET o.RouteId = $RouteId,
+                    o.ForwarderId = $ForwarderId,
+                    o.CommissionRate = $CommissionRate,
+                    o.ForwarderOfferStatus = $ForwarderOfferStatus,
+                    o.RejectionReason = $RejectionReason,
+                    o.CreatedAt = $CreatedAt,
+                    o.ExpiresAt = $ExpiresAt,
+                    o.DiscountRate = $DiscountRate",
+				new
+				{
+					offer.Id,
+					offer.RouteId,
+					offer.ForwarderId,
+					offer.CommissionRate,
+					ForwarderOfferStatus = (int)offer.ForwarderOfferStatus,
+					offer.RejectionReason,
+					offer.CreatedAt,
+					offer.ExpiresAt,
+					offer.DiscountRate
+				});
 		}
 
-		private ForwarderOffer MapNodeToForwarderOffer(INode node)
+		private ForwarderOffer MapNodeToEntity(INode node)
 		{
 			return new ForwarderOffer
 			{
-				Id = (int)(long)node.Properties["Id"],
-				RouteId = (int)(long)node.Properties["RouteId"],
-				ForwarderId = (int)(long)node.Properties["ForwarderId"],
-				CommissionRate = Convert.ToDecimal((double)node.Properties["CommissionRate"]),
-				ForwarderOfferStatus = (ForwarderOfferStatus)(int)(long)node.Properties["ForwarderOfferStatus"],
-				RejectionReason = node.Properties.ContainsKey("RejectionReason") ? (string)node.Properties["RejectionReason"] : null,
-				CreatedAt = DateTime.Parse((string)node.Properties["CreatedAt"]),
-				ExpiresAt = DateTime.Parse((string)node.Properties["ExpiresAt"]),
-				DiscountRate = Convert.ToDecimal((double)node.Properties["DiscountRate"])
+				Id = node.Properties["Id"].As<int>(),
+				RouteId = node.Properties["RouteId"].As<int>(),
+				ForwarderId = node.Properties["ForwarderId"].As<int>(),
+				CommissionRate = node.Properties["CommissionRate"].As<decimal>(),
+				ForwarderOfferStatus = (ForwarderOfferStatus)node.Properties["ForwarderOfferStatus"].As<int>(),
+				RejectionReason = node.Properties.ContainsKey("RejectionReason") ? node.Properties["RejectionReason"].As<string?>() : null,
+				CreatedAt = node.Properties["CreatedAt"].As<DateTime>(),
+				ExpiresAt = node.Properties["ExpiresAt"].As<DateTime>(),
+				DiscountRate = node.Properties["DiscountRate"].As<decimal>()
 			};
 		}
 	}

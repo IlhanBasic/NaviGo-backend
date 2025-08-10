@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Neo4j.Driver;
 using NaviGoApi.Domain.Entities;
+using NaviGoApi.Domain.Interfaces;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
-	public class DelayPenaltyNeo4jRepository
+	public class DelayPenaltyNeo4jRepository : IDelayPenaltyRepository
 	{
 		private readonly IDriver _driver;
 
@@ -18,130 +19,100 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		public async Task AddAsync(DelayPenalty penalty)
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                CREATE (dp:DelayPenalty {
-                    Id: $id,
-                    ShipmentId: $shipmentId,
-                    CalculatedAt: $calculatedAt,
-                    DelayHours: $delayHours,
-                    PenaltyAmount: $penaltyAmount,
-                    DelayPenaltiesStatus: $status
-                })
-                WITH dp
-                MATCH (s:Shipment {Id: $shipmentId})
-                CREATE (dp)-[:FOR_SHIPMENT]->(s)
-            ";
-
-			var parameters = new Dictionary<string, object>
-			{
-				["id"] = penalty.Id,
-				["shipmentId"] = penalty.ShipmentId,
-				["calculatedAt"] = penalty.CalculatedAt.ToString("o"),
-				["delayHours"] = penalty.DelayHours,
-				["penaltyAmount"] = penalty.PenaltyAmount,
-				["status"] = (int)penalty.DelayPenaltiesStatus
-			};
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, parameters);
-			});
+			await session.RunAsync(@"
+                CREATE (p:DelayPenalty {
+                    Id: $Id,
+                    ShipmentId: $ShipmentId,
+                    CalculatedAt: $CalculatedAt,
+                    DelayHours: $DelayHours,
+                    PenaltyAmount: $PenaltyAmount,
+                    DelayPenaltiesStatus: $DelayPenaltiesStatus
+                })",
+				new
+				{
+					Id = penalty.Id,
+					ShipmentId = penalty.ShipmentId,
+					CalculatedAt = penalty.CalculatedAt,
+					DelayHours = penalty.DelayHours,
+					PenaltyAmount = penalty.PenaltyAmount,
+					DelayPenaltiesStatus = (int)penalty.DelayPenaltiesStatus
+				});
 		}
 
 		public async Task DeleteAsync(int id)
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = "MATCH (dp:DelayPenalty {Id: $id}) DETACH DELETE dp";
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, new { id });
-			});
+			await session.RunAsync(@"
+                MATCH (p:DelayPenalty {Id: $Id})
+                DETACH DELETE p",
+				new { Id = id });
 		}
 
 		public async Task<IEnumerable<DelayPenalty>> GetAllAsync()
 		{
 			await using var session = _driver.AsyncSession();
+			var cursor = await session.RunAsync(@"
+                MATCH (p:DelayPenalty)
+                RETURN p");
 
-			var query = "MATCH (dp:DelayPenalty) RETURN dp";
+			var records = await cursor.ToListAsync();
+			var list = new List<DelayPenalty>();
 
-			return await session.ReadTransactionAsync(async tx =>
+			foreach (var record in records)
 			{
-				var cursor = await tx.RunAsync(query);
-				var records = await cursor.ToListAsync();
+				var node = record["p"].As<INode>();
+				list.Add(MapNodeToEntity(node));
+			}
 
-				var penalties = new List<DelayPenalty>();
-
-				foreach (var record in records)
-				{
-					var node = record["dp"].As<INode>();
-					penalties.Add(MapNodeToDelayPenalty(node));
-				}
-
-				return penalties;
-			});
+			return list;
 		}
 
 		public async Task<DelayPenalty?> GetByIdAsync(int id)
 		{
 			await using var session = _driver.AsyncSession();
+			var cursor = await session.RunAsync(@"
+                MATCH (p:DelayPenalty {Id: $Id})
+                RETURN p",
+				new { Id = id });
 
-			var query = "MATCH (dp:DelayPenalty {Id: $id}) RETURN dp LIMIT 1";
+			var records = await cursor.ToListAsync();
+			if (records.Count == 0) return null;
 
-			return await session.ReadTransactionAsync(async tx =>
-			{
-				var cursor = await tx.RunAsync(query, new { id });
-				var hasRecord = await cursor.FetchAsync();
-				if (!hasRecord) return null;
-
-				var record = cursor.Current;
-				var node = record["dp"].As<INode>();
-
-				return MapNodeToDelayPenalty(node);
-			});
+			var node = records[0]["p"].As<INode>();
+			return MapNodeToEntity(node);
 		}
 
 		public async Task UpdateAsync(DelayPenalty penalty)
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (dp:DelayPenalty {Id: $id})
-                SET dp.ShipmentId = $shipmentId,
-                    dp.CalculatedAt = $calculatedAt,
-                    dp.DelayHours = $delayHours,
-                    dp.PenaltyAmount = $penaltyAmount,
-                    dp.DelayPenaltiesStatus = $status
-            ";
-
-			var parameters = new Dictionary<string, object>
-			{
-				["id"] = penalty.Id,
-				["shipmentId"] = penalty.ShipmentId,
-				["calculatedAt"] = penalty.CalculatedAt.ToString("o"),
-				["delayHours"] = penalty.DelayHours,
-				["penaltyAmount"] = penalty.PenaltyAmount,
-				["status"] = (int)penalty.DelayPenaltiesStatus
-			};
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, parameters);
-			});
+			await session.RunAsync(@"
+                MATCH (p:DelayPenalty {Id: $Id})
+                SET p.ShipmentId = $ShipmentId,
+                    p.CalculatedAt = $CalculatedAt,
+                    p.DelayHours = $DelayHours,
+                    p.PenaltyAmount = $PenaltyAmount,
+                    p.DelayPenaltiesStatus = $DelayPenaltiesStatus",
+				new
+				{
+					Id = penalty.Id,
+					ShipmentId = penalty.ShipmentId,
+					CalculatedAt = penalty.CalculatedAt,
+					DelayHours = penalty.DelayHours,
+					PenaltyAmount = penalty.PenaltyAmount,
+					DelayPenaltiesStatus = (int)penalty.DelayPenaltiesStatus
+				});
 		}
 
-		private DelayPenalty MapNodeToDelayPenalty(INode node)
+		private DelayPenalty MapNodeToEntity(INode node)
 		{
 			return new DelayPenalty
 			{
-				Id = (int)(long)node.Properties["Id"],
-				ShipmentId = (int)(long)node.Properties["ShipmentId"],
-				CalculatedAt = DateTime.Parse((string)node.Properties["CalculatedAt"]),
-				DelayHours = (int)(long)node.Properties["DelayHours"],
-				PenaltyAmount = Convert.ToDecimal((double)node.Properties["PenaltyAmount"]),
-				DelayPenaltiesStatus = (DelayPenaltyStatus)(int)(long)node.Properties["DelayPenaltiesStatus"]
+				Id = node.Properties["Id"].As<int>(),
+				ShipmentId = node.Properties["ShipmentId"].As<int>(),
+				CalculatedAt = node.Properties["CalculatedAt"].As<DateTime>(),
+				DelayHours = node.Properties["DelayHours"].As<int>(),
+				PenaltyAmount = node.Properties["PenaltyAmount"].As<decimal>(),
+				DelayPenaltiesStatus = (DelayPenaltyStatus)node.Properties["DelayPenaltiesStatus"].As<int>()
 			};
 		}
 	}

@@ -7,7 +7,7 @@ using NaviGoApi.Domain.Interfaces;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
-	internal class VehicleTypeNeo4jRepository : IVehicleTypeRepository
+	public class VehicleTypeNeo4jRepository : IVehicleTypeRepository
 	{
 		private readonly IDriver _driver;
 
@@ -19,25 +19,23 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		public async Task AddAsync(VehicleType vehicleType)
 		{
 			var query = @"
-                CREATE (vt:VehicleType {
-                    Id: $id,
-                    TypeName: $typeName,
-                    Description: $description,
-                    RequiresSpecialLicense: $requiresSpecialLicense
-                })";
-
-			var parameters = new Dictionary<string, object>
-			{
-				{ "id", vehicleType.Id },
-				{ "typeName", vehicleType.TypeName },
-				{ "description", vehicleType.Description ?? "" },
-				{ "requiresSpecialLicense", vehicleType.RequiresSpecialLicense }
-			};
+				CREATE (vt:VehicleType {
+					id: $id,
+					typeName: $typeName,
+					description: $description,
+					requiresSpecialLicense: $requiresSpecialLicense
+				})";
 
 			var session = _driver.AsyncSession();
 			try
 			{
-				await session.RunAsync(query, parameters);
+				await session.RunAsync(query, new
+				{
+					id = vehicleType.Id,
+					typeName = vehicleType.TypeName,
+					description = vehicleType.Description ?? "",
+					requiresSpecialLicense = vehicleType.RequiresSpecialLicense
+				});
 			}
 			finally
 			{
@@ -47,9 +45,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 
 		public async Task DeleteAsync(int id)
 		{
-			var query = @"
-                MATCH (vt:VehicleType {Id: $id})
-                DETACH DELETE vt";
+			var query = @"MATCH (vt:VehicleType {id: $id}) DETACH DELETE vt";
 
 			var session = _driver.AsyncSession();
 			try
@@ -67,40 +63,36 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			var query = @"MATCH (vt:VehicleType) RETURN vt";
 
 			var session = _driver.AsyncSession();
-			var result = new List<VehicleType>();
+			var list = new List<VehicleType>();
 			try
 			{
-				var cursor = await session.RunAsync(query);
-				while (await cursor.FetchAsync())
+				var result = await session.RunAsync(query);
+				await result.ForEachAsync(record =>
 				{
-					var node = cursor.Current["vt"].As<INode>();
-					result.Add(MapNodeToVehicleType(node));
-				}
+					var node = record["vt"].As<INode>();
+					list.Add(NodeToEntity(node));
+				});
+				return list;
 			}
 			finally
 			{
 				await session.CloseAsync();
 			}
-			return result;
 		}
 
 		public async Task<VehicleType?> GetByIdAsync(int id)
 		{
-			var query = @"
-                MATCH (vt:VehicleType {Id: $id})
-                RETURN vt
-                LIMIT 1";
+			var query = @"MATCH (vt:VehicleType {id: $id}) RETURN vt LIMIT 1";
 
 			var session = _driver.AsyncSession();
 			try
 			{
-				var cursor = await session.RunAsync(query, new { id });
-				if (await cursor.FetchAsync())
-				{
-					var node = cursor.Current["vt"].As<INode>();
-					return MapNodeToVehicleType(node);
-				}
-				return null;
+				var result = await session.RunAsync(query, new { id });
+				var found = await result.FetchAsync();
+				if (!found) return null;
+
+				var node = result.Current["vt"].As<INode>();
+				return NodeToEntity(node);
 			}
 			finally
 			{
@@ -111,23 +103,21 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		public async Task UpdateAsync(VehicleType vehicleType)
 		{
 			var query = @"
-                MATCH (vt:VehicleType {Id: $id})
-                SET vt.TypeName = $typeName,
-                    vt.Description = $description,
-                    vt.RequiresSpecialLicense = $requiresSpecialLicense";
-
-			var parameters = new Dictionary<string, object>
-			{
-				{ "id", vehicleType.Id },
-				{ "typeName", vehicleType.TypeName },
-				{ "description", vehicleType.Description ?? "" },
-				{ "requiresSpecialLicense", vehicleType.RequiresSpecialLicense }
-			};
+				MATCH (vt:VehicleType {id: $id})
+				SET vt.typeName = $typeName,
+					vt.description = $description,
+					vt.requiresSpecialLicense = $requiresSpecialLicense";
 
 			var session = _driver.AsyncSession();
 			try
 			{
-				await session.RunAsync(query, parameters);
+				await session.RunAsync(query, new
+				{
+					id = vehicleType.Id,
+					typeName = vehicleType.TypeName,
+					description = vehicleType.Description ?? "",
+					requiresSpecialLicense = vehicleType.RequiresSpecialLicense
+				});
 			}
 			finally
 			{
@@ -135,14 +125,14 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			}
 		}
 
-		private VehicleType MapNodeToVehicleType(INode node)
+		private VehicleType NodeToEntity(INode node)
 		{
 			return new VehicleType
 			{
-				Id = (int)(long)node.Properties["Id"],
-				TypeName = node.Properties["TypeName"].As<string>(),
-				Description = node.Properties.ContainsKey("Description") ? node.Properties["Description"].As<string>() : null,
-				RequiresSpecialLicense = node.Properties["RequiresSpecialLicense"].As<bool>()
+				Id = node.Properties.ContainsKey("id") ? Convert.ToInt32(node.Properties["id"]) : 0,
+				TypeName = node.Properties.ContainsKey("typeName") ? node.Properties["typeName"].ToString()! : string.Empty,
+				Description = node.Properties.ContainsKey("description") ? node.Properties["description"].ToString() : null,
+				RequiresSpecialLicense = node.Properties.ContainsKey("requiresSpecialLicense") && (bool)node.Properties["requiresSpecialLicense"]
 			};
 		}
 	}

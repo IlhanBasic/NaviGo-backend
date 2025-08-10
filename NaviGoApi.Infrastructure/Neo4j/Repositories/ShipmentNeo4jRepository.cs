@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Neo4j.Driver;
 using NaviGoApi.Domain.Entities;
+using NaviGoApi.Domain.Interfaces;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
-	public class ShipmentNeo4jRepository
+	public class ShipmentNeo4jRepository : IShipmentRepository
 	{
 		private readonly IDriver _driver;
 
@@ -17,209 +18,249 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 
 		public async Task AddAsync(Shipment shipment)
 		{
-			await using var session = _driver.AsyncSession();
-
 			var query = @"
                 CREATE (s:Shipment {
-                    Id: $id,
-                    ContractId: $contractId,
-                    VehicleId: $vehicleId,
-                    DriverId: $driverId,
-                    CargoTypeId: $cargoTypeId,
-                    WeightKg: $weightKg,
-                    Priority: $priority,
-                    Description: $description,
-                    Status: $status,
-                    ScheduledDeparture: datetime($scheduledDeparture),
-                    ScheduledArrival: datetime($scheduledArrival),
-                    ActualDeparture: $actualDeparture,
-                    ActualArrival: $actualArrival,
-                    CreatedAt: datetime($createdAt),
-                    DelayHours: $delayHours,
-                    DelayPenaltyAmount: $delayPenaltyAmount,
-                    PenaltyCalculatedAt: $penaltyCalculatedAt
+                    id: $id,
+                    contractId: $contractId,
+                    vehicleId: $vehicleId,
+                    driverId: $driverId,
+                    cargoTypeId: $cargoTypeId,
+                    weightKg: $weightKg,
+                    priority: $priority,
+                    description: $description,
+                    status: $status,
+                    scheduledDeparture: datetime($scheduledDeparture),
+                    scheduledArrival: datetime($scheduledArrival),
+                    actualDeparture: $actualDeparture,
+                    actualArrival: $actualArrival,
+                    createdAt: datetime($createdAt),
+                    delayHours: $delayHours,
+                    delayPenaltyAmount: $delayPenaltyAmount,
+                    penaltyCalculatedAt: $penaltyCalculatedAt
                 })";
 
-			var parameters = new Dictionary<string, object>
+			var session = _driver.AsyncSession();
+			try
 			{
-				["id"] = shipment.Id,
-				["contractId"] = shipment.ContractId,
-				["vehicleId"] = shipment.VehicleId,
-				["driverId"] = shipment.DriverId,
-				["cargoTypeId"] = shipment.CargoTypeId,
-				["weightKg"] = shipment.WeightKg,
-				["priority"] = shipment.Priority,
-				["description"] = shipment.Description ?? "",
-				["status"] = (int)shipment.Status,
-				["scheduledDeparture"] = shipment.ScheduledDeparture.ToString("o"),
-				["scheduledArrival"] = shipment.ScheduledArrival.ToString("o"),
-				["actualDeparture"] = shipment.ActualDeparture?.ToString("o"),
-				["actualArrival"] = shipment.ActualArrival?.ToString("o"),
-				["createdAt"] = shipment.CreatedAt.ToString("o"),
-				["delayHours"] = shipment.DelayHours ?? 0,
-				["delayPenaltyAmount"] = shipment.DelayPenaltyAmount ?? 0m,
-				["penaltyCalculatedAt"] = shipment.PenaltyCalculatedAt?.ToString("o")
-			};
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, parameters);
-			});
-		}
-
-		public async Task UpdateAsync(Shipment shipment)
-		{
-			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (s:Shipment {Id: $id})
-                SET s.ContractId = $contractId,
-                    s.VehicleId = $vehicleId,
-                    s.DriverId = $driverId,
-                    s.CargoTypeId = $cargoTypeId,
-                    s.WeightKg = $weightKg,
-                    s.Priority = $priority,
-                    s.Description = $description,
-                    s.Status = $status,
-                    s.ScheduledDeparture = datetime($scheduledDeparture),
-                    s.ScheduledArrival = datetime($scheduledArrival),
-                    s.ActualDeparture = $actualDeparture,
-                    s.ActualArrival = $actualArrival,
-                    s.CreatedAt = datetime($createdAt),
-                    s.DelayHours = $delayHours,
-                    s.DelayPenaltyAmount = $delayPenaltyAmount,
-                    s.PenaltyCalculatedAt = $penaltyCalculatedAt";
-
-			var parameters = new Dictionary<string, object>
-			{
-				["id"] = shipment.Id,
-				["contractId"] = shipment.ContractId,
-				["vehicleId"] = shipment.VehicleId,
-				["driverId"] = shipment.DriverId,
-				["cargoTypeId"] = shipment.CargoTypeId,
-				["weightKg"] = shipment.WeightKg,
-				["priority"] = shipment.Priority,
-				["description"] = shipment.Description ?? "",
-				["status"] = (int)shipment.Status,
-				["scheduledDeparture"] = shipment.ScheduledDeparture.ToString("o"),
-				["scheduledArrival"] = shipment.ScheduledArrival.ToString("o"),
-				["actualDeparture"] = shipment.ActualDeparture?.ToString("o"),
-				["actualArrival"] = shipment.ActualArrival?.ToString("o"),
-				["createdAt"] = shipment.CreatedAt.ToString("o"),
-				["delayHours"] = shipment.DelayHours ?? 0,
-				["delayPenaltyAmount"] = shipment.DelayPenaltyAmount ?? 0m,
-				["penaltyCalculatedAt"] = shipment.PenaltyCalculatedAt?.ToString("o")
-			};
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, parameters);
-			});
-		}
-
-		public async Task DeleteAsync(int id)
-		{
-			await using var session = _driver.AsyncSession();
-
-			var query = "MATCH (s:Shipment {Id: $id}) DETACH DELETE s";
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, new { id });
-			});
-		}
-
-		public async Task<Shipment?> GetByIdAsync(int id)
-		{
-			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (s:Shipment {Id: $id})
-                RETURN s
-                LIMIT 1";
-
-			return await session.ReadTransactionAsync(async tx =>
-			{
-				var cursor = await tx.RunAsync(query, new { id });
-				if (!await cursor.FetchAsync()) return null;
-
-				var node = cursor.Current["s"].As<INode>();
-
-				return new Shipment
+				await session.RunAsync(query, new
 				{
-					Id = (int)(long)node.Properties["Id"],
-					ContractId = (int)(long)node.Properties["ContractId"],
-					VehicleId = (int)(long)node.Properties["VehicleId"],
-					DriverId = (int)(long)node.Properties["DriverId"],
-					CargoTypeId = (int)(long)node.Properties["CargoTypeId"],
-					WeightKg = (double)node.Properties["WeightKg"],
-					Priority = (int)(long)node.Properties["Priority"],
-					Description = node.Properties.ContainsKey("Description") ? (string)node.Properties["Description"] : null,
-					Status = (ShipmentStatus)(int)(long)node.Properties["Status"],
-					ScheduledDeparture = DateTime.Parse((string)node.Properties["ScheduledDeparture"]),
-					ScheduledArrival = DateTime.Parse((string)node.Properties["ScheduledArrival"]),
-					ActualDeparture = node.Properties.ContainsKey("ActualDeparture") && node.Properties["ActualDeparture"] != null
-						? DateTime.Parse((string)node.Properties["ActualDeparture"])
-						: (DateTime?)null,
-					ActualArrival = node.Properties.ContainsKey("ActualArrival") && node.Properties["ActualArrival"] != null
-						? DateTime.Parse((string)node.Properties["ActualArrival"])
-						: (DateTime?)null,
-					CreatedAt = DateTime.Parse((string)node.Properties["CreatedAt"]),
-					DelayHours = node.Properties.ContainsKey("DelayHours") ? (int?)(long)node.Properties["DelayHours"] : null,
-					DelayPenaltyAmount = node.Properties.ContainsKey("DelayPenaltyAmount") ? (decimal?)(double)node.Properties["DelayPenaltyAmount"] : null,
-					PenaltyCalculatedAt = node.Properties.ContainsKey("PenaltyCalculatedAt") && node.Properties["PenaltyCalculatedAt"] != null
-						? DateTime.Parse((string)node.Properties["PenaltyCalculatedAt"])
-						: (DateTime?)null
-				};
-			});
+					id = shipment.Id,
+					contractId = shipment.ContractId,
+					vehicleId = shipment.VehicleId,
+					driverId = shipment.DriverId,
+					cargoTypeId = shipment.CargoTypeId,
+					weightKg = shipment.WeightKg,
+					priority = shipment.Priority,
+					description = shipment.Description,
+					status = (int)shipment.Status,
+					scheduledDeparture = shipment.ScheduledDeparture.ToString("o"),
+					scheduledArrival = shipment.ScheduledArrival.ToString("o"),
+					actualDeparture = shipment.ActualDeparture?.ToString("o"),
+					actualArrival = shipment.ActualArrival?.ToString("o"),
+					createdAt = shipment.CreatedAt.ToString("o"),
+					delayHours = shipment.DelayHours,
+					delayPenaltyAmount = shipment.DelayPenaltyAmount,
+					penaltyCalculatedAt = shipment.PenaltyCalculatedAt?.ToString("o")
+				});
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+		public async Task DeleteAsync(Shipment shipment)
+		{
+			var query = "MATCH (s:Shipment {id: $id}) DETACH DELETE s";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				await session.RunAsync(query, new { id = shipment.Id });
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
 
 		public async Task<IEnumerable<Shipment>> GetAllAsync()
 		{
-			await using var session = _driver.AsyncSession();
-
 			var query = "MATCH (s:Shipment) RETURN s";
 
-			return await session.ReadTransactionAsync(async tx =>
+			var session = _driver.AsyncSession();
+			try
 			{
-				var cursor = await tx.RunAsync(query);
-				var records = await cursor.ToListAsync();
+				var cursor = await session.RunAsync(query);
+				var result = new List<Shipment>();
 
-				var list = new List<Shipment>();
-
-				foreach (var record in records)
+				while (await cursor.FetchAsync())
 				{
-					var node = record["s"].As<INode>();
-					list.Add(new Shipment
-					{
-						Id = (int)(long)node.Properties["Id"],
-						ContractId = (int)(long)node.Properties["ContractId"],
-						VehicleId = (int)(long)node.Properties["VehicleId"],
-						DriverId = (int)(long)node.Properties["DriverId"],
-						CargoTypeId = (int)(long)node.Properties["CargoTypeId"],
-						WeightKg = (double)node.Properties["WeightKg"],
-						Priority = (int)(long)node.Properties["Priority"],
-						Description = node.Properties.ContainsKey("Description") ? (string)node.Properties["Description"] : null,
-						Status = (ShipmentStatus)(int)(long)node.Properties["Status"],
-						ScheduledDeparture = DateTime.Parse((string)node.Properties["ScheduledDeparture"]),
-						ScheduledArrival = DateTime.Parse((string)node.Properties["ScheduledArrival"]),
-						ActualDeparture = node.Properties.ContainsKey("ActualDeparture") && node.Properties["ActualDeparture"] != null
-							? DateTime.Parse((string)node.Properties["ActualDeparture"])
-							: (DateTime?)null,
-						ActualArrival = node.Properties.ContainsKey("ActualArrival") && node.Properties["ActualArrival"] != null
-							? DateTime.Parse((string)node.Properties["ActualArrival"])
-							: (DateTime?)null,
-						CreatedAt = DateTime.Parse((string)node.Properties["CreatedAt"]),
-						DelayHours = node.Properties.ContainsKey("DelayHours") ? (int?)(long)node.Properties["DelayHours"] : null,
-						DelayPenaltyAmount = node.Properties.ContainsKey("DelayPenaltyAmount") ? (decimal?)(double)node.Properties["DelayPenaltyAmount"] : null,
-						PenaltyCalculatedAt = node.Properties.ContainsKey("PenaltyCalculatedAt") && node.Properties["PenaltyCalculatedAt"] != null
-							? DateTime.Parse((string)node.Properties["PenaltyCalculatedAt"])
-							: (DateTime?)null
-					});
+					var node = cursor.Current["s"].As<INode>();
+					result.Add(MapNodeToShipment(node));
 				}
 
-				return list;
-			});
+				return result;
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+		public async Task<IEnumerable<Shipment>> GetByContractIdAsync(int contractId)
+		{
+			var query = "MATCH (s:Shipment {contractId: $contractId}) RETURN s";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var cursor = await session.RunAsync(query, new { contractId });
+				var result = new List<Shipment>();
+
+				while (await cursor.FetchAsync())
+				{
+					var node = cursor.Current["s"].As<INode>();
+					result.Add(MapNodeToShipment(node));
+				}
+
+				return result;
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+		public async Task<Shipment?> GetByIdAsync(int id)
+		{
+			var query = "MATCH (s:Shipment {id: $id}) RETURN s LIMIT 1";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var cursor = await session.RunAsync(query, new { id });
+
+				if (await cursor.FetchAsync())
+				{
+					var node = cursor.Current["s"].As<INode>();
+					return MapNodeToShipment(node);
+				}
+				return null;
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+		public async Task<IEnumerable<Shipment>> GetByStatusAsync(ShipmentStatus status)
+		{
+			var query = "MATCH (s:Shipment {status: $status}) RETURN s";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var cursor = await session.RunAsync(query, new { status = (int)status });
+				var result = new List<Shipment>();
+
+				while (await cursor.FetchAsync())
+				{
+					var node = cursor.Current["s"].As<INode>();
+					result.Add(MapNodeToShipment(node));
+				}
+
+				return result;
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+		public async Task UpdateAsync(Shipment shipment)
+		{
+			var query = @"
+                MATCH (s:Shipment {id: $id})
+                SET s.contractId = $contractId,
+                    s.vehicleId = $vehicleId,
+                    s.driverId = $driverId,
+                    s.cargoTypeId = $cargoTypeId,
+                    s.weightKg = $weightKg,
+                    s.priority = $priority,
+                    s.description = $description,
+                    s.status = $status,
+                    s.scheduledDeparture = datetime($scheduledDeparture),
+                    s.scheduledArrival = datetime($scheduledArrival),
+                    s.actualDeparture = $actualDeparture,
+                    s.actualArrival = $actualArrival,
+                    s.createdAt = datetime($createdAt),
+                    s.delayHours = $delayHours,
+                    s.delayPenaltyAmount = $delayPenaltyAmount,
+                    s.penaltyCalculatedAt = $penaltyCalculatedAt";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				await session.RunAsync(query, new
+				{
+					id = shipment.Id,
+					contractId = shipment.ContractId,
+					vehicleId = shipment.VehicleId,
+					driverId = shipment.DriverId,
+					cargoTypeId = shipment.CargoTypeId,
+					weightKg = shipment.WeightKg,
+					priority = shipment.Priority,
+					description = shipment.Description,
+					status = (int)shipment.Status,
+					scheduledDeparture = shipment.ScheduledDeparture.ToString("o"),
+					scheduledArrival = shipment.ScheduledArrival.ToString("o"),
+					actualDeparture = shipment.ActualDeparture?.ToString("o"),
+					actualArrival = shipment.ActualArrival?.ToString("o"),
+					createdAt = shipment.CreatedAt.ToString("o"),
+					delayHours = shipment.DelayHours,
+					delayPenaltyAmount = shipment.DelayPenaltyAmount,
+					penaltyCalculatedAt = shipment.PenaltyCalculatedAt?.ToString("o")
+				});
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+		private Shipment MapNodeToShipment(INode node)
+		{
+			return new Shipment
+			{
+				Id = Convert.ToInt32(node.Properties["id"]),
+				ContractId = Convert.ToInt32(node.Properties["contractId"]),
+				VehicleId = Convert.ToInt32(node.Properties["vehicleId"]),
+				DriverId = Convert.ToInt32(node.Properties["driverId"]),
+				CargoTypeId = Convert.ToInt32(node.Properties["cargoTypeId"]),
+				WeightKg = Convert.ToDouble(node.Properties["weightKg"]),
+				Priority = Convert.ToInt32(node.Properties["priority"]),
+				Description = node.Properties.ContainsKey("description") ? node.Properties["description"]?.ToString() : null,
+				Status = (ShipmentStatus)Convert.ToInt32(node.Properties["status"]),
+				ScheduledDeparture = DateTime.Parse(node.Properties["scheduledDeparture"].ToString()),
+				ScheduledArrival = DateTime.Parse(node.Properties["scheduledArrival"].ToString()),
+				ActualDeparture = node.Properties.ContainsKey("actualDeparture") && node.Properties["actualDeparture"] != null
+					? (DateTime?)DateTime.Parse(node.Properties["actualDeparture"].ToString())
+					: null,
+				ActualArrival = node.Properties.ContainsKey("actualArrival") && node.Properties["actualArrival"] != null
+					? (DateTime?)DateTime.Parse(node.Properties["actualArrival"].ToString())
+					: null,
+				CreatedAt = DateTime.Parse(node.Properties["createdAt"].ToString()),
+				DelayHours = node.Properties.ContainsKey("delayHours") && node.Properties["delayHours"] != null
+					? (int?)Convert.ToInt32(node.Properties["delayHours"])
+					: null,
+				DelayPenaltyAmount = node.Properties.ContainsKey("delayPenaltyAmount") && node.Properties["delayPenaltyAmount"] != null
+					? (decimal?)Convert.ToDecimal(node.Properties["delayPenaltyAmount"])
+					: null,
+				PenaltyCalculatedAt = node.Properties.ContainsKey("penaltyCalculatedAt") && node.Properties["penaltyCalculatedAt"] != null
+					? (DateTime?)DateTime.Parse(node.Properties["penaltyCalculatedAt"].ToString())
+					: null
+			};
 		}
 	}
 }

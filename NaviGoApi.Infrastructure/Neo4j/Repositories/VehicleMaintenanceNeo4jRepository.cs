@@ -7,7 +7,7 @@ using NaviGoApi.Domain.Interfaces;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
-	internal class VehicleMaintenanceNeo4jRepository : IVehicleMaintenanceRepository
+	public class VehicleMaintenanceNeo4jRepository : IVehicleMaintenanceRepository
 	{
 		private readonly IDriver _driver;
 
@@ -19,35 +19,33 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		public async Task AddAsync(VehicleMaintenance maintenance)
 		{
 			var query = @"
-                CREATE (vm:VehicleMaintenance {
-                    Id: $id,
-                    VehicleId: $vehicleId,
-                    ReportedByUserId: $reportedByUserId,
-                    Description: $description,
-                    ReportedAt: datetime($reportedAt),
-                    ResolvedAt: $resolvedAt,
-                    Severity: $severity,
-                    RepairCost: $repairCost,
-                    MaintenanceType: $maintenanceType
-                })";
-
-			var parameters = new Dictionary<string, object>
-			{
-				{ "id", maintenance.Id },
-				{ "vehicleId", maintenance.VehicleId },
-				{ "reportedByUserId", maintenance.ReportedByUserId },
-				{ "description", maintenance.Description },
-				{ "reportedAt", maintenance.ReportedAt.ToString("o") },
-				{ "resolvedAt", maintenance.ResolvedAt?.ToString("o") },
-				{ "severity", maintenance.Severity.ToString() },
-				{ "repairCost", maintenance.RepairCost ?? 0m },
-				{ "maintenanceType", maintenance.MaintenanceType.ToString() }
-			};
+				CREATE (vm:VehicleMaintenance {
+					id: $id,
+					vehicleId: $vehicleId,
+					reportedByUserId: $reportedByUserId,
+					description: $description,
+					reportedAt: datetime($reportedAt),
+					resolvedAt: CASE WHEN $resolvedAt IS NULL THEN NULL ELSE datetime($resolvedAt) END,
+					severity: $severity,
+					repairCost: $repairCost,
+					maintenanceType: $maintenanceType
+				})";
 
 			var session = _driver.AsyncSession();
 			try
 			{
-				await session.RunAsync(query, parameters);
+				await session.RunAsync(query, new
+				{
+					id = maintenance.Id,
+					vehicleId = maintenance.VehicleId,
+					reportedByUserId = maintenance.ReportedByUserId,
+					description = maintenance.Description,
+					reportedAt = maintenance.ReportedAt.ToString("o"),
+					resolvedAt = maintenance.ResolvedAt?.ToString("o"),
+					severity = maintenance.Severity.ToString(),
+					repairCost = maintenance.RepairCost,
+					maintenanceType = maintenance.MaintenanceType.ToString()
+				});
 			}
 			finally
 			{
@@ -57,9 +55,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 
 		public async Task DeleteAsync(int id)
 		{
-			var query = @"
-                MATCH (vm:VehicleMaintenance {Id: $id})
-                DETACH DELETE vm";
+			var query = @"MATCH (vm:VehicleMaintenance {id: $id}) DETACH DELETE vm";
 
 			var session = _driver.AsyncSession();
 			try
@@ -74,45 +70,39 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 
 		public async Task<IEnumerable<VehicleMaintenance>> GetAllAsync()
 		{
-			var query = @"
-                MATCH (vm:VehicleMaintenance)
-                RETURN vm";
+			var query = @"MATCH (vm:VehicleMaintenance) RETURN vm";
 
 			var session = _driver.AsyncSession();
-			var results = new List<VehicleMaintenance>();
+			var list = new List<VehicleMaintenance>();
 			try
 			{
-				var cursor = await session.RunAsync(query);
-				while (await cursor.FetchAsync())
+				var result = await session.RunAsync(query);
+				await result.ForEachAsync(record =>
 				{
-					var node = cursor.Current["vm"].As<INode>();
-					results.Add(MapNodeToVehicleMaintenance(node));
-				}
+					var node = record["vm"].As<INode>();
+					list.Add(NodeToEntity(node));
+				});
+				return list;
 			}
 			finally
 			{
 				await session.CloseAsync();
 			}
-			return results;
 		}
 
 		public async Task<VehicleMaintenance?> GetByIdAsync(int id)
 		{
-			var query = @"
-                MATCH (vm:VehicleMaintenance {Id: $id})
-                RETURN vm
-                LIMIT 1";
+			var query = @"MATCH (vm:VehicleMaintenance {id: $id}) RETURN vm LIMIT 1";
 
 			var session = _driver.AsyncSession();
 			try
 			{
-				var cursor = await session.RunAsync(query, new { id });
-				if (await cursor.FetchAsync())
-				{
-					var node = cursor.Current["vm"].As<INode>();
-					return MapNodeToVehicleMaintenance(node);
-				}
-				return null;
+				var result = await session.RunAsync(query, new { id });
+				var found = await result.FetchAsync();
+				if (!found) return null;
+
+				var node = result.Current["vm"].As<INode>();
+				return NodeToEntity(node);
 			}
 			finally
 			{
@@ -123,33 +113,31 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		public async Task UpdateAsync(VehicleMaintenance maintenance)
 		{
 			var query = @"
-                MATCH (vm:VehicleMaintenance {Id: $id})
-                SET vm.VehicleId = $vehicleId,
-                    vm.ReportedByUserId = $reportedByUserId,
-                    vm.Description = $description,
-                    vm.ReportedAt = datetime($reportedAt),
-                    vm.ResolvedAt = $resolvedAt,
-                    vm.Severity = $severity,
-                    vm.RepairCost = $repairCost,
-                    vm.MaintenanceType = $maintenanceType";
-
-			var parameters = new Dictionary<string, object>
-			{
-				{ "id", maintenance.Id },
-				{ "vehicleId", maintenance.VehicleId },
-				{ "reportedByUserId", maintenance.ReportedByUserId },
-				{ "description", maintenance.Description },
-				{ "reportedAt", maintenance.ReportedAt.ToString("o") },
-				{ "resolvedAt", maintenance.ResolvedAt?.ToString("o") },
-				{ "severity", maintenance.Severity.ToString() },
-				{ "repairCost", maintenance.RepairCost ?? 0m },
-				{ "maintenanceType", maintenance.MaintenanceType.ToString() }
-			};
+				MATCH (vm:VehicleMaintenance {id: $id})
+				SET vm.vehicleId = $vehicleId,
+					vm.reportedByUserId = $reportedByUserId,
+					vm.description = $description,
+					vm.reportedAt = datetime($reportedAt),
+					vm.resolvedAt = CASE WHEN $resolvedAt IS NULL THEN NULL ELSE datetime($resolvedAt) END,
+					vm.severity = $severity,
+					vm.repairCost = $repairCost,
+					vm.maintenanceType = $maintenanceType";
 
 			var session = _driver.AsyncSession();
 			try
 			{
-				await session.RunAsync(query, parameters);
+				await session.RunAsync(query, new
+				{
+					id = maintenance.Id,
+					vehicleId = maintenance.VehicleId,
+					reportedByUserId = maintenance.ReportedByUserId,
+					description = maintenance.Description,
+					reportedAt = maintenance.ReportedAt.ToString("o"),
+					resolvedAt = maintenance.ResolvedAt?.ToString("o"),
+					severity = maintenance.Severity.ToString(),
+					repairCost = maintenance.RepairCost,
+					maintenanceType = maintenance.MaintenanceType.ToString()
+				});
 			}
 			finally
 			{
@@ -157,21 +145,25 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			}
 		}
 
-		private VehicleMaintenance MapNodeToVehicleMaintenance(INode node)
+		private VehicleMaintenance NodeToEntity(INode node)
 		{
 			return new VehicleMaintenance
 			{
-				Id = (int)(long)node.Properties["Id"],
-				VehicleId = (int)(long)node.Properties["VehicleId"],
-				ReportedByUserId = (int)(long)node.Properties["ReportedByUserId"],
-				Description = node.Properties["Description"].As<string>(),
-				ReportedAt = DateTime.Parse(node.Properties["ReportedAt"].As<string>()),
-				ResolvedAt = node.Properties.ContainsKey("ResolvedAt") && node.Properties["ResolvedAt"] != null
-					? DateTime.Parse(node.Properties["ResolvedAt"].As<string>())
-					: (DateTime?)null,
-				Severity = Enum.TryParse<Domain.Entities.Severity>(node.Properties["Severity"].As<string>(), out var sev) ? sev : Domain.Entities.Severity.Low,
-				RepairCost = node.Properties.ContainsKey("RepairCost") ? (decimal?)(double)node.Properties["RepairCost"] : null,
-				MaintenanceType = Enum.TryParse<MaintenanceType>(node.Properties["MaintenanceType"].As<string>(), out var mt) ? mt : MaintenanceType.Regular
+				Id = node.Properties.ContainsKey("id") ? Convert.ToInt32(node.Properties["id"]) : 0,
+				VehicleId = node.Properties.ContainsKey("vehicleId") ? Convert.ToInt32(node.Properties["vehicleId"]) : 0,
+				ReportedByUserId = node.Properties.ContainsKey("reportedByUserId") ? Convert.ToInt32(node.Properties["reportedByUserId"]) : 0,
+				Description = node.Properties.ContainsKey("description") ? node.Properties["description"].ToString()! : string.Empty,
+				ReportedAt = node.Properties.ContainsKey("reportedAt") ? DateTime.Parse(node.Properties["reportedAt"].ToString()!) : default,
+				ResolvedAt = node.Properties.ContainsKey("resolvedAt") && node.Properties["resolvedAt"] != null
+					? DateTime.Parse(node.Properties["resolvedAt"].ToString()!)
+					: null,
+				Severity = node.Properties.ContainsKey("severity")
+					? Enum.Parse<Domain.Entities.Severity>(node.Properties["severity"].ToString()!)
+					: Domain.Entities.Severity.Low,
+				RepairCost = node.Properties.ContainsKey("repairCost") ? (decimal?)Convert.ToDecimal(node.Properties["repairCost"]) : null,
+				MaintenanceType = node.Properties.ContainsKey("maintenanceType")
+					? Enum.Parse<MaintenanceType>(node.Properties["maintenanceType"].ToString()!)
+					: MaintenanceType.Regular
 			};
 		}
 	}

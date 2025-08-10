@@ -13,6 +13,7 @@ using NaviGoApi.Application.Settings;
 using NaviGoApi.Application.Validators.Location;
 using NaviGoApi.Domain.Interfaces;
 using NaviGoApi.Infrastructure.MongoDB.Repositories;
+using NaviGoApi.Infrastructure.Neo4j.Repositories;
 using NaviGoApi.Infrastructure.Postgresql.Persistence;
 using NaviGoApi.Infrastructure.Postgresql.Repositories;
 using Neo4j.Driver;
@@ -21,6 +22,26 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 	options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+//INTERFACES + REPOSITORIES FOR POSTGRESQL
+//builder.Services.AddScoped<IUserRepository, UserRepository>();
+//builder.Services.AddScoped<ICargoTypeRepository, CargoTypeRepository>();
+//builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
+//builder.Services.AddScoped<IDelayPenaltyRepository, DelayPenalityRepository>();
+//builder.Services.AddScoped<IDriverRepository, DriverRepository>();
+//builder.Services.AddScoped<IForwarderOfferRepository, ForwarderOfferRepository>();
+//builder.Services.AddScoped<ILocationRepository, LocationRepository>();
+//builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+//builder.Services.AddScoped<IPickupChangeRepository, PickupChangeRepository>();
+//builder.Services.AddScoped<IRouteRepository, RouteRepository>();
+//builder.Services.AddScoped<IRoutePriceRepository, RoutePriceRepository>();
+//builder.Services.AddScoped<IShipmentRepository, ShipmentRepository>();
+//builder.Services.AddScoped<IShipmentDocumentRepository, ShipmentDocumentRepository>();
+//builder.Services.AddScoped<IShipmentStatusHistoryRepository, ShipmentStatusHistoryRepository>();
+//builder.Services.AddScoped<IVehicleMaintenanceRepository, VehicleMaintenanceRepository>();
+//builder.Services.AddScoped<IVehicleTypeRepository, VehicleTypeRepository>();
+//builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+//builder.Services.AddScoped<IContractRepository, ContractRepository>();
+//builder.Services.AddScoped<IUserLocationRepository, UserLocationRepository>();
 //MONGODB
 builder.Services.AddSingleton<IMongoClient>(sp =>
 {
@@ -63,27 +84,28 @@ builder.Services.AddSingleton<IDriver>(sp =>
 	var password = config["Neo4jSettings:Password"]!;
 	return GraphDatabase.Driver(uri, AuthTokens.Basic(user, password));
 });
+//INTERFACES + REPOSITORIES FOR NEO4J
+builder.Services.AddScoped<IUserRepository,UserNeo4jRepository>();
+builder.Services.AddScoped<ICargoTypeRepository, CargoTypeNeo4jRepository>();
+builder.Services.AddScoped<ICompanyRepository, CompanyNeo4jRepository>();
+builder.Services.AddScoped<IDelayPenaltyRepository, DelayPenaltyNeo4jRepository>();
+builder.Services.AddScoped<IDriverRepository, DriverNeo4jRepository>();
+builder.Services.AddScoped<IForwarderOfferRepository, ForwarderOfferNeo4jRepository>();
+builder.Services.AddScoped<ILocationRepository, LocationNeo4jRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentNeo4jRepository>();
+builder.Services.AddScoped<IPickupChangeRepository, PickupChangeNeo4jRepository>();
+builder.Services.AddScoped<IRouteRepository, RouteNeo4jRepository>();
+builder.Services.AddScoped<IRoutePriceRepository, RoutePriceNeo4jRepository>();
+builder.Services.AddScoped<IShipmentRepository, ShipmentNeo4jRepository>();
+builder.Services.AddScoped<IShipmentDocumentRepository, ShipmentDocumentNeo4jRepository>();
+builder.Services.AddScoped<IShipmentStatusHistoryRepository, ShipmentStatusHistoryNeo4jRepository>();
+builder.Services.AddScoped<IVehicleMaintenanceRepository, VehicleMaintenanceNeo4jRepository>();
+builder.Services.AddScoped<IVehicleTypeRepository, VehicleTypeNeo4jRepository>();
+builder.Services.AddScoped<IVehicleRepository, VehicleNeo4jRepository>();
+builder.Services.AddScoped<IContractRepository, ContractNeo4jRepository>();
+builder.Services.AddScoped<IUserLocationRepository, UserLocationNeo4jRepository>();
 builder.Services.Configure<ApiSettings>(builder.Configuration.GetSection("ApiSettings"));
-//INTERFACES + REPOSITORIES FOR POSTGRESQL
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<ICargoTypeRepository, CargoTypeRepository>();
-builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
-builder.Services.AddScoped<IDelayPenaltyRepository, DelayPenalityRepository>();
-builder.Services.AddScoped<IDriverRepository, DriverRepository>();
-builder.Services.AddScoped<IForwarderOfferRepository, ForwarderOfferRepository>();
-builder.Services.AddScoped<ILocationRepository, LocationRepository>();
-builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
-builder.Services.AddScoped<IPickupChangeRepository, PickupChangeRepository>();
-builder.Services.AddScoped<IRouteRepository, RouteRepository>();
-builder.Services.AddScoped<IRoutePriceRepository, RoutePriceRepository>();
-builder.Services.AddScoped<IShipmentRepository, ShipmentRepository>();
-builder.Services.AddScoped<IShipmentDocumentRepository, ShipmentDocumentRepository>();
-builder.Services.AddScoped<IShipmentStatusHistoryRepository, ShipmentStatusHistoryRepository>();
-builder.Services.AddScoped<IVehicleMaintenanceRepository, VehicleMaintenanceRepository>();
-builder.Services.AddScoped<IVehicleTypeRepository, VehicleTypeRepository>();
-builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
-builder.Services.AddScoped<IContractRepository, ContractRepository>();
-builder.Services.AddScoped<IUserLocationRepository, UserLocationRepository>();
+
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // Add services to the container.
 builder.Services.AddAutoMapper(typeof(MappingProfile));

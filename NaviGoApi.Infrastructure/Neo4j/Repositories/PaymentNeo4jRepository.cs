@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Neo4j.Driver;
 using NaviGoApi.Domain.Entities;
+using NaviGoApi.Domain.Interfaces;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
-	public class PaymentNeo4jRepository
+	public class PaymentNeo4jRepository : IPaymentRepository
 	{
 		private readonly IDriver _driver;
 
@@ -18,262 +20,126 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		public async Task AddAsync(Payment payment)
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                CREATE (p:Payment {
-                    Id: $id,
-                    ClientId: $clientId,
-                    ContractId: $contractId,
-                    Amount: $amount,
-                    PaymentDate: $paymentDate,
-                    PaymentStatus: $paymentStatus
-                })
-                WITH p
-                MATCH (c:User {Id: $clientId}), (con:Contract {Id: $contractId})
-                CREATE (p)-[:BY_CLIENT]->(c)
-                CREATE (p)-[:FOR_CONTRACT]->(con)
-            ";
-
-			var parameters = new Dictionary<string, object>
-			{
-				["id"] = payment.Id,
-				["clientId"] = payment.ClientId,
-				["contractId"] = payment.ContractId,
-				["amount"] = payment.Amount,
-				["paymentDate"] = payment.PaymentDate.ToString("o"),
-				["paymentStatus"] = (int)payment.PaymentStatus
-			};
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, parameters);
-			});
+			await session.RunAsync(@"
+				CREATE (p:Payment {
+					Id: $Id,
+					ContractId: $ContractId,
+					Amount: $Amount,
+					PaymentDate: datetime($PaymentDate),
+					PaymentStatus: $PaymentStatus,
+					ReceiptUrl: $ReceiptUrl,
+					ClientId: $ClientId
+				})",
+				new
+				{
+					payment.Id,
+					payment.ContractId,
+					payment.Amount,
+					PaymentDate = payment.PaymentDate.ToString("o"), // ISO 8601 format
+					PaymentStatus = (int)payment.PaymentStatus,
+					payment.ReceiptUrl,
+					payment.ClientId
+				});
 		}
 
-		public async Task DeleteAsync(int id)
+		public async Task DeleteAsync(Payment payment)
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = "MATCH (p:Payment {Id: $id}) DETACH DELETE p";
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, new { id });
-			});
+			await session.RunAsync(@"
+				MATCH (p:Payment {Id: $Id})
+				DETACH DELETE p",
+				new { payment.Id });
 		}
 
 		public async Task<IEnumerable<Payment>> GetAllAsync()
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (p:Payment)-[:BY_CLIENT]->(c:User),
-                      (p)-[:FOR_CONTRACT]->(con:Contract)
-                RETURN p, c, con
-            ";
-
-			return await session.ReadTransactionAsync(async tx =>
-			{
-				var cursor = await tx.RunAsync(query);
-				var records = await cursor.ToListAsync();
-
-				var payments = new List<Payment>();
-
-				foreach (var record in records)
-				{
-					var nodePayment = record["p"].As<INode>();
-					var nodeClient = record["c"].As<INode>();
-					var nodeContract = record["con"].As<INode>();
-
-					var payment = MapNodeToPayment(nodePayment);
-					payment.Client = new User { Id = (int)(long)nodeClient.Properties["Id"] };
-					payment.Contract = new Contract { Id = (int)(long)nodeContract.Properties["Id"] };
-
-					payments.Add(payment);
-				}
-
-				return payments;
-			});
-		}
-
-		public async Task<Payment?> GetByIdAsync(int id)
-		{
-			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (p:Payment {Id: $id})-[:BY_CLIENT]->(c:User),
-                      (p)-[:FOR_CONTRACT]->(con:Contract)
-                RETURN p, c, con
-                LIMIT 1
-            ";
-
-			return await session.ReadTransactionAsync(async tx =>
-			{
-				var cursor = await tx.RunAsync(query, new { id });
-				var hasRecord = await cursor.FetchAsync();
-
-				if (!hasRecord) return null;
-
-				var record = cursor.Current;
-				var nodePayment = record["p"].As<INode>();
-				var nodeClient = record["c"].As<INode>();
-				var nodeContract = record["con"].As<INode>();
-
-				var payment = MapNodeToPayment(nodePayment);
-				payment.Client = new User { Id = (int)(long)nodeClient.Properties["Id"] };
-				payment.Contract = new Contract { Id = (int)(long)nodeContract.Properties["Id"] };
-
-				return payment;
-			});
+			var cursor = await session.RunAsync("MATCH (p:Payment) RETURN p");
+			var records = await cursor.ToListAsync();
+			return records.Select(r => MapNodeToEntity(r["p"].As<INode>())).ToList();
 		}
 
 		public async Task<IEnumerable<Payment>> GetByClientIdAsync(int clientId)
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (p:Payment {ClientId: $clientId})-[:BY_CLIENT]->(c:User),
-                      (p)-[:FOR_CONTRACT]->(con:Contract)
-                RETURN p, c, con
-            ";
-
-			return await session.ReadTransactionAsync(async tx =>
-			{
-				var cursor = await tx.RunAsync(query, new { clientId });
-				var records = await cursor.ToListAsync();
-
-				var payments = new List<Payment>();
-
-				foreach (var record in records)
-				{
-					var nodePayment = record["p"].As<INode>();
-					var nodeClient = record["c"].As<INode>();
-					var nodeContract = record["con"].As<INode>();
-
-					var payment = MapNodeToPayment(nodePayment);
-					payment.Client = new User { Id = (int)(long)nodeClient.Properties["Id"] };
-					payment.Contract = new Contract { Id = (int)(long)nodeContract.Properties["Id"] };
-
-					payments.Add(payment);
-				}
-
-				return payments;
-			});
+			var cursor = await session.RunAsync(@"
+				MATCH (p:Payment {ClientId: $ClientId})
+				RETURN p",
+				new { ClientId = clientId });
+			var records = await cursor.ToListAsync();
+			return records.Select(r => MapNodeToEntity(r["p"].As<INode>())).ToList();
 		}
 
 		public async Task<IEnumerable<Payment>> GetByContractIdAsync(int contractId)
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (p:Payment {ContractId: $contractId})-[:BY_CLIENT]->(c:User),
-                      (p)-[:FOR_CONTRACT]->(con:Contract)
-                RETURN p, c, con
-            ";
-
-			return await session.ReadTransactionAsync(async tx =>
-			{
-				var cursor = await tx.RunAsync(query, new { contractId });
-				var records = await cursor.ToListAsync();
-
-				var payments = new List<Payment>();
-
-				foreach (var record in records)
-				{
-					var nodePayment = record["p"].As<INode>();
-					var nodeClient = record["c"].As<INode>();
-					var nodeContract = record["con"].As<INode>();
-
-					var payment = MapNodeToPayment(nodePayment);
-					payment.Client = new User { Id = (int)(long)nodeClient.Properties["Id"] };
-					payment.Contract = new Contract { Id = (int)(long)nodeContract.Properties["Id"] };
-
-					payments.Add(payment);
-				}
-
-				return payments;
-			});
+			var cursor = await session.RunAsync(@"
+				MATCH (p:Payment {ContractId: $ContractId})
+				RETURN p",
+				new { ContractId = contractId });
+			var records = await cursor.ToListAsync();
+			return records.Select(r => MapNodeToEntity(r["p"].As<INode>())).ToList();
 		}
 
 		public async Task<IEnumerable<Payment>> GetPendingPaymentsAsync()
 		{
 			await using var session = _driver.AsyncSession();
+			var cursor = await session.RunAsync(@"
+				MATCH (p:Payment)
+				WHERE p.PaymentStatus = $PendingStatus
+				RETURN p",
+				new { PendingStatus = (int)PaymentStatus.Pending });
+			var records = await cursor.ToListAsync();
+			return records.Select(r => MapNodeToEntity(r["p"].As<INode>())).ToList();
+		}
 
-			var query = @"
-                MATCH (p:Payment)
-                WHERE p.PaymentStatus = $pendingStatus
-                OPTIONAL MATCH (p)-[:BY_CLIENT]->(c:User)
-                OPTIONAL MATCH (p)-[:FOR_CONTRACT]->(con:Contract)
-                RETURN p, c, con
-            ";
-
-			var pendingStatus = (int)PaymentStatus.Pending;
-
-			return await session.ReadTransactionAsync(async tx =>
-			{
-				var cursor = await tx.RunAsync(query, new { pendingStatus });
-				var records = await cursor.ToListAsync();
-
-				var payments = new List<Payment>();
-
-				foreach (var record in records)
-				{
-					var nodePayment = record["p"].As<INode>();
-
-					var payment = MapNodeToPayment(nodePayment);
-
-					if (record["c"] is INode nodeClient)
-						payment.Client = new User { Id = (int)(long)nodeClient.Properties["Id"] };
-
-					if (record["con"] is INode nodeContract)
-						payment.Contract = new Contract { Id = (int)(long)nodeContract.Properties["Id"] };
-
-					payments.Add(payment);
-				}
-
-				return payments;
-			});
+		public async Task<Payment?> GetByIdAsync(int id)
+		{
+			await using var session = _driver.AsyncSession();
+			var cursor = await session.RunAsync(@"
+				MATCH (p:Payment {Id: $Id})
+				RETURN p",
+				new { Id = id });
+			var records = await cursor.ToListAsync();
+			if (records.Count == 0)
+				return null;
+			return MapNodeToEntity(records[0]["p"].As<INode>());
 		}
 
 		public async Task UpdateAsync(Payment payment)
 		{
 			await using var session = _driver.AsyncSession();
-
-			var query = @"
-                MATCH (p:Payment {Id: $id})
-                SET p.ClientId = $clientId,
-                    p.ContractId = $contractId,
-                    p.Amount = $amount,
-                    p.PaymentDate = $paymentDate,
-                    p.PaymentStatus = $paymentStatus
-            ";
-
-			var parameters = new Dictionary<string, object>
-			{
-				["id"] = payment.Id,
-				["clientId"] = payment.ClientId,
-				["contractId"] = payment.ContractId,
-				["amount"] = payment.Amount,
-				["paymentDate"] = payment.PaymentDate.ToString("o"),
-				["paymentStatus"] = (int)payment.PaymentStatus
-			};
-
-			await session.WriteTransactionAsync(async tx =>
-			{
-				await tx.RunAsync(query, parameters);
-			});
+			await session.RunAsync(@"
+				MATCH (p:Payment {Id: $Id})
+				SET p.ContractId = $ContractId,
+					p.Amount = $Amount,
+					p.PaymentDate = datetime($PaymentDate),
+					p.PaymentStatus = $PaymentStatus,
+					p.ReceiptUrl = $ReceiptUrl,
+					p.ClientId = $ClientId",
+				new
+				{
+					payment.Id,
+					payment.ContractId,
+					payment.Amount,
+					PaymentDate = payment.PaymentDate.ToString("o"),
+					PaymentStatus = (int)payment.PaymentStatus,
+					payment.ReceiptUrl,
+					payment.ClientId
+				});
 		}
 
-		private Payment MapNodeToPayment(INode node)
+		private Payment MapNodeToEntity(INode node)
 		{
 			return new Payment
 			{
-				Id = (int)(long)node.Properties["Id"],
-				ClientId = (int)(long)node.Properties["ClientId"],
-				ContractId = (int)(long)node.Properties["ContractId"],
-				Amount = Convert.ToDecimal((double)node.Properties["Amount"]),
-				PaymentDate = DateTime.Parse((string)node.Properties["PaymentDate"]),
-				PaymentStatus = (PaymentStatus)(int)(long)node.Properties["PaymentStatus"]
+				Id = node.Properties["Id"].As<int>(),
+				ContractId = node.Properties["ContractId"].As<int>(),
+				Amount = node.Properties["Amount"].As<decimal>(),
+				PaymentDate = DateTime.Parse(node.Properties["PaymentDate"].As<string>()),
+				PaymentStatus = (PaymentStatus)Convert.ToInt32(node.Properties["PaymentStatus"]),
+				ReceiptUrl = node.Properties.ContainsKey("ReceiptUrl") ? node.Properties["ReceiptUrl"].As<string>() : null,
+				ClientId = node.Properties["ClientId"].As<int>()
 			};
 		}
 	}
