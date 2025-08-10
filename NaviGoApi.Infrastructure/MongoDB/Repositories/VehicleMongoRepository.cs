@@ -1,9 +1,9 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System;
 
 namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 {
@@ -18,9 +18,26 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 
 		public async Task AddAsync(Vehicle vehicle)
 		{
+			vehicle.Id = await GetNextIdAsync("Vehicles");
 			await _vehiclesCollection.InsertOneAsync(vehicle);
 		}
 
+		private async Task<int> GetNextIdAsync(string collectionName)
+		{
+			var counters = _vehiclesCollection.Database.GetCollection<BsonDocument>("Counters");
+
+			var filter = Builders<BsonDocument>.Filter.Eq("_id", collectionName);
+			var update = Builders<BsonDocument>.Update.Inc("SequenceValue", 1);
+
+			var options = new FindOneAndUpdateOptions<BsonDocument>
+			{
+				IsUpsert = true,
+				ReturnDocument = ReturnDocument.After
+			};
+
+			var result = await counters.FindOneAndUpdateAsync(filter, update, options);
+			return result["SequenceValue"].AsInt32;
+		}
 
 		public async Task<IEnumerable<Vehicle>> GetAllAsync()
 		{
@@ -41,6 +58,7 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		{
 			return await _vehiclesCollection.Find(v => v.Id == id).FirstOrDefaultAsync();
 		}
+
 		public void Delete(Vehicle vehicle)
 		{
 			_vehiclesCollection.DeleteOneAsync(v => v.Id == vehicle.Id).GetAwaiter().GetResult();
@@ -50,6 +68,5 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		{
 			_vehiclesCollection.ReplaceOneAsync(v => v.Id == vehicle.Id, vehicle).GetAwaiter().GetResult();
 		}
-
 	}
 }

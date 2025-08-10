@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System.Collections.Generic;
@@ -17,7 +18,23 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 
 		public async Task AddAsync(Driver driver)
 		{
+			driver.Id = await GetNextIdAsync();
 			await _driversCollection.InsertOneAsync(driver);
+		}
+
+		private async Task<int> GetNextIdAsync()
+		{
+			var counters = _driversCollection.Database.GetCollection<BsonDocument>("Counters");
+			var filter = Builders<BsonDocument>.Filter.Eq("_id", "Drivers");
+			var update = Builders<BsonDocument>.Update.Inc("SequenceValue", 1);
+			var options = new FindOneAndUpdateOptions<BsonDocument>
+			{
+				IsUpsert = true,
+				ReturnDocument = ReturnDocument.After
+			};
+
+			var result = await counters.FindOneAndUpdateAsync(filter, update, options);
+			return result["SequenceValue"].AsInt32;
 		}
 
 		public void Delete(Driver driver)
@@ -51,7 +68,10 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 
 		public void Update(Driver driver)
 		{
-			_driversCollection.ReplaceOne(d => d.Id == driver.Id, driver);
+			var result = _driversCollection.ReplaceOneAsync(d => d.Id == driver.Id, driver).GetAwaiter().GetResult();
+			if (result.MatchedCount == 0)
+				throw new Exception($"Driver with Id {driver.Id} not found for update.");
 		}
+
 	}
 }

@@ -12,6 +12,7 @@ using NaviGoApi.Application.Services;
 using NaviGoApi.Application.Settings;
 using NaviGoApi.Application.Validators.Location;
 using NaviGoApi.Domain.Interfaces;
+using NaviGoApi.Infrastructure.MongoDB.Repositories;
 using NaviGoApi.Infrastructure.Postgresql.Persistence;
 using NaviGoApi.Infrastructure.Postgresql.Repositories;
 using Neo4j.Driver;
@@ -27,7 +28,26 @@ builder.Services.AddSingleton<IMongoClient>(sp =>
 	var connectionString = config["MongoDbSettings:ConnectionString"];
 	return new MongoClient(connectionString);
 });
-
+//INTERFACES + REPOSITORIES FOR MONGODB
+//builder.Services.AddScoped<IUserRepository, UserMongoRepository>();
+//builder.Services.AddScoped<ICargoTypeRepository, CargoTypeMongoRepository>();
+//builder.Services.AddScoped<ICompanyRepository, CompanyMongoRepository>();
+//builder.Services.AddScoped<IDelayPenaltyRepository, DelayPenaltyMongoRepository>();
+//builder.Services.AddScoped<IDriverRepository, DriverMongoRepository>();
+//builder.Services.AddScoped<IForwarderOfferRepository, ForwarderOfferMongoRepository>();
+//builder.Services.AddScoped<ILocationRepository, LocationMongoRepository>();
+//builder.Services.AddScoped<IPaymentRepository, PaymentMongoRepository>();
+//builder.Services.AddScoped<IPickupChangeRepository, PickupChangeMongoRepository>();
+//builder.Services.AddScoped<IRouteRepository, RouteMongoRepository>();
+//builder.Services.AddScoped<IRoutePriceRepository, RoutePriceMongoRepository>();
+//builder.Services.AddScoped<IShipmentRepository, ShipmentMongoRepository>();
+//builder.Services.AddScoped<IShipmentDocumentRepository, ShipmentDocumentMongoRepository>();
+//builder.Services.AddScoped<IShipmentStatusHistoryRepository, ShipmentStatusHistoryMongoRepository>();
+//builder.Services.AddScoped<IVehicleMaintenanceRepository, VehicleMaintenanceMongoRepository>();
+//builder.Services.AddScoped<IVehicleTypeRepository, VehicleTypeMongoRepository>();
+//builder.Services.AddScoped<IVehicleRepository, VehicleMongoRepository>();
+//builder.Services.AddScoped<IContractRepository, ContractMongoRepository>();
+//builder.Services.AddScoped<IUserLocationRepository, UserLocationMongoRepository>();
 builder.Services.AddScoped(sp =>
 {
 	var client = sp.GetRequiredService<IMongoClient>();

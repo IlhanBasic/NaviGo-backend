@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System.Collections.Generic;
@@ -17,10 +18,27 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 
 		public async Task AddAsync(Shipment shipment)
 		{
+			shipment.Id = await GetNextIdAsync();
 			await _shipmentsCollection.InsertOneAsync(shipment);
 		}
 
-		// Prepravljen na void po interfejsu:
+		private async Task<int> GetNextIdAsync()
+		{
+			var counters = _shipmentsCollection.Database.GetCollection<BsonDocument>("Counters");
+
+			var filter = Builders<BsonDocument>.Filter.Eq("_id", "Shipments");
+			var update = Builders<BsonDocument>.Update.Inc("SequenceValue", 1);
+
+			var options = new FindOneAndUpdateOptions<BsonDocument>
+			{
+				IsUpsert = true,
+				ReturnDocument = ReturnDocument.After
+			};
+
+			var result = await counters.FindOneAndUpdateAsync(filter, update, options);
+			return result["SequenceValue"].AsInt32;
+		}
+
 		public void Delete(Shipment shipment)
 		{
 			_shipmentsCollection.DeleteOneAsync(s => s.Id == shipment.Id).GetAwaiter().GetResult();
@@ -46,7 +64,6 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return await _shipmentsCollection.Find(s => s.Status == status).ToListAsync();
 		}
 
-		// Prepravljen na void po interfejsu:
 		public void Update(Shipment shipment)
 		{
 			_shipmentsCollection.ReplaceOneAsync(s => s.Id == shipment.Id, shipment).GetAwaiter().GetResult();

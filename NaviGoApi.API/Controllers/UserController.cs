@@ -63,7 +63,8 @@ namespace NaviGoApi.API.Controllers
 		{
 			var command = new VerifyEmailCommand(token);
 			var result = await _mediator.Send(command);
-
+			if (!result)
+				return BadRequest("Email Verification Failed: Invalid or expired token.");
 			if (!result)
 			{
 				var errorHtml = @"

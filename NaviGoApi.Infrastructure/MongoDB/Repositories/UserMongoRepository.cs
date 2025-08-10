@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System.Collections.Generic;
@@ -20,18 +21,36 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 
 		public async Task AddAsync(User user)
 		{
+			user.Id = await GetNextIdAsync("Users");
 			await _usersCollection.InsertOneAsync(user);
 		}
 
 		public async Task AddRefreshTokenAsync(RefreshToken token)
 		{
+			token.Id = await GetNextIdAsync("RefreshTokens");
 			await _refreshTokensCollection.InsertOneAsync(token);
+		}
+
+		private async Task<int> GetNextIdAsync(string collectionName)
+		{
+			var counters = _usersCollection.Database.GetCollection<BsonDocument>("Counters");
+
+			var filter = Builders<BsonDocument>.Filter.Eq("_id", collectionName);
+			var update = Builders<BsonDocument>.Update.Inc("SequenceValue", 1);
+
+			var options = new FindOneAndUpdateOptions<BsonDocument>
+			{
+				IsUpsert = true,
+				ReturnDocument = ReturnDocument.After
+			};
+
+			var result = await counters.FindOneAndUpdateAsync(filter, update, options);
+			return result["SequenceValue"].AsInt32;
 		}
 
 		public async Task<User?> FindByRefreshTokenAsync(string token)
 		{
-			var user = await _usersCollection.Find(u => u.RefreshTokens.Any(t => t.Token == token)).FirstOrDefaultAsync();
-			return user;
+			return await _usersCollection.Find(u => u.RefreshTokens.Any(t => t.Token == token)).FirstOrDefaultAsync();
 		}
 
 		public async Task<IEnumerable<User>> GetAllAsync()
@@ -66,8 +85,6 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 
 		public IQueryable<User> Query()
 		{
-			// MongoDB driver ne vraća IQueryable direktno,
-			// ali ako ti treba za LINQ, možeš napraviti ovo:
 			return _usersCollection.AsQueryable();
 		}
 

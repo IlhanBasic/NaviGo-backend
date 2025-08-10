@@ -30,6 +30,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Driver
 			}
 
 			_mapper.Map(request.DriverDto, existingDriver);
+			_unitOfWork.Drivers.Update(existingDriver);
 			await _unitOfWork.SaveChangesAsync();
 			return Unit.Value;
 		}

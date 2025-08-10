@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System.Collections.Generic;
@@ -17,7 +18,25 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 
 		public async Task AddAsync(ShipmentStatusHistory history)
 		{
+			history.Id = await GetNextIdAsync();
 			await _shipmentStatusHistoryCollection.InsertOneAsync(history);
+		}
+
+		private async Task<int> GetNextIdAsync()
+		{
+			var counters = _shipmentStatusHistoryCollection.Database.GetCollection<BsonDocument>("Counters");
+
+			var filter = Builders<BsonDocument>.Filter.Eq("_id", "ShipmentStatusHistories");
+			var update = Builders<BsonDocument>.Update.Inc("SequenceValue", 1);
+
+			var options = new FindOneAndUpdateOptions<BsonDocument>
+			{
+				IsUpsert = true,
+				ReturnDocument = ReturnDocument.After
+			};
+
+			var result = await counters.FindOneAndUpdateAsync(filter, update, options);
+			return result["SequenceValue"].AsInt32;
 		}
 
 		public async Task DeleteAsync(int id)

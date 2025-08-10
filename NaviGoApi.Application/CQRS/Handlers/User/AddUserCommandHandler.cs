@@ -20,7 +20,12 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 		private readonly IMapper _mapper;
 		private readonly IEmailService _emailService;
 		private readonly string _apiBaseUrl;
-		public AddUserCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, IEmailService emailService, IOptions<ApiSettings> apiSettings)
+
+		public AddUserCommandHandler(
+			IUnitOfWork unitOfWork,
+			IMapper mapper,
+			IEmailService emailService,
+			IOptions<ApiSettings> apiSettings)
 		{
 			_unitOfWork = unitOfWork;
 			_mapper = mapper;
@@ -33,18 +38,21 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			var userEntity = _mapper.Map<Domain.Entities.User>(request.UserDto);
 
 			userEntity.PasswordHash = HashPassword(request.UserDto.Password);
-			var verificationToken = System.Guid.NewGuid().ToString();
-			userEntity.EmailVerificationToken = verificationToken;
+			userEntity.CreatedAt = DateTime.UtcNow;
+			userEntity.EmailVerificationToken = System.Guid.NewGuid().ToString();
+			userEntity.EmailVerificationTokenDuration = TimeSpan.FromMinutes(15);
 			if (userEntity.UserRole == UserRole.SuperAdmin)
 			{
 				userEntity.EmailVerified = true;
 			}
+
 			userEntity.UserStatus = UserStatus.Active;
+
 			await _unitOfWork.Users.AddAsync(userEntity);
 			await _unitOfWork.SaveChangesAsync();
 
-			var verificationLink = $"{_apiBaseUrl}/api/User/verify-email?token={verificationToken}";
-			// Pošalji email sa linkom za verifikaciju
+			var verificationLink = $"{_apiBaseUrl}api/User/verify-email?token={userEntity.EmailVerificationToken}";
+
 			await _emailService.SendVerificationEmailAsync(userEntity.Email, verificationLink);
 
 			return _mapper.Map<UserDto>(userEntity);

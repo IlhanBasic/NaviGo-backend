@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
@@ -18,7 +19,25 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 
 		public async Task AddAsync(UserLocation location)
 		{
+			location.Id = await GetNextIdAsync();
 			await _userLocationsCollection.InsertOneAsync(location);
+		}
+
+		private async Task<int> GetNextIdAsync()
+		{
+			var counters = _userLocationsCollection.Database.GetCollection<BsonDocument>("Counters");
+
+			var filter = Builders<BsonDocument>.Filter.Eq("_id", "UserLocations");
+			var update = Builders<BsonDocument>.Update.Inc("SequenceValue", 1);
+
+			var options = new FindOneAndUpdateOptions<BsonDocument>
+			{
+				IsUpsert = true,
+				ReturnDocument = ReturnDocument.After
+			};
+
+			var result = await counters.FindOneAndUpdateAsync(filter, update, options);
+			return result["SequenceValue"].AsInt32;
 		}
 
 		public async Task<List<UserLocation>> GetRecentLocationsAsync(int userId, TimeSpan interval)
@@ -32,7 +51,7 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return await _userLocationsCollection.Find(filter).ToListAsync();
 		}
 
-		// Ako ti treba SaveChangesAsync zbog interface, ali u MongoDB nije neophodno jer je sve odmah snimljeno
+		// MongoDB nema SaveChanges jer su promene odmah upisane, pa samo vrati CompletedTask
 		public Task SaveChangesAsync()
 		{
 			return Task.CompletedTask;
