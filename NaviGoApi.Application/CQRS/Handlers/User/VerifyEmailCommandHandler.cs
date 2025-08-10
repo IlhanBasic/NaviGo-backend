@@ -33,7 +33,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			user.EmailVerificationToken = null;
 			user.EmailVerificationTokenDuration = null;
 
-			_unitOfWork.Users.Update(user);
+			await _unitOfWork.Users.UpdateAsync(user);
 			await _unitOfWork.SaveChangesAsync();
 			Console.WriteLine("VerifyEmail: User email successfully verified.");
 			return true;

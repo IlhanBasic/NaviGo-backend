@@ -29,7 +29,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 
 			_mapper.Map(request.ContractDto, existingContract);
 
-			_unitOfWork.Contracts.Update(existingContract);
+			await _unitOfWork.Contracts.UpdateAsync(existingContract);
 			await _unitOfWork.SaveChangesAsync();
 
 			return Unit.Value;

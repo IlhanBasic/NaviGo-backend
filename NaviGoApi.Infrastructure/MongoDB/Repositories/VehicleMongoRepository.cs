@@ -59,14 +59,14 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return await _vehiclesCollection.Find(v => v.Id == id).FirstOrDefaultAsync();
 		}
 
-		public void Delete(Vehicle vehicle)
+		public async Task DeleteAsync(Vehicle vehicle)
 		{
-			_vehiclesCollection.DeleteOneAsync(v => v.Id == vehicle.Id).GetAwaiter().GetResult();
+			await _vehiclesCollection.DeleteOneAsync(v => v.Id == vehicle.Id);
 		}
 
-		public void Update(Vehicle vehicle)
+		public async Task UpdateAsync(Vehicle vehicle)
 		{
-			_vehiclesCollection.ReplaceOneAsync(v => v.Id == vehicle.Id, vehicle).GetAwaiter().GetResult();
+			await _vehiclesCollection.ReplaceOneAsync(v => v.Id == vehicle.Id, vehicle);
 		}
 	}
 }

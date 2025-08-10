@@ -7,7 +7,7 @@ using NaviGoApi.Domain.Interfaces;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
-	internal class VehicleNeo4jRepository : IVehicleRepository
+	internal class VehicleNeo4jRepository 
 	{
 		private readonly IDriver _driver;
 

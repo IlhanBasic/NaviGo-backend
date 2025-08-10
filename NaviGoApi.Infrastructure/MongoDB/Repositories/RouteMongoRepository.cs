@@ -39,16 +39,14 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return result["SequenceValue"].AsInt32;
 		}
 
-		public void Update(Route route)
+		public async Task UpdateAsync(Route route)
 		{
-			_routesCollection.ReplaceOneAsync(r => r.Id == route.Id, route)
-				.GetAwaiter().GetResult();
+			await _routesCollection.ReplaceOneAsync(r => r.Id == route.Id, route);
 		}
 
-		public void Delete(Route route)
+		public async Task DeleteAsync(Route route)
 		{
-			_routesCollection.DeleteOneAsync(r => r.Id == route.Id)
-				.GetAwaiter().GetResult();
+			await _routesCollection.DeleteOneAsync(r => r.Id == route.Id);
 		}
 
 		public async Task<Route?> GetByIdAsync(int id)

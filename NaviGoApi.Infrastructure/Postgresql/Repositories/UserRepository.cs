@@ -70,14 +70,16 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			return _context.Users.AsQueryable();
 		}
 
-		public void Remove(User user)
+		public Task DeleteAsync(User user)
 		{
 			_context.Users.Remove(user);
+			return Task.CompletedTask;
 		}
 
-		public void Update(User user)
+		public Task UpdateAsync(User user)
 		{
 			_context.Users.Update(user);
+			return Task.CompletedTask;
 		}
 
 		public async Task UpdateRefreshTokenAsync(RefreshToken token)

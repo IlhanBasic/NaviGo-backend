@@ -37,9 +37,9 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return result["SequenceValue"].AsInt32;
 		}
 
-		public void Delete(Payment payment)
+		public async Task DeleteAsync(Payment payment)
 		{
-			_paymentsCollection.DeleteOne(p => p.Id == payment.Id);
+			await _paymentsCollection.DeleteOneAsync(p => p.Id == payment.Id);
 		}
 
 		public async Task<IEnumerable<Payment>> GetAllAsync()
@@ -75,9 +75,9 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 				.ToListAsync();
 		}
 
-		public void Update(Payment payment)
+		public async Task UpdateAsync(Payment payment)
 		{
-			_paymentsCollection.ReplaceOne(p => p.Id == payment.Id, payment);
+			await _paymentsCollection.ReplaceOneAsync(p => p.Id == payment.Id, payment);
 		}
 	}
 }

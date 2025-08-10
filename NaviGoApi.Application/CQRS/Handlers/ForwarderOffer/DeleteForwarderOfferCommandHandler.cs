@@ -25,7 +25,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.ForwarderOffer
 			if (entity == null)
 				throw new KeyNotFoundException($"ForwarderOffer with id {request.Id} not found.");
 
-			_unitOfWork.ForwarderOffers.Delete(entity);
+			await _unitOfWork.ForwarderOffers.DeleteAsync(entity);
 			await _unitOfWork.SaveChangesAsync();
 
 			return Unit.Value;

@@ -37,9 +37,10 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return result["SequenceValue"].AsInt32;
 		}
 
-		public void Delete(Company company)
+		public async Task DeleteAsync(Company company)
 		{
-			_companiesCollection.DeleteOne(c => c.Id == company.Id);
+			await _companiesCollection.DeleteOneAsync(c => c.Id == company.Id);
+			
 		}
 
 		public async Task<IEnumerable<Company>> GetAllAsync()
@@ -62,9 +63,10 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return await _companiesCollection.Find(c => c.PIB == pib).FirstOrDefaultAsync();
 		}
 
-		public void Update(Company company)
+		public async Task UpdateAsync(Company company)
 		{
-			_companiesCollection.ReplaceOne(c => c.Id == company.Id, company);
+			await _companiesCollection.ReplaceOneAsync(c => c.Id == company.Id, company);
+
 		}
 	}
 }

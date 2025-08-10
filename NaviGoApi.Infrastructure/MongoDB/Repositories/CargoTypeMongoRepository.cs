@@ -37,9 +37,9 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return result["SequenceValue"].AsInt32;
 		}
 
-		public void Delete(CargoType cargoType)
+		public async Task DeleteAsync(CargoType cargoType)
 		{
-			_cargoTypesCollection.DeleteOne(ct => ct.Id == cargoType.Id);
+			await _cargoTypesCollection.DeleteOneAsync(ct => ct.Id == cargoType.Id);
 		}
 
 		public async Task<IEnumerable<CargoType>> GetAllAsync()
@@ -52,9 +52,9 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return await _cargoTypesCollection.Find(ct => ct.Id == id).FirstOrDefaultAsync();
 		}
 
-		public void Update(CargoType cargoType)
+		public async Task UpdateAsync(CargoType cargoType)
 		{
-			_cargoTypesCollection.ReplaceOne(ct => ct.Id == cargoType.Id, cargoType);
+			await _cargoTypesCollection.ReplaceOneAsync(ct => ct.Id == cargoType.Id, cargoType);
 		}
 	}
 }

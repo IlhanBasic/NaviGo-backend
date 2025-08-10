@@ -13,8 +13,8 @@ namespace NaviGoApi.Domain.Interfaces
 		Task<User?> GetByIdAsync(int id);
 		Task<User?> GetByPasswordResetTokenAsync(string token);
 		Task AddAsync(User user);
-		void Update(User user);
-		void Remove(User user);
+		Task UpdateAsync(User user);
+		Task DeleteAsync(User user);
 		Task<User?> GetByEmailAsync(string email);
 		Task<RefreshToken?> GetRefreshTokenAsync(string token);
 		Task AddRefreshTokenAsync(RefreshToken token);

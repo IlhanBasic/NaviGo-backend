@@ -21,9 +21,10 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			await _context.Companies.AddAsync(company);
 		}
 
-		public void Delete(Company company)
+		public Task DeleteAsync(Company company)
 		{
 			_context.Companies.Remove(company);
+			return Task.CompletedTask;
 		}
 
 		public async Task<IEnumerable<Company>> GetAllAsync()
@@ -41,9 +42,10 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			return await _context.Companies.FirstOrDefaultAsync(c => c.CompanyName == name);
 		}
 
-		public void Update(Company company)
+		public Task UpdateAsync(Company company)
 		{
 			_context.Companies.Update(company);
+			return Task.CompletedTask;
 		}
 		public async Task<Company?> GetByPibAsync(string pib)
 		{

@@ -31,7 +31,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			var pin = GenerateSixDigitPin();
 			user.PasswordResetToken = pin;
 			user.PasswordResetTokenDuration = TimeSpan.FromMinutes(15);
-			_unitOfWork.Users.Update(user);
+			await _unitOfWork.Users.UpdateAsync(user);
 			await _unitOfWork.SaveChangesAsync();
 			await _emailService.SendResetPasswordPinEmailAsync(user.Email, pin);
 

@@ -25,7 +25,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 			if (shipment == null)
 				throw new KeyNotFoundException($"Shipment with ID {request.Id} not found.");
 
-			_unitOfWork.Shipments.Delete(shipment);
+			await _unitOfWork.Shipments.DeleteAsync(shipment);
 			await _unitOfWork.SaveChangesAsync();
 			return Unit.Value;
 		}

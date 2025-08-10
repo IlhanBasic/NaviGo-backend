@@ -24,7 +24,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.CargoType
 			if (existing != null)
 			{
 				_mapper.Map(request.CargoTypeDto, existing);
-				_unitOfWork.CargoTypes.Update(existing);
+				await _unitOfWork.CargoTypes.UpdateAsync(existing);
 				await _unitOfWork.SaveChangesAsync();
 			}
 

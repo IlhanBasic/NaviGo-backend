@@ -88,14 +88,14 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return _usersCollection.AsQueryable();
 		}
 
-		public void Remove(User user)
+		public async Task DeleteAsync(User user)
 		{
-			_usersCollection.DeleteOne(u => u.Id == user.Id);
+			await _usersCollection.DeleteOneAsync(u => u.Id == user.Id);
 		}
 
-		public void Update(User user)
+		public async Task UpdateAsync(User user)
 		{
-			_usersCollection.ReplaceOne(u => u.Id == user.Id, user);
+			await _usersCollection.ReplaceOneAsync(u => u.Id == user.Id, user);
 		}
 
 		public async Task UpdateRefreshTokenAsync(RefreshToken token)

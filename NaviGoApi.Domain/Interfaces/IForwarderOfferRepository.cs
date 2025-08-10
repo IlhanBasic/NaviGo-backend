@@ -9,8 +9,8 @@ namespace NaviGoApi.Domain.Interfaces
 		Task<ForwarderOffer?> GetByIdAsync(int id);
 		Task<IEnumerable<ForwarderOffer>> GetAllAsync();
 		Task AddAsync(ForwarderOffer offer);
-		void Update(ForwarderOffer offer);
-		void Delete(ForwarderOffer offer);
+		Task UpdateAsync(ForwarderOffer offer);
+		Task DeleteAsync(ForwarderOffer offer);
 
 		// Dodatne metode
 		Task<IEnumerable<ForwarderOffer>> GetByRouteIdAsync(int routeId);

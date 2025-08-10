@@ -22,9 +22,10 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			await _context.Contracts.AddAsync(contract);
 		}
 
-		public void Delete(Contract contract)
+		public Task DeleteAsync(Contract contract)
 		{
 			_context.Contracts.Remove(contract);
+			return Task.CompletedTask;
 		}
 
 		public async Task<IEnumerable<Contract>> GetAllAsync()
@@ -81,9 +82,10 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.FirstOrDefaultAsync(c => c.Id == id);
 		}
 
-		public void Update(Contract contract)
+		public Task UpdateAsync(Contract contract)
 		{
 			_context.Contracts.Update(contract);
+			return Task.CompletedTask;
 		}
 	}
 }

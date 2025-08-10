@@ -22,9 +22,10 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			await _context.Payments.AddAsync(payment);
 		}
 
-		public void Delete(Payment payment)
+		public Task DeleteAsync(Payment payment)
 		{
 			_context.Payments.Remove(payment);
+			return Task.CompletedTask;
 		}
 
 		public async Task<IEnumerable<Payment>> GetAllAsync()
@@ -70,9 +71,10 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.ToListAsync();
 		}
 
-		public void Update(Payment payment)
+		public Task UpdateAsync(Payment payment)
 		{
 			_context.Payments.Update(payment);
+			return Task.CompletedTask;
 		}
 	}
 }

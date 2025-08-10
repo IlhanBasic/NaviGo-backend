@@ -23,7 +23,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Company
 			var existing = await _unitOfWork.Companies.GetByIdAsync(request.Id);
 			if (existing != null)
 			{
-				_unitOfWork.Companies.Delete(existing);
+				await _unitOfWork.Companies.DeleteAsync(existing);
 				await _unitOfWork.SaveChangesAsync();
 			}
 

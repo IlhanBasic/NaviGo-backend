@@ -39,9 +39,9 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return result["SequenceValue"].AsInt32;
 		}
 
-		public void Delete(Shipment shipment)
+		public async Task DeleteAsync(Shipment shipment)
 		{
-			_shipmentsCollection.DeleteOneAsync(s => s.Id == shipment.Id).GetAwaiter().GetResult();
+			await _shipmentsCollection.DeleteOneAsync(s => s.Id == shipment.Id);
 		}
 
 		public async Task<IEnumerable<Shipment>> GetAllAsync()
@@ -64,9 +64,9 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return await _shipmentsCollection.Find(s => s.Status == status).ToListAsync();
 		}
 
-		public void Update(Shipment shipment)
+		public async Task UpdateAsync(Shipment shipment)
 		{
-			_shipmentsCollection.ReplaceOneAsync(s => s.Id == shipment.Id, shipment).GetAwaiter().GetResult();
+			await _shipmentsCollection.ReplaceOneAsync(s => s.Id == shipment.Id, shipment);
 		}
 	}
 }

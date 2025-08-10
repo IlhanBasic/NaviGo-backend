@@ -25,7 +25,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 				throw new KeyNotFoundException($"Contract with ID {request.Id} not found.");
 			}
 
-			_unitOfWork.Contracts.Delete(contract);
+			await _unitOfWork.Contracts.DeleteAsync(contract);
 			await _unitOfWork.SaveChangesAsync();
 
 			return Unit.Value;

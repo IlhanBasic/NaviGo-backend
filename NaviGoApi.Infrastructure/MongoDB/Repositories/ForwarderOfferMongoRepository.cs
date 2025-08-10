@@ -38,9 +38,9 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return result["SequenceValue"].AsInt32;
 		}
 
-		public void Delete(ForwarderOffer offer)
+		public async Task DeleteAsync(ForwarderOffer offer)
 		{
-			_offersCollection.DeleteOne(o => o.Id == offer.Id);
+			await _offersCollection.DeleteOneAsync(o => o.Id == offer.Id);
 		}
 
 		public async Task<IEnumerable<ForwarderOffer>> GetActiveOffersAsync()
@@ -78,9 +78,9 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 				.ToListAsync();
 		}
 
-		public void Update(ForwarderOffer offer)
+		public async Task UpdateAsync(ForwarderOffer offer)
 		{
-			_offersCollection.ReplaceOne(o => o.Id == offer.Id, offer);
+			await _offersCollection.ReplaceOneAsync(o => o.Id == offer.Id, offer);
 		}
 	}
 }

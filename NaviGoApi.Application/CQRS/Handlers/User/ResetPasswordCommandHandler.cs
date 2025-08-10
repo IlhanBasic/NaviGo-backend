@@ -30,7 +30,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			user.PasswordResetToken = null;
 			user.PasswordResetTokenDuration = null;
 
-			_unitOfWork.Users.Update(user);
+			await _unitOfWork.Users.UpdateAsync(user);
 			await _unitOfWork.SaveChangesAsync();
 
 			return true;

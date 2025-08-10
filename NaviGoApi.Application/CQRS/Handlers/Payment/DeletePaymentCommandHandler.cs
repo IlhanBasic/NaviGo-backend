@@ -24,7 +24,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 			if (payment == null)
 				throw new KeyNotFoundException($"Payment with Id {request.Id} not found.");
 
-			_unitOfWork.Payments.Delete(payment);
+			await _unitOfWork.Payments.DeleteAsync(payment);
 			await _unitOfWork.SaveChangesAsync();
 			return Unit.Value;
 		}

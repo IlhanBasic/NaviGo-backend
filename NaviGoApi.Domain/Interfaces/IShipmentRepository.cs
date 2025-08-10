@@ -9,8 +9,8 @@ namespace NaviGoApi.Domain.Interfaces
 		Task<Shipment?> GetByIdAsync(int id);
 		Task<IEnumerable<Shipment>> GetAllAsync();
 		Task AddAsync(Shipment shipment);
-		void Update(Shipment shipment);
-		void Delete(Shipment shipment);
+		Task UpdateAsync(Shipment shipment);
+		Task DeleteAsync(Shipment shipment);
 
 		// Specifične metode za Shipment ako trebaš
 		Task<IEnumerable<Shipment>> GetByContractIdAsync(int contractId);

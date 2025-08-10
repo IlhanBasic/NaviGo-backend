@@ -77,7 +77,7 @@ namespace NaviGoApi.API.Middlewares
 				if (user != null && user.UserStatus == UserStatus.Active)
 				{
 					user.UserStatus = UserStatus.Inactive;
-					_unitOfWork.Users.Update(user);
+					await _unitOfWork.Users.UpdateAsync(user);
 					await _unitOfWork.SaveChangesAsync();
 
 					_logger.LogWarning("User {UserId} account locked due to multiple geo-locations in {Interval} minutes: {Regions}",

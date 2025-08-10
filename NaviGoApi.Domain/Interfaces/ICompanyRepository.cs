@@ -9,8 +9,8 @@ namespace NaviGoApi.Domain.Interfaces
 		Task<Company?> GetByIdAsync(int id);
 		Task<IEnumerable<Company>> GetAllAsync();
 		Task AddAsync(Company company);
-		void Update(Company company);
-		void Delete(Company company);
+		Task UpdateAsync(Company company);
+		Task DeleteAsync(Company company);
 		Task<Company?> GetByNameAsync(string name);
 		Task<Company?> GetByPibAsync(string pib);
 

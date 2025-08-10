@@ -30,7 +30,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 			// Map update DTO onto existing entity (ignoring nulls could be handled here if needed)
 			_mapper.Map(request.PaymentDto, payment);
 
-			_unitOfWork.Payments.Update(payment);
+			await _unitOfWork.Payments.UpdateAsync(payment);
 			await _unitOfWork.SaveChangesAsync();
 			return Unit.Value;
 		}

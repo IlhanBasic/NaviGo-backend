@@ -27,12 +27,11 @@ namespace NaviGoApi.Application.CQRS.Handlers.Company
 			var existing = await _unitOfWork.Companies.GetByIdAsync(request.Id);
 			if (existing == null)
 			{
-				// Možeš baciti custom exception ili vratiti null, po dogovoru
 				return null!;
 			}
 
 			_mapper.Map(request.CompanyDto, existing);
-			_unitOfWork.Companies.Update(existing);
+			await _unitOfWork.Companies.UpdateAsync(existing);
 			await _unitOfWork.SaveChangesAsync();
 
 			return _mapper.Map<CompanyDto>(existing);

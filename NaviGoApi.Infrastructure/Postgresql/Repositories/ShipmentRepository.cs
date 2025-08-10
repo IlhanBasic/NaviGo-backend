@@ -22,9 +22,10 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			await _context.Shipments.AddAsync(shipment);
 		}
 
-		public void Delete(Shipment shipment)
+		public Task DeleteAsync(Shipment shipment)
 		{
 			_context.Shipments.Remove(shipment);
+			return Task.CompletedTask;
 		}
 
 		public async Task<IEnumerable<Shipment>> GetAllAsync()
@@ -73,9 +74,10 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.ToListAsync();
 		}
 
-		public void Update(Shipment shipment)
+		public Task UpdateAsync(Shipment shipment)
 		{
 			_context.Shipments.Update(shipment);
+			return Task.CompletedTask;
 		}
 	}
 }

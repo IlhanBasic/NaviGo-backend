@@ -9,8 +9,8 @@ namespace NaviGoApi.Domain.Interfaces
 		Task<Payment?> GetByIdAsync(int id);
 		Task<IEnumerable<Payment>> GetAllAsync();
 		Task AddAsync(Payment payment);
-		void Update(Payment payment);
-		void Delete(Payment payment);
+		Task UpdateAsync(Payment payment);
+		Task DeleteAsync(Payment payment);
 
 		// Specifične metode
 		Task<IEnumerable<Payment>> GetByContractIdAsync(int contractId);

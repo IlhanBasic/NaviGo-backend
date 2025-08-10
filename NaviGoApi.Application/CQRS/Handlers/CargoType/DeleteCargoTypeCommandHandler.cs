@@ -20,7 +20,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.CargoType
 			var cargoType = await _unitOfWork.CargoTypes.GetByIdAsync(request.Id);
 			if (cargoType != null)
 			{
-				_unitOfWork.CargoTypes.Delete(cargoType);
+				await _unitOfWork.CargoTypes.DeleteAsync(cargoType);
 				await _unitOfWork.SaveChangesAsync();
 			}
 			return Unit.Value;

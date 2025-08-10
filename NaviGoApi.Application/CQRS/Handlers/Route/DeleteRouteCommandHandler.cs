@@ -23,7 +23,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Route
 			if (route == null)
 				throw new KeyNotFoundException($"Route with ID {request.Id} not found");
 
-			_unitOfWork.Routes.Delete(route);
+			await _unitOfWork.Routes.DeleteAsync(route);
 			await _unitOfWork.SaveChangesAsync();
 			return Unit.Value;
 		}

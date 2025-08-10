@@ -24,7 +24,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			if (user == null)
 				return false;
 
-			_unitOfWork.Users.Remove(user);
+			await _unitOfWork.Users.DeleteAsync(user);
 			await _unitOfWork.SaveChangesAsync();
 			return true;
 		}

@@ -96,7 +96,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Route
 			// Mapiraj ostala polja iz DTO (osim onih koje si ručno ažurirao)
 			_mapper.Map(request.RouteDto, existingRoute);
 
-			_unitOfWork.Routes.Update(existingRoute);
+			await _unitOfWork.Routes.UpdateAsync(existingRoute);
 			await _unitOfWork.SaveChangesAsync();
 
 			return Unit.Value;

@@ -26,7 +26,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 				throw new KeyNotFoundException($"Vehicle with Id {request.VehicleId} not found.");
 			}
 
-			_unitOfWork.Vehicles.Delete(vehicle);
+			await _unitOfWork.Vehicles.DeleteAsync(vehicle);
 			await _unitOfWork.SaveChangesAsync();
 
 			return Unit.Value;

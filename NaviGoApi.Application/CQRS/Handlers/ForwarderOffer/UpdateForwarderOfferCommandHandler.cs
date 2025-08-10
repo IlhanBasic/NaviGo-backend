@@ -30,7 +30,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.ForwarderOffer
 			// Map update DTO to entity
 			_mapper.Map(request.ForwarderOfferDto, entity);
 
-			_unitOfWork.ForwarderOffers.Update(entity);
+			await _unitOfWork.ForwarderOffers.UpdateAsync(entity);
 			await _unitOfWork.SaveChangesAsync();
 
 			return Unit.Value;

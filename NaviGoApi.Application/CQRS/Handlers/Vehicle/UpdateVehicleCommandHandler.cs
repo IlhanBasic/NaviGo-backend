@@ -33,7 +33,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 
 			_mapper.Map(request.VehicleUpdateDto, existingVehicle);
 
-			_unitOfWork.Vehicles.Update(existingVehicle);
+			await _unitOfWork.Vehicles.UpdateAsync(existingVehicle);
 			await _unitOfWork.SaveChangesAsync();
 
 			return _mapper.Map<VehicleDto>(existingVehicle);

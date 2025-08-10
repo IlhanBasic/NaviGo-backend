@@ -23,7 +23,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Driver
 			var driver = await _unitOfWork.Drivers.GetByIdAsync(request.Id);
 			if (driver != null)
 			{
-				 _unitOfWork.Drivers.Delete(driver);
+				 await _unitOfWork.Drivers.DeleteAsync(driver);
 				await _unitOfWork.SaveChangesAsync();
 			}
 			

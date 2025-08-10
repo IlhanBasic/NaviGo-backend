@@ -9,8 +9,8 @@ namespace NaviGoApi.Domain.Interfaces
 		Task<Contract?> GetByIdAsync(int id);
 		Task<IEnumerable<Contract>> GetAllAsync();
 		Task AddAsync(Contract contract);
-		void Update(Contract contract);
-		void Delete(Contract contract);
+		Task UpdateAsync(Contract contract);
+		Task DeleteAsync(Contract contract);
 
 		// Primer specifičnih metoda:
 		Task<IEnumerable<Contract>> GetByClientIdAsync(int clientId);

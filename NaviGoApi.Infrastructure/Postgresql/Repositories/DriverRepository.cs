@@ -17,9 +17,10 @@ public class DriverRepository : IDriverRepository
 		await _context.Drivers.AddAsync(driver);
 	}
 
-	public void Delete(Driver driver)
+	public Task DeleteAsync(Driver driver)
 	{
 		_context.Drivers.Remove(driver);
+		return Task.CompletedTask;
 	}
 
 	public async Task<IEnumerable<Driver>> GetAllAsync()
@@ -44,8 +45,9 @@ public class DriverRepository : IDriverRepository
 		return await _context.Drivers.FindAsync(id);
 	}
 
-	public void Update(Driver driver)
+	public Task UpdateAsync(Driver driver)
 	{
 		_context.Drivers.Update(driver);
+		return Task.CompletedTask;
 	}
 }

@@ -9,8 +9,8 @@ namespace NaviGoApi.Domain.Interfaces
 		Task<Driver?> GetByIdAsync(int id);
 		Task<IEnumerable<Driver>> GetAllAsync();
 		Task AddAsync(Driver driver);
-		void Update(Driver driver);
-		void Delete(Driver driver);
+		Task UpdateAsync(Driver driver);
+		Task DeleteAsync(Driver driver);
 
 		// Primer dodatnih metoda
 		Task<IEnumerable<Driver>> GetByCompanyIdAsync(int companyId);

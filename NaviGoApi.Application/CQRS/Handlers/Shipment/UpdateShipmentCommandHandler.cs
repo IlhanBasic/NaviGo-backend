@@ -28,7 +28,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 				throw new KeyNotFoundException($"Shipment with ID {request.Id} not found.");
 
 			_mapper.Map(request.ShipmentDto, existing); // Mapuje izmene na postojeći entitet
-			_unitOfWork.Shipments.Update(existing);
+			await _unitOfWork.Shipments.UpdateAsync(existing);
 			await _unitOfWork.SaveChangesAsync();
 			return Unit.Value;
 		}

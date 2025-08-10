@@ -23,14 +23,16 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			await _context.Routes.AddAsync(route);
 		}
 
-		public void Update(Route route)
+		public Task UpdateAsync(Route route)
 		{
 			_context.Routes.Update(route);
+			return Task.CompletedTask;
 		}
 
-		public void Delete(Route route)
+		public Task DeleteAsync(Route route)
 		{
 			_context.Routes.Remove(route);
+			return Task.CompletedTask;
 		}
 
 		public async Task<Route?> GetByIdAsync(int id)

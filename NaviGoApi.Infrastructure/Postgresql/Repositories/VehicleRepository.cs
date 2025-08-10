@@ -23,9 +23,10 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			await _context.Vehicles.AddAsync(vehicle);
 		}
 
-		public void Delete(Vehicle vehicle)
+		public Task DeleteAsync(Vehicle vehicle)
 		{
 			_context.Vehicles.Remove(vehicle);
+			return Task.CompletedTask;
 		}
 
 		public async Task<IEnumerable<Vehicle>> GetAllAsync()
@@ -57,9 +58,10 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.FirstOrDefaultAsync(v => v.Id == id);
 		}
 
-		public void Update(Vehicle vehicle)
+		public Task UpdateAsync(Vehicle vehicle)
 		{
 			_context.Vehicles.Update(vehicle);
+			return Task.CompletedTask;
 		}
 	}
 }

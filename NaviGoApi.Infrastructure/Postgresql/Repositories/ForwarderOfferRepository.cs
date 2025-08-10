@@ -20,13 +20,12 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		public async Task AddAsync(ForwarderOffer offer)
 		{
 			await _context.ForwarderOffers.AddAsync(offer);
-			await _context.SaveChangesAsync();
 		}
 
-		public void Delete(ForwarderOffer offer)
+		public Task DeleteAsync(ForwarderOffer offer)
 		{
 			_context.ForwarderOffers.Remove(offer);
-			_context.SaveChanges();
+			return Task.CompletedTask;
 		}
 
 		public async Task<IEnumerable<ForwarderOffer>> GetActiveOffersAsync()
@@ -74,10 +73,10 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.ToListAsync();
 		}
 
-		public void Update(ForwarderOffer offer)
+		public Task UpdateAsync(ForwarderOffer offer)
 		{
 			_context.ForwarderOffers.Update(offer);
-			_context.SaveChanges();
+			return Task.CompletedTask;
 		}
 	}
 }

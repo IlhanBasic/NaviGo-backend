@@ -37,9 +37,9 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return result["SequenceValue"].AsInt32;
 		}
 
-		public void Delete(Driver driver)
+		public async Task DeleteAsync(Driver driver)
 		{
-			_driversCollection.DeleteOne(d => d.Id == driver.Id);
+			await _driversCollection.DeleteOneAsync(d => d.Id == driver.Id);
 		}
 
 		public async Task<IEnumerable<Driver>> GetAllAsync()
@@ -66,9 +66,9 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return await _driversCollection.Find(d => d.Id == id).FirstOrDefaultAsync();
 		}
 
-		public void Update(Driver driver)
+		public async Task UpdateAsync(Driver driver)
 		{
-			var result = _driversCollection.ReplaceOneAsync(d => d.Id == driver.Id, driver).GetAwaiter().GetResult();
+			var result = await _driversCollection.ReplaceOneAsync(d => d.Id == driver.Id, driver);
 			if (result.MatchedCount == 0)
 				throw new Exception($"Driver with Id {driver.Id} not found for update.");
 		}

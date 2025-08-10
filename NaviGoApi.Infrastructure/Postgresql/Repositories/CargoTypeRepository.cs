@@ -19,9 +19,10 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			await _context.CargoTypes.AddAsync(cargoType);
 		}
 
-		public void Delete(CargoType cargoType)
+		public Task DeleteAsync(CargoType cargoType)
 		{
 			_context.CargoTypes.Remove(cargoType);
+			return Task.CompletedTask;
 		}
 
 		public async Task<IEnumerable<CargoType>> GetAllAsync()
@@ -34,9 +35,11 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			return await _context.CargoTypes.FindAsync(id);
 		}
 
-		public void Update(CargoType cargoType)
+		public Task UpdateAsync(CargoType cargoType)
 		{
 			_context.CargoTypes.Update(cargoType);
+			return Task.CompletedTask;
 		}
 	}
+
 }

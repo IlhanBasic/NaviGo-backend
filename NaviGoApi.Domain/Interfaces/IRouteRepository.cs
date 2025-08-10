@@ -9,8 +9,8 @@ namespace NaviGoApi.Domain.Interfaces
 		Task<Route?> GetByIdAsync(int id);
 		Task<IEnumerable<Route>> GetAllAsync();
 		Task AddAsync(Route route);
-		void Update(Route route);
-		void Delete(Route route);
+		Task UpdateAsync(Route route);
+		Task DeleteAsync(Route route);
 
 		// Specifične metode za Route, ako su potrebne
 		Task<IEnumerable<Route>> GetActiveRoutesAsync();
