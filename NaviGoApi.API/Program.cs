@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
 using NaviGoApi.API.Middlewares;
 using NaviGoApi.Application.CQRS.Queries.User;
 using NaviGoApi.Application.MappingProfiles;
@@ -19,6 +20,20 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 	options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+//MONGODB
+builder.Services.AddSingleton<IMongoClient>(sp =>
+{
+	var config = sp.GetRequiredService<IConfiguration>();
+	var connectionString = config["MongoDbSettings:ConnectionString"];
+	return new MongoClient(connectionString);
+});
+
+builder.Services.AddScoped(sp =>
+{
+	var client = sp.GetRequiredService<IMongoClient>();
+	var databaseName = sp.GetRequiredService<IConfiguration>()["MongoDbSettings:DatabaseName"];
+	return client.GetDatabase(databaseName);
+});
 // Neo4j baza
 builder.Services.AddSingleton<IDriver>(sp =>
 {

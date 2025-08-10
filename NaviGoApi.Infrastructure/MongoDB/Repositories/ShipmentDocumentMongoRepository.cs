@@ -1,12 +1,43 @@
-﻿using System;
+﻿using MongoDB.Driver;
+using NaviGoApi.Domain.Entities;
+using NaviGoApi.Domain.Interfaces;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 {
-	internal class ShipmentDocumentMongoRepository
+	public class ShipmentDocumentMongoRepository : IShipmentDocumentRepository
 	{
+		private readonly IMongoCollection<ShipmentDocument> _shipmentDocumentsCollection;
+
+		public ShipmentDocumentMongoRepository(IMongoDatabase database)
+		{
+			_shipmentDocumentsCollection = database.GetCollection<ShipmentDocument>("ShipmentDocuments");
+		}
+
+		public async Task AddAsync(ShipmentDocument document)
+		{
+			await _shipmentDocumentsCollection.InsertOneAsync(document);
+		}
+
+		public async Task DeleteAsync(int id)
+		{
+			await _shipmentDocumentsCollection.DeleteOneAsync(doc => doc.Id == id);
+		}
+
+		public async Task<IEnumerable<ShipmentDocument>> GetAllAsync()
+		{
+			return await _shipmentDocumentsCollection.Find(_ => true).ToListAsync();
+		}
+
+		public async Task<ShipmentDocument?> GetByIdAsync(int id)
+		{
+			return await _shipmentDocumentsCollection.Find(doc => doc.Id == id).FirstOrDefaultAsync();
+		}
+
+		public async Task UpdateAsync(ShipmentDocument document)
+		{
+			await _shipmentDocumentsCollection.ReplaceOneAsync(doc => doc.Id == document.Id, document);
+		}
 	}
 }
