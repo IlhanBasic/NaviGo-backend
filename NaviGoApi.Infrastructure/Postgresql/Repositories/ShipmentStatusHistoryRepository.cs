@@ -19,7 +19,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		public async Task AddAsync(ShipmentStatusHistory history)
 		{
 			await _context.ShipmentStatusHistories.AddAsync(history);
-			await _context.SaveChangesAsync();
 		}
 
 		public async Task DeleteAsync(int id)
@@ -28,7 +27,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			if (entity != null)
 			{
 				_context.ShipmentStatusHistories.Remove(entity);
-				await _context.SaveChangesAsync();
 			}
 		}
 
@@ -51,7 +49,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		public async Task UpdateAsync(ShipmentStatusHistory history)
 		{
 			_context.ShipmentStatusHistories.Update(history);
-			await _context.SaveChangesAsync();
 		}
 	}
 }

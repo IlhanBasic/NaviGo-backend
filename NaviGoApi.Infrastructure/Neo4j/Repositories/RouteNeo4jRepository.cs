@@ -17,41 +17,72 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			_driver = driver;
 		}
 
+		private async Task<int> GetNextIdAsync(string entityName)
+		{
+			var query = @"
+            MERGE (c:Counter { name: $entityName })
+            ON CREATE SET c.lastId = 1
+            ON MATCH SET c.lastId = c.lastId + 1
+            RETURN c.lastId as lastId
+        ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { entityName });
+				var record = await result.SingleAsync();
+				return record["lastId"].As<int>();
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
 		public async Task AddAsync(Route route)
 		{
+			var id = await GetNextIdAsync("Route");
+
 			await using var session = _driver.AsyncSession();
-			await session.RunAsync(@"
-				CREATE (r:Route {
-					Id: $Id,
-					CompanyId: $CompanyId,
-					StartLocationId: $StartLocationId,
-					EndLocationId: $EndLocationId,
-					DistanceKm: $DistanceKm,
-					EstimatedDurationHours: $EstimatedDurationHours,
-					BasePrice: $BasePrice,
-					IsActive: $IsActive,
-					CreatedAt: datetime($CreatedAt),
-					AvailableFrom: datetime($AvailableFrom),
-					AvailableTo: datetime($AvailableTo),
-					GeometryEncoded: $GeometryEncoded,
-					GeometryJson: $GeometryJson
-				})",
-				new
-				{
-					route.Id,
-					route.CompanyId,
-					route.StartLocationId,
-					route.EndLocationId,
-					route.DistanceKm,
-					route.EstimatedDurationHours,
-					route.BasePrice,
-					route.IsActive,
-					CreatedAt = route.CreatedAt.ToString("o"),
-					AvailableFrom = route.AvailableFrom.ToString("o"),
-					AvailableTo = route.AvailableTo.ToString("o"),
-					route.GeometryEncoded,
-					route.GeometryJson
-				});
+			try
+			{
+				await session.RunAsync(@"
+                CREATE (r:Route {
+                    Id: $Id,
+                    CompanyId: $CompanyId,
+                    StartLocationId: $StartLocationId,
+                    EndLocationId: $EndLocationId,
+                    DistanceKm: $DistanceKm,
+                    EstimatedDurationHours: $EstimatedDurationHours,
+                    BasePrice: $BasePrice,
+                    IsActive: $IsActive,
+                    CreatedAt: datetime($CreatedAt),
+                    AvailableFrom: datetime($AvailableFrom),
+                    AvailableTo: datetime($AvailableTo),
+                    GeometryEncoded: $GeometryEncoded,
+                    GeometryJson: $GeometryJson
+                })",
+					new
+					{
+						Id = id,
+						route.CompanyId,
+						route.StartLocationId,
+						route.EndLocationId,
+						route.DistanceKm,
+						route.EstimatedDurationHours,
+						route.BasePrice,
+						route.IsActive,
+						CreatedAt = route.CreatedAt.ToString("o"),
+						AvailableFrom = route.AvailableFrom.ToString("o"),
+						AvailableTo = route.AvailableTo.ToString("o"),
+						route.GeometryEncoded,
+						route.GeometryJson
+					});
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
 
 		public async Task DeleteAsync(Route route)

@@ -17,31 +17,62 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			_driver = driver;
 		}
 
+		private async Task<int> GetNextIdAsync(string entityName)
+		{
+			var query = @"
+            MERGE (c:Counter { name: $entityName })
+            ON CREATE SET c.lastId = 1
+            ON MATCH SET c.lastId = c.lastId + 1
+            RETURN c.lastId as lastId
+        ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { entityName });
+				var record = await result.SingleAsync();
+				return record["lastId"].As<int>();
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
 		public async Task AddAsync(PickupChange change)
 		{
+			var id = await GetNextIdAsync("PickupChange");
+
 			await using var session = _driver.AsyncSession();
-			await session.RunAsync(@"
-				CREATE (pc:PickupChange {
-					Id: $Id,
-					ShipmentId: $ShipmentId,
-					ClientId: $ClientId,
-					OldTime: datetime($OldTime),
-					NewTime: datetime($NewTime),
-					ChangeCount: $ChangeCount,
-					AdditionalFee: $AdditionalFee,
-					PickupChangesStatus: $PickupChangesStatus
-				})",
-				new
-				{
-					change.Id,
-					change.ShipmentId,
-					change.ClientId,
-					OldTime = change.OldTime.ToString("o"),
-					NewTime = change.NewTime.ToString("o"),
-					change.ChangeCount,
-					change.AdditionalFee,
-					change.PickupChangesStatus
-				});
+			try
+			{
+				await session.RunAsync(@"
+                CREATE (pc:PickupChange {
+                    Id: $Id,
+                    ShipmentId: $ShipmentId,
+                    ClientId: $ClientId,
+                    OldTime: datetime($OldTime),
+                    NewTime: datetime($NewTime),
+                    ChangeCount: $ChangeCount,
+                    AdditionalFee: $AdditionalFee,
+                    PickupChangesStatus: $PickupChangesStatus
+                })",
+					new
+					{
+						Id = id,
+						change.ShipmentId,
+						change.ClientId,
+						OldTime = change.OldTime.ToString("o"),
+						NewTime = change.NewTime.ToString("o"),
+						change.ChangeCount,
+						change.AdditionalFee,
+						PickupChangesStatus = (int)change.PickupChangesStatus
+					});
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
 
 		public async Task DeleteAsync(int id)

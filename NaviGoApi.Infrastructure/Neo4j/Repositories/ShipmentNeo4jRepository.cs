@@ -16,35 +16,59 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			_driver = driver;
 		}
 
-		public async Task AddAsync(Shipment shipment)
+		private async Task<int> GetNextIdAsync(string entityName)
 		{
 			var query = @"
-                CREATE (s:Shipment {
-                    id: $id,
-                    contractId: $contractId,
-                    vehicleId: $vehicleId,
-                    driverId: $driverId,
-                    cargoTypeId: $cargoTypeId,
-                    weightKg: $weightKg,
-                    priority: $priority,
-                    description: $description,
-                    status: $status,
-                    scheduledDeparture: datetime($scheduledDeparture),
-                    scheduledArrival: datetime($scheduledArrival),
-                    actualDeparture: $actualDeparture,
-                    actualArrival: $actualArrival,
-                    createdAt: datetime($createdAt),
-                    delayHours: $delayHours,
-                    delayPenaltyAmount: $delayPenaltyAmount,
-                    penaltyCalculatedAt: $penaltyCalculatedAt
-                })";
+            MERGE (c:Counter { name: $entityName })
+            ON CREATE SET c.lastId = 1
+            ON MATCH SET c.lastId = c.lastId + 1
+            RETURN c.lastId as lastId
+        ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { entityName });
+				var record = await result.SingleAsync();
+				return record["lastId"].As<int>();
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+		public async Task AddAsync(Shipment shipment)
+		{
+			var id = await GetNextIdAsync("Shipment");
+
+			var query = @"
+            CREATE (s:Shipment {
+                id: $id,
+                contractId: $contractId,
+                vehicleId: $vehicleId,
+                driverId: $driverId,
+                cargoTypeId: $cargoTypeId,
+                weightKg: $weightKg,
+                priority: $priority,
+                description: $description,
+                status: $status,
+                scheduledDeparture: datetime($scheduledDeparture),
+                scheduledArrival: datetime($scheduledArrival),
+                actualDeparture: $actualDeparture,
+                actualArrival: $actualArrival,
+                createdAt: datetime($createdAt),
+                delayHours: $delayHours,
+                delayPenaltyAmount: $delayPenaltyAmount,
+                penaltyCalculatedAt: $penaltyCalculatedAt
+            })";
 
 			var session = _driver.AsyncSession();
 			try
 			{
 				await session.RunAsync(query, new
 				{
-					id = shipment.Id,
+					id = id,
 					contractId = shipment.ContractId,
 					vehicleId = shipment.VehicleId,
 					driverId = shipment.DriverId,

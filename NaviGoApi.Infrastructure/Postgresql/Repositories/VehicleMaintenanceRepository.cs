@@ -20,7 +20,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		public async Task AddAsync(VehicleMaintenance maintenance)
 		{
 			await _context.VehicleMaintenances.AddAsync(maintenance);
-			await _context.SaveChangesAsync();
 		}
 
 		public async Task DeleteAsync(int id)
@@ -29,7 +28,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			if (entity != null)
 			{
 				_context.VehicleMaintenances.Remove(entity);
-				await _context.SaveChangesAsync();
 			}
 		}
 
@@ -52,7 +50,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		public async Task UpdateAsync(VehicleMaintenance maintenance)
 		{
 			_context.VehicleMaintenances.Update(maintenance);
-			await _context.SaveChangesAsync();
 		}
 	}
 }

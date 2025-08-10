@@ -16,30 +16,54 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			_driver = driver;
 		}
 
-		public async Task AddAsync(ShipmentDocument document)
+		private async Task<int> GetNextIdAsync(string entityName)
 		{
 			var query = @"
-                CREATE (d:ShipmentDocument {
-                    id: $id,
-                    shipmentId: $shipmentId,
-                    documentType: $documentType,
-                    fileUrl: $fileUrl,
-                    uploadDate: datetime($uploadDate),
-                    verified: $verified,
-                    verifiedByUserId: $verifiedByUserId,
-                    expiryDate: $expiryDate
-                })";
+            MERGE (c:Counter { name: $entityName })
+            ON CREATE SET c.lastId = 1
+            ON MATCH SET c.lastId = c.lastId + 1
+            RETURN c.lastId as lastId
+        ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { entityName });
+				var record = await result.SingleAsync();
+				return record["lastId"].As<int>();
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+		public async Task AddAsync(ShipmentDocument document)
+		{
+			var id = await GetNextIdAsync("ShipmentDocument");
+
+			var query = @"
+            CREATE (d:ShipmentDocument {
+                id: $id,
+                shipmentId: $shipmentId,
+                documentType: $documentType,
+                fileUrl: $fileUrl,
+                uploadDate: datetime($uploadDate),
+                verified: $verified,
+                verifiedByUserId: $verifiedByUserId,
+                expiryDate: $expiryDate
+            })";
 
 			var session = _driver.AsyncSession();
 			try
 			{
 				await session.RunAsync(query, new
 				{
-					id = document.Id,
+					id = id,
 					shipmentId = document.ShipmentId,
 					documentType = (int)document.DocumentType,
 					fileUrl = document.FileUrl,
-					uploadDate = document.UploadDate.ToString("o"), // ISO 8601 format
+					uploadDate = document.UploadDate.ToString("o"),
 					verified = document.Verified,
 					verifiedByUserId = document.VerifiedByUserId,
 					expiryDate = document.ExpiryDate?.ToString("o")

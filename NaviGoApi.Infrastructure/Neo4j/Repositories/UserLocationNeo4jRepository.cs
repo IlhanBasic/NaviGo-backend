@@ -16,23 +16,47 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			_driver = driver;
 		}
 
-		public async Task AddAsync(UserLocation location)
+		private async Task<int> GetNextIdAsync(string entityName)
 		{
 			var query = @"
-				CREATE (ul:UserLocation {
-					id: $id,
-					userId: $userId,
-					ipAddress: $ipAddress,
-					region: $region,
-					accessTime: datetime($accessTime)
-				})";
+            MERGE (c:Counter { name: $entityName })
+            ON CREATE SET c.lastId = 1
+            ON MATCH SET c.lastId = c.lastId + 1
+            RETURN c.lastId as lastId
+        ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { entityName });
+				var record = await result.SingleAsync();
+				return record["lastId"].As<int>();
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+		public async Task AddAsync(UserLocation location)
+		{
+			var id = await GetNextIdAsync("UserLocation");
+
+			var query = @"
+            CREATE (ul:UserLocation {
+                id: $id,
+                userId: $userId,
+                ipAddress: $ipAddress,
+                region: $region,
+                accessTime: datetime($accessTime)
+            })";
 
 			var session = _driver.AsyncSession();
 			try
 			{
 				await session.RunAsync(query, new
 				{
-					id = location.Id,
+					id = id,
 					userId = location.UserId,
 					ipAddress = location.IpAddress,
 					region = location.Region,

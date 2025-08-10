@@ -16,25 +16,49 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			_driver = driver;
 		}
 
-		public async Task AddAsync(VehicleType vehicleType)
+		private async Task<int> GetNextIdAsync(string entityName)
 		{
 			var query = @"
-				CREATE (vt:VehicleType {
-					id: $id,
-					typeName: $typeName,
-					description: $description,
-					requiresSpecialLicense: $requiresSpecialLicense
-				})";
+            MERGE (c:Counter { name: $entityName })
+            ON CREATE SET c.lastId = 1
+            ON MATCH SET c.lastId = c.lastId + 1
+            RETURN c.lastId as lastId
+        ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { entityName });
+				var record = await result.SingleAsync();
+				return record["lastId"].As<int>();
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+		public async Task AddAsync(VehicleType vehicleType)
+		{
+			var id = await GetNextIdAsync("VehicleType");
+
+			var query = @"
+            CREATE (vt:VehicleType {
+                id: $id,
+                typeName: $typeName,
+                description: $description,
+                requiresSpecialLicense: $requiresSpecialLicense
+            })";
 
 			var session = _driver.AsyncSession();
 			try
 			{
 				await session.RunAsync(query, new
 				{
-					id = vehicleType.Id,
-					typeName = vehicleType.TypeName,
+					id = id,
+					vehicleType.TypeName,
 					description = vehicleType.Description ?? "",
-					requiresSpecialLicense = vehicleType.RequiresSpecialLicense
+					vehicleType.RequiresSpecialLicense
 				});
 			}
 			finally

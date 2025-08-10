@@ -29,7 +29,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			{
 				_context.Locations.Remove(location);
 			}
-			// SaveChanges radi UnitOfWork
 		}
 
 		public async Task<IEnumerable<Location>> GetAllAsync()

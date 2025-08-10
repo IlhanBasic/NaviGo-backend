@@ -17,31 +17,55 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			_driver = driver;
 		}
 
-		public async Task AddAsync(Contract contract)
+		private async Task<int> GetNextIdAsync(string entityName)
 		{
 			var query = @"
-				CREATE (c:Contract {
-					Id: $Id,
-					ClientId: $ClientId,
-					ForwarderId: $ForwarderId,
-					RouteId: $RouteId,
-					ContractNumber: $ContractNumber,
-					ContractDate: datetime($ContractDate),
-					Terms: $Terms,
-					ContractStatus: $ContractStatus,
-					PenaltyRatePerHour: $PenaltyRatePerHour,
-					MaxPenaltyPercent: $MaxPenaltyPercent,
-					ValidUntil: datetime($ValidUntil),
-					SignedDate: CASE WHEN $SignedDate IS NULL THEN NULL ELSE datetime($SignedDate) END
-				})
-			";
+            MERGE (c:Counter { name: $entityName })
+            ON CREATE SET c.lastId = 1
+            ON MATCH SET c.lastId = c.lastId + 1
+            RETURN c.lastId as lastId
+        ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { entityName });
+				var record = await result.SingleAsync();
+				return record["lastId"].As<int>();
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+		public async Task AddAsync(Contract contract)
+		{
+			var id = await GetNextIdAsync("Contract");
+
+			var query = @"
+            CREATE (c:Contract {
+                Id: $Id,
+                ClientId: $ClientId,
+                ForwarderId: $ForwarderId,
+                RouteId: $RouteId,
+                ContractNumber: $ContractNumber,
+                ContractDate: datetime($ContractDate),
+                Terms: $Terms,
+                ContractStatus: $ContractStatus,
+                PenaltyRatePerHour: $PenaltyRatePerHour,
+                MaxPenaltyPercent: $MaxPenaltyPercent,
+                ValidUntil: datetime($ValidUntil),
+                SignedDate: CASE WHEN $SignedDate IS NULL THEN NULL ELSE datetime($SignedDate) END
+            })
+        ";
 
 			await using var session = _driver.AsyncSession();
 			try
 			{
 				await session.RunAsync(query, new
 				{
-					contract.Id,
+					Id = id,
 					contract.ClientId,
 					contract.ForwarderId,
 					contract.RouteId,

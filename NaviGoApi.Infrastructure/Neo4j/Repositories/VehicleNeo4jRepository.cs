@@ -16,47 +16,71 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			_driver = driver;
 		}
 
-		public async Task AddAsync(Vehicle vehicle)
+		private async Task<int> GetNextIdAsync(string entityName)
 		{
 			var query = @"
-				CREATE (v:Vehicle {
-					id: $id,
-					companyId: $companyId,
-					brand: $brand,
-					model: $model,
-					engineCapacityCc: $engineCapacityCc,
-					vehiclePicture: $vehiclePicture,
-					vehicleTypeId: $vehicleTypeId,
-					registrationNumber: $registrationNumber,
-					capacityKg: $capacityKg,
-					manufactureYear: $manufactureYear,
-					vehicleStatus: $vehicleStatus,
-					lastInspectionDate: datetime($lastInspectionDate),
-					insuranceExpiry: datetime($insuranceExpiry),
-					currentLocationId: $currentLocationId,
-					createdAt: datetime($createdAt),
-					categories: $categories
-				})";
+            MERGE (c:Counter { name: $entityName })
+            ON CREATE SET c.lastId = 1
+            ON MATCH SET c.lastId = c.lastId + 1
+            RETURN c.lastId as lastId
+        ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { entityName });
+				var record = await result.SingleAsync();
+				return record["lastId"].As<int>();
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+		public async Task AddAsync(Vehicle vehicle)
+		{
+			var id = await GetNextIdAsync("Vehicle");
+
+			var query = @"
+            CREATE (v:Vehicle {
+                id: $id,
+                companyId: $companyId,
+                brand: $brand,
+                model: $model,
+                engineCapacityCc: $engineCapacityCc,
+                vehiclePicture: $vehiclePicture,
+                vehicleTypeId: $vehicleTypeId,
+                registrationNumber: $registrationNumber,
+                capacityKg: $capacityKg,
+                manufactureYear: $manufactureYear,
+                vehicleStatus: $vehicleStatus,
+                lastInspectionDate: datetime($lastInspectionDate),
+                insuranceExpiry: datetime($insuranceExpiry),
+                currentLocationId: $currentLocationId,
+                createdAt: datetime($createdAt),
+                categories: $categories
+            })";
 
 			var session = _driver.AsyncSession();
 			try
 			{
 				await session.RunAsync(query, new
 				{
-					id = vehicle.Id,
-					companyId = vehicle.CompanyId,
-					brand = vehicle.Brand,
-					model = vehicle.Model,
-					engineCapacityCc = vehicle.EngineCapacityCc,
-					vehiclePicture = vehicle.VehiclePicture ?? "",
-					vehicleTypeId = vehicle.VehicleTypeId,
-					registrationNumber = vehicle.RegistrationNumber,
-					capacityKg = vehicle.CapacityKg,
-					manufactureYear = vehicle.ManufactureYear,
+					id = id,
+					vehicle.CompanyId,
+					vehicle.Brand,
+					vehicle.Model,
+					vehicle.EngineCapacityCc,
+					vehiclePicture=vehicle.VehiclePicture ?? "",
+					vehicle.VehicleTypeId,
+					vehicle.RegistrationNumber,
+					vehicle.CapacityKg,
+					vehicle.ManufactureYear,
 					vehicleStatus = vehicle.VehicleStatus.ToString(),
 					lastInspectionDate = vehicle.LastInspectionDate?.ToString("o"),
 					insuranceExpiry = vehicle.InsuranceExpiry?.ToString("o"),
-					currentLocationId = vehicle.CurrentLocationId,
+					vehicle.CurrentLocationId,
 					createdAt = vehicle.CreatedAt.ToString("o"),
 					categories = vehicle.Categories ?? ""
 				});

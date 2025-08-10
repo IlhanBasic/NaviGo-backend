@@ -17,29 +17,60 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			_driver = driver;
 		}
 
+		private async Task<int> GetNextIdAsync(string entityName)
+		{
+			var query = @"
+            MERGE (c:Counter { name: $entityName })
+            ON CREATE SET c.lastId = 1
+            ON MATCH SET c.lastId = c.lastId + 1
+            RETURN c.lastId as lastId
+        ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { entityName });
+				var record = await result.SingleAsync();
+				return record["lastId"].As<int>();
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
 		public async Task AddAsync(Payment payment)
 		{
+			var id = await GetNextIdAsync("Payment");
+
 			await using var session = _driver.AsyncSession();
-			await session.RunAsync(@"
-				CREATE (p:Payment {
-					Id: $Id,
-					ContractId: $ContractId,
-					Amount: $Amount,
-					PaymentDate: datetime($PaymentDate),
-					PaymentStatus: $PaymentStatus,
-					ReceiptUrl: $ReceiptUrl,
-					ClientId: $ClientId
-				})",
-				new
-				{
-					payment.Id,
-					payment.ContractId,
-					payment.Amount,
-					PaymentDate = payment.PaymentDate.ToString("o"), // ISO 8601 format
-					PaymentStatus = (int)payment.PaymentStatus,
-					payment.ReceiptUrl,
-					payment.ClientId
-				});
+			try
+			{
+				await session.RunAsync(@"
+                CREATE (p:Payment {
+                    Id: $Id,
+                    ContractId: $ContractId,
+                    Amount: $Amount,
+                    PaymentDate: datetime($PaymentDate),
+                    PaymentStatus: $PaymentStatus,
+                    ReceiptUrl: $ReceiptUrl,
+                    ClientId: $ClientId
+                })",
+					new
+					{
+						Id = id,
+						payment.ContractId,
+						payment.Amount,
+						PaymentDate = payment.PaymentDate.ToString("o"), // ISO 8601
+						PaymentStatus = (int)payment.PaymentStatus,
+						payment.ReceiptUrl,
+						payment.ClientId
+					});
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
 
 		public async Task DeleteAsync(Payment payment)

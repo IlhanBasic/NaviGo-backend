@@ -17,22 +17,24 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 
 		public async Task AddAsync(CargoType cargoType)
 		{
+			var id = await GetNextIdAsync("CargoType");
+
 			var query = @"
-                CREATE (ct:CargoType { 
-                    Id: $Id, 
-                    TypeName: $TypeName, 
-                    Description: $Description, 
-                    HazardLevel: $HazardLevel, 
-                    RequiresSpecialEquipment: $RequiresSpecialEquipment 
-                })
-            ";
+        CREATE (ct:CargoType { 
+            Id: $Id, 
+            TypeName: $TypeName, 
+            Description: $Description, 
+            HazardLevel: $HazardLevel, 
+            RequiresSpecialEquipment: $RequiresSpecialEquipment 
+        })
+    ";
 
 			var session = _driver.AsyncSession();
 			try
 			{
 				await session.RunAsync(query, new
 				{
-					Id = cargoType.Id,
+					Id = id,
 					TypeName = cargoType.TypeName,
 					Description = cargoType.Description,
 					HazardLevel = cargoType.HazardLevel,
@@ -44,6 +46,29 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				await session.CloseAsync();
 			}
 		}
+		private async Task<int> GetNextIdAsync(string entityName)
+		{
+			var query = @"
+        MERGE (c:Counter { name: $entityName })
+        ON CREATE SET c.lastId = 1
+        ON MATCH SET c.lastId = c.lastId + 1
+        RETURN c.lastId as lastId
+    ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { entityName });
+				var record = await result.SingleAsync();
+				return record["lastId"].As<int>();
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+
 
 		public async Task DeleteAsync(CargoType cargoType)
 		{

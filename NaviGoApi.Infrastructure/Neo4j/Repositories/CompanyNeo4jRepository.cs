@@ -16,33 +16,57 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			_driver = driver;
 		}
 
-		public async Task AddAsync(Company company)
+		private async Task<int> GetNextIdAsync(string entityName)
 		{
 			var query = @"
-                CREATE (c:Company {
-                    Id: $Id,
-                    CompanyName: $CompanyName,
-                    PIB: $PIB,
-                    Address: $Address,
-                    LogoUrl: $LogoUrl,
-                    ContactEmail: $ContactEmail,
-                    Website: $Website,
-                    Description: $Description,
-                    CompanyType: $CompanyType,
-                    CompanyStatus: $CompanyStatus,
-                    MaxCommissionRate: $MaxCommissionRate,
-                    SaldoAmount: $SaldoAmount,
-                    CreatedAt: $CreatedAt,
-                    ProofFileUrl: $ProofFileUrl
-                })
-            ";
+            MERGE (c:Counter { name: $entityName })
+            ON CREATE SET c.lastId = 1
+            ON MATCH SET c.lastId = c.lastId + 1
+            RETURN c.lastId as lastId
+        ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { entityName });
+				var record = await result.SingleAsync();
+				return record["lastId"].As<int>();
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+		public async Task AddAsync(Company company)
+		{
+			var id = await GetNextIdAsync("Company");
+
+			var query = @"
+            CREATE (c:Company {
+                Id: $Id,
+                CompanyName: $CompanyName,
+                PIB: $PIB,
+                Address: $Address,
+                LogoUrl: $LogoUrl,
+                ContactEmail: $ContactEmail,
+                Website: $Website,
+                Description: $Description,
+                CompanyType: $CompanyType,
+                CompanyStatus: $CompanyStatus,
+                MaxCommissionRate: $MaxCommissionRate,
+                SaldoAmount: $SaldoAmount,
+                CreatedAt: $CreatedAt,
+                ProofFileUrl: $ProofFileUrl
+            })
+        ";
 
 			var session = _driver.AsyncSession();
 			try
 			{
 				await session.RunAsync(query, new
 				{
-					company.Id,
+					Id = id,
 					company.CompanyName,
 					company.PIB,
 					company.Address,

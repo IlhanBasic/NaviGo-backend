@@ -17,10 +17,36 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			_driver = driver;
 		}
 
+		private async Task<int> GetNextIdAsync(string entityName)
+		{
+			var query = @"
+            MERGE (c:Counter { name: $entityName })
+            ON CREATE SET c.lastId = 1
+            ON MATCH SET c.lastId = c.lastId + 1
+            RETURN c.lastId as lastId
+        ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { entityName });
+				var record = await result.SingleAsync();
+				return record["lastId"].As<int>();
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
 		public async Task AddAsync(Driver driverEntity)
 		{
+			var id = await GetNextIdAsync("Driver");
+
 			await using var session = _driver.AsyncSession();
-			await session.RunAsync(@"
+			try
+			{
+				await session.RunAsync(@"
                 CREATE (d:Driver {
                     Id: $Id,
                     CompanyId: $CompanyId,
@@ -33,19 +59,24 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
                     HireDate: $HireDate,
                     DriverStatus: $DriverStatus
                 })",
-				new
-				{
-					driverEntity.Id,
-					driverEntity.CompanyId,
-					driverEntity.FirstName,
-					driverEntity.LastName,
-					driverEntity.PhoneNumber,
-					driverEntity.LicenseNumber,
-					driverEntity.LicenseExpiry,
-					driverEntity.LicenseCategories,
-					driverEntity.HireDate,
-					DriverStatus = (int)driverEntity.DriverStatus
-				});
+					new
+					{
+						Id = id,
+						driverEntity.CompanyId,
+						driverEntity.FirstName,
+						driverEntity.LastName,
+						driverEntity.PhoneNumber,
+						driverEntity.LicenseNumber,
+						driverEntity.LicenseExpiry,
+						driverEntity.LicenseCategories,
+						driverEntity.HireDate,
+						DriverStatus = (int)driverEntity.DriverStatus
+					});
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
 
 		public async Task DeleteAsync(Driver driverEntity)

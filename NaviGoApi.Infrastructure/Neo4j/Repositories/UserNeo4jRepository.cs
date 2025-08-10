@@ -17,35 +17,59 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			_driver = driver;
 		}
 
-		public async Task AddAsync(User user)
+		private async Task<int> GetNextIdAsync(string entityName)
 		{
 			var query = @"
-				CREATE (u:User {
-					Id: $id,
-					Email: $email,
-					PasswordHash: $passwordHash,
-					FirstName: $firstName,
-					LastName: $lastName,
-					PhoneNumber: $phoneNumber,
-					UserRole: $userRole,
-					CreatedAt: datetime($createdAt),
-					EmailVerified: $emailVerified,
-					UserStatus: $userStatus
-				})";
+            MERGE (c:Counter { name: $entityName })
+            ON CREATE SET c.lastId = 1
+            ON MATCH SET c.lastId = c.lastId + 1
+            RETURN c.lastId as lastId
+        ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { entityName });
+				var record = await result.SingleAsync();
+				return record["lastId"].As<int>();
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+		public async Task AddAsync(User user)
+		{
+			var id = await GetNextIdAsync("User");
+
+			var query = @"
+            CREATE (u:User {
+                Id: $id,
+                Email: $email,
+                PasswordHash: $passwordHash,
+                FirstName: $firstName,
+                LastName: $lastName,
+                PhoneNumber: $phoneNumber,
+                UserRole: $userRole,
+                CreatedAt: datetime($createdAt),
+                EmailVerified: $emailVerified,
+                UserStatus: $userStatus
+            })";
 
 			var session = _driver.AsyncSession();
 			try
 			{
 				await session.RunAsync(query, new
 				{
-					id = user.Id,
+					id = id,
 					email = user.Email,
 					passwordHash = user.PasswordHash,
 					firstName = user.FirstName,
 					lastName = user.LastName,
 					phoneNumber = user.PhoneNumber,
 					userRole = (int)user.UserRole,
-					createdAt = user.CreatedAt,
+					createdAt = user.CreatedAt.ToString("o"),
 					emailVerified = user.EmailVerified,
 					userStatus = (int)user.UserStatus
 				});

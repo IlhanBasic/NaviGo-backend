@@ -17,25 +17,56 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			_driver = driver;
 		}
 
+		private async Task<int> GetNextIdAsync(string entityName)
+		{
+			var query = @"
+            MERGE (c:Counter { name: $entityName })
+            ON CREATE SET c.lastId = 1
+            ON MATCH SET c.lastId = c.lastId + 1
+            RETURN c.lastId as lastId
+        ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { entityName });
+				var record = await result.SingleAsync();
+				return record["lastId"].As<int>();
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
 		public async Task AddAsync(RoutePrice price)
 		{
+			var id = await GetNextIdAsync("RoutePrice");
+
 			await using var session = _driver.AsyncSession();
-			await session.RunAsync(@"
-				CREATE (rp:RoutePrice {
-					Id: $Id,
-					RouteId: $RouteId,
-					VehicleTypeId: $VehicleTypeId,
-					PricePerKm: $PricePerKm,
-					MinimumPrice: $MinimumPrice
-				})",
-				new
-				{
-					price.Id,
-					price.RouteId,
-					price.VehicleTypeId,
-					price.PricePerKm,
-					price.MinimumPrice
-				});
+			try
+			{
+				await session.RunAsync(@"
+                CREATE (rp:RoutePrice {
+                    Id: $Id,
+                    RouteId: $RouteId,
+                    VehicleTypeId: $VehicleTypeId,
+                    PricePerKm: $PricePerKm,
+                    MinimumPrice: $MinimumPrice
+                })",
+					new
+					{
+						Id = id,
+						price.RouteId,
+						price.VehicleTypeId,
+						price.PricePerKm,
+						price.MinimumPrice
+					});
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
 
 		public async Task DeleteAsync(int id)

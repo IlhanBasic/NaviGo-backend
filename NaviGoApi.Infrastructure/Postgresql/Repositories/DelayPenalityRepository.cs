@@ -19,7 +19,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		public async Task AddAsync(DelayPenalty penalty)
 		{
 			await _context.DelayPenalties.AddAsync(penalty);
-			await _context.SaveChangesAsync();
 		}
 
 		public async Task DeleteAsync(int id)
@@ -28,7 +27,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			if (entity != null)
 			{
 				_context.DelayPenalties.Remove(entity);
-				await _context.SaveChangesAsync();
 			}
 		}
 
@@ -45,7 +43,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		public async Task UpdateAsync(DelayPenalty penalty)
 		{
 			_context.DelayPenalties.Update(penalty);
-			await _context.SaveChangesAsync();
 		}
 	}
 }

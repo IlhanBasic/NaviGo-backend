@@ -17,10 +17,36 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			_driver = driver;
 		}
 
+		private async Task<int> GetNextIdAsync(string entityName)
+		{
+			var query = @"
+            MERGE (c:Counter { name: $entityName })
+            ON CREATE SET c.lastId = 1
+            ON MATCH SET c.lastId = c.lastId + 1
+            RETURN c.lastId as lastId
+        ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { entityName });
+				var record = await result.SingleAsync();
+				return record["lastId"].As<int>();
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
 		public async Task AddAsync(ForwarderOffer offer)
 		{
+			var id = await GetNextIdAsync("ForwarderOffer");
+
 			await using var session = _driver.AsyncSession();
-			await session.RunAsync(@"
+			try
+			{
+				await session.RunAsync(@"
                 CREATE (o:ForwarderOffer {
                     Id: $Id,
                     RouteId: $RouteId,
@@ -32,18 +58,23 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
                     ExpiresAt: $ExpiresAt,
                     DiscountRate: $DiscountRate
                 })",
-				new
-				{
-					offer.Id,
-					offer.RouteId,
-					offer.ForwarderId,
-					offer.CommissionRate,
-					ForwarderOfferStatus = (int)offer.ForwarderOfferStatus,
-					offer.RejectionReason,
-					offer.CreatedAt,
-					offer.ExpiresAt,
-					offer.DiscountRate
-				});
+					new
+					{
+						Id = id,
+						offer.RouteId,
+						offer.ForwarderId,
+						offer.CommissionRate,
+						ForwarderOfferStatus = (int)offer.ForwarderOfferStatus,
+						offer.RejectionReason,
+						offer.CreatedAt,
+						offer.ExpiresAt,
+						offer.DiscountRate
+					});
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
 
 		public async Task DeleteAsync(ForwarderOffer offer)

@@ -16,10 +16,36 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			_driver = driver;
 		}
 
+		private async Task<int> GetNextIdAsync(string entityName)
+		{
+			var query = @"
+            MERGE (c:Counter { name: $entityName })
+            ON CREATE SET c.lastId = 1
+            ON MATCH SET c.lastId = c.lastId + 1
+            RETURN c.lastId as lastId
+        ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { entityName });
+				var record = await result.SingleAsync();
+				return record["lastId"].As<int>();
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
 		public async Task AddAsync(DelayPenalty penalty)
 		{
+			var id = await GetNextIdAsync("DelayPenalty");
+
 			await using var session = _driver.AsyncSession();
-			await session.RunAsync(@"
+			try
+			{
+				await session.RunAsync(@"
                 CREATE (p:DelayPenalty {
                     Id: $Id,
                     ShipmentId: $ShipmentId,
@@ -28,15 +54,20 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
                     PenaltyAmount: $PenaltyAmount,
                     DelayPenaltiesStatus: $DelayPenaltiesStatus
                 })",
-				new
-				{
-					Id = penalty.Id,
-					ShipmentId = penalty.ShipmentId,
-					CalculatedAt = penalty.CalculatedAt,
-					DelayHours = penalty.DelayHours,
-					PenaltyAmount = penalty.PenaltyAmount,
-					DelayPenaltiesStatus = (int)penalty.DelayPenaltiesStatus
-				});
+					new
+					{
+						Id = id,
+						penalty.ShipmentId,
+						penalty.CalculatedAt,
+						penalty.DelayHours,
+						penalty.PenaltyAmount,
+						DelayPenaltiesStatus = (int)penalty.DelayPenaltiesStatus
+					});
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
 
 		public async Task DeleteAsync(int id)

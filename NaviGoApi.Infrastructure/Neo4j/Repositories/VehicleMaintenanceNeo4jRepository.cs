@@ -16,34 +16,58 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			_driver = driver;
 		}
 
-		public async Task AddAsync(VehicleMaintenance maintenance)
+		private async Task<int> GetNextIdAsync(string entityName)
 		{
 			var query = @"
-				CREATE (vm:VehicleMaintenance {
-					id: $id,
-					vehicleId: $vehicleId,
-					reportedByUserId: $reportedByUserId,
-					description: $description,
-					reportedAt: datetime($reportedAt),
-					resolvedAt: CASE WHEN $resolvedAt IS NULL THEN NULL ELSE datetime($resolvedAt) END,
-					severity: $severity,
-					repairCost: $repairCost,
-					maintenanceType: $maintenanceType
-				})";
+            MERGE (c:Counter { name: $entityName })
+            ON CREATE SET c.lastId = 1
+            ON MATCH SET c.lastId = c.lastId + 1
+            RETURN c.lastId as lastId
+        ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { entityName });
+				var record = await result.SingleAsync();
+				return record["lastId"].As<int>();
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+		public async Task AddAsync(VehicleMaintenance maintenance)
+		{
+			var id = await GetNextIdAsync("VehicleMaintenance");
+
+			var query = @"
+            CREATE (vm:VehicleMaintenance {
+                id: $id,
+                vehicleId: $vehicleId,
+                reportedByUserId: $reportedByUserId,
+                description: $description,
+                reportedAt: datetime($reportedAt),
+                resolvedAt: CASE WHEN $resolvedAt IS NULL THEN NULL ELSE datetime($resolvedAt) END,
+                severity: $severity,
+                repairCost: $repairCost,
+                maintenanceType: $maintenanceType
+            })";
 
 			var session = _driver.AsyncSession();
 			try
 			{
 				await session.RunAsync(query, new
 				{
-					id = maintenance.Id,
-					vehicleId = maintenance.VehicleId,
-					reportedByUserId = maintenance.ReportedByUserId,
-					description = maintenance.Description,
+					id = id,
+					maintenance.VehicleId,
+					maintenance.ReportedByUserId,
+					maintenance.Description,
 					reportedAt = maintenance.ReportedAt.ToString("o"),
 					resolvedAt = maintenance.ResolvedAt?.ToString("o"),
 					severity = maintenance.Severity.ToString(),
-					repairCost = maintenance.RepairCost,
+					maintenance.RepairCost,
 					maintenanceType = maintenance.MaintenanceType.ToString()
 				});
 			}
