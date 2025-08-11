@@ -26,17 +26,24 @@ namespace NaviGoApi.Application.Validators.User
 
 			RuleFor(x => x.PhoneNumber)
 				.NotEmpty().WithMessage("Phone number is required.");
+			RuleFor(x => x)
+				.Must(dto =>
+				{
+					if (dto.UserRole == UserRole.RegularUser && dto.CompanyId != null)
+						return false;
+
+					if ((dto.UserRole == UserRole.CompanyUser || dto.UserRole == UserRole.CompanyAdmin) && dto.CompanyId == null)
+						return false;
+
+					if (dto.UserRole == UserRole.SuperAdmin && dto.CompanyId != null)
+						return false;
+
+					return true;
+				})
+				.WithMessage("Invalid CompanyId based on UserRole.");
 
 			RuleFor(x => x.UserRole)
 				.IsInEnum();
-			RuleFor(x => x.CompanyId)
-				.Must((dto, companyId) =>
-				{
-					if (dto.UserRole == UserRole.SuperAdmin)
-						return companyId == null;
-					return true;
-				})
-				.WithMessage("SuperAdmin users must not be associated with a company.");
 		}
 	}
 }

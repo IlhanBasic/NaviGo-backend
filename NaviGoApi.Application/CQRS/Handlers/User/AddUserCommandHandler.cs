@@ -7,6 +7,7 @@ using NaviGoApi.Application.Services;
 using NaviGoApi.Application.Settings;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -32,15 +33,40 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			_emailService = emailService;
 			_apiBaseUrl = apiSettings.Value.BaseUrl;
 		}
-
 		public async Task<UserDto> Handle(AddUserCommand request, CancellationToken cancellationToken)
 		{
-			var userEntity = _mapper.Map<Domain.Entities.User>(request.UserDto);
+			var dto = request.UserDto;
 
-			userEntity.PasswordHash = HashPassword(request.UserDto.Password);
+			if (dto.UserRole == UserRole.RegularUser && dto.CompanyId != null)
+			{
+				throw new ValidationException("RegularUser cannot be linked to a company.");
+			}
+
+			if ((dto.UserRole == UserRole.CompanyUser || dto.UserRole == UserRole.CompanyAdmin) && dto.CompanyId == null)
+			{
+				throw new ValidationException("CompanyUser or CompanyAdmin must be linked to a company.");
+			}
+
+			if (dto.UserRole == UserRole.SuperAdmin && dto.CompanyId != null)
+			{
+				throw new ValidationException("SuperAdmin must not be linked to a company.");
+			}
+
+			if (dto.CompanyId != null)
+			{
+				var companyExists = await _unitOfWork.Companies.GetByIdAsync(dto.CompanyId.Value);
+				if (companyExists==null)
+				{
+					throw new ValidationException($"Company with ID {dto.CompanyId} does not exist.");
+				}
+			}
+
+			var userEntity = _mapper.Map<Domain.Entities.User>(dto);
+			userEntity.PasswordHash = HashPassword(dto.Password);
 			userEntity.CreatedAt = DateTime.UtcNow;
-			userEntity.EmailVerificationToken = System.Guid.NewGuid().ToString();
+			userEntity.EmailVerificationToken = Guid.NewGuid().ToString();
 			userEntity.EmailVerificationTokenDuration = TimeSpan.FromMinutes(15);
+
 			if (userEntity.UserRole == UserRole.SuperAdmin)
 			{
 				userEntity.EmailVerified = true;
@@ -48,16 +74,16 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 
 			userEntity.UserStatus = UserStatus.Active;
 
+			// Čuvanje u bazi
 			await _unitOfWork.Users.AddAsync(userEntity);
 			await _unitOfWork.SaveChangesAsync();
 
+			// Slanje verifikacionog mejla
 			var verificationLink = $"{_apiBaseUrl}api/User/verify-email?token={userEntity.EmailVerificationToken}";
-
 			await _emailService.SendVerificationEmailAsync(userEntity.Email, verificationLink);
 
 			return _mapper.Map<UserDto>(userEntity);
 		}
-
 		private string HashPassword(string password)
 		{
 			using var sha256 = SHA256.Create();
