@@ -14,6 +14,8 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 			builder.Property(v => v.RegistrationNumber)
 				.IsRequired()
 				.HasMaxLength(50);
+			builder.HasIndex(v => v.RegistrationNumber)
+				.IsUnique();
 
 			builder.Property(v => v.CapacityKg)
 				.IsRequired();

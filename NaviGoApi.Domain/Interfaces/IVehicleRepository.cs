@@ -15,5 +15,6 @@ namespace NaviGoApi.Domain.Interfaces
 		// Eventualno dodatne metode specifične za Vehicle
 		Task<IEnumerable<Vehicle>> GetByCompanyIdAsync(int companyId);
 		Task<IEnumerable<Vehicle>> GetAvailableVehiclesAsync();
+		Task<Vehicle?> GetByRegistrationNumberAsync(string RegistrationNumber);
 	}
 }

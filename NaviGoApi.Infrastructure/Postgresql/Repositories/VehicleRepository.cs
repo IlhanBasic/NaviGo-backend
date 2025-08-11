@@ -58,6 +58,12 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.FirstOrDefaultAsync(v => v.Id == id);
 		}
 
+		public async Task<Vehicle?> GetByRegistrationNumberAsync(string registrationNumber)
+		{
+			return await _context.Vehicles
+				.FirstOrDefaultAsync(v => v.RegistrationNumber == registrationNumber);
+		}
+
 		public Task UpdateAsync(Vehicle vehicle)
 		{
 			_context.Vehicles.Update(vehicle);

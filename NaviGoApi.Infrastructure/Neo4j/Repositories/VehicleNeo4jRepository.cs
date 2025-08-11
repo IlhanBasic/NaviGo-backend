@@ -273,5 +273,10 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				Categories = node.Properties.ContainsKey("categories") ? node.Properties["categories"].ToString() : null
 			};
 		}
+
+		public Task<Vehicle?> GetByRegistrationNumberAsync(string RegistrationNumber)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }
