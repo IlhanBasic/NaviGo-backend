@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using NaviGoApi.Application.DTOs.Company;
+using NaviGoApi.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +20,6 @@ namespace NaviGoApi.Application.Validators.Company
 			RuleFor(x => x.PIB)
 				.NotEmpty().WithMessage("PIB is required.")
 				.Matches(@"^\d{9,13}$").WithMessage("PIB must be between 9 and 13 digits.");
-			// Primer regex za PIB, prilagodi po potrebi
 
 			RuleFor(x => x.Address)
 				.NotEmpty().WithMessage("Address is required.")
@@ -45,7 +45,9 @@ namespace NaviGoApi.Application.Validators.Company
 				.GreaterThanOrEqualTo(0).WithMessage("Max commission rate must be non-negative.")
 				.LessThanOrEqualTo(100).WithMessage("Max commission rate cannot exceed 100%")
 				.When(x => x.MaxCommissionRate.HasValue);
-
+			RuleFor(x => x)
+				.Must(x => x.CompanyType == CompanyType.Forwarder || x.MaxCommissionRate == null)
+				.WithMessage("MaxCommissionRate can only be set if the company is a Forwarder.");
 			RuleFor(x => x.ProofFileUrl)
 				.Must(url => Uri.IsWellFormedUriString(url, UriKind.Absolute))
 				.When(x => !string.IsNullOrEmpty(x.ProofFileUrl))

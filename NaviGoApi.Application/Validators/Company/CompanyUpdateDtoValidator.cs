@@ -17,10 +17,6 @@ namespace NaviGoApi.Application.Validators.Company
 				.NotEmpty().WithMessage("Company name is required.")
 				.MaximumLength(200).WithMessage("Company name cannot exceed 200 characters.");
 
-			RuleFor(x => x.PIB)
-				.NotEmpty().WithMessage("PIB is required.")
-				.Matches(@"^\d{9,13}$").WithMessage("PIB must be between 9 and 13 digits.");
-
 			RuleFor(x => x.Address)
 				.NotEmpty().WithMessage("Address is required.")
 				.MaximumLength(300).WithMessage("Address cannot exceed 300 characters.");

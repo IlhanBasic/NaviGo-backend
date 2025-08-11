@@ -56,7 +56,10 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 
 			builder.Property(c => c.ProofFileUrl)
 				   .HasMaxLength(1000);
-
+			builder.HasCheckConstraint(
+					"CK_Companies_MaxCommissionRate_OnlyForwarder",
+					"(\"MaxCommissionRate\" IS NULL OR \"CompanyType\" = 2)"
+				);
 			// Veze
 
 			builder.HasMany(c => c.Users)

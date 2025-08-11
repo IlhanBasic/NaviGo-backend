@@ -2,9 +2,11 @@
 using MediatR;
 using NaviGoApi.Application.CQRS.Commands.Company;
 using NaviGoApi.Application.DTOs.Company;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,6 +30,12 @@ namespace NaviGoApi.Application.CQRS.Handlers.Company
 			if (existing == null)
 			{
 				return null!;
+			}
+			var dto = request.CompanyDto;
+			if (dto.CompanyType != CompanyType.Forwarder &&
+				(dto.MaxCommissionRate.HasValue || dto.SaldoAmount.HasValue))
+			{
+				throw new ValidationException("Only Forwarder companies can have MaxCommissionRate and SaldoAmount set.");
 			}
 
 			_mapper.Map(request.CompanyDto, existing);
