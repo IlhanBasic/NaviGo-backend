@@ -3,6 +3,7 @@ using MediatR;
 using NaviGoApi.Application.CQRS.Commands.CargoType;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
+using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,6 +22,15 @@ namespace NaviGoApi.Application.CQRS.Handlers.CargoType
 
 		public async Task<Unit> Handle(AddCargoTypeCommand request, CancellationToken cancellationToken)
 		{
+			var typeName = request.CargoTypeDto.TypeName.Trim();
+
+			bool exists = await _unitOfWork.CargoTypes
+				.ExistsAsync(vt => vt.TypeName.ToLower() == typeName.ToLower());
+
+			if (exists)
+			{
+				throw new ValidationException($"Cargo type with name '{typeName}' already exists.");
+			}
 			var cargoType = _mapper.Map<Domain.Entities.CargoType>(request.CargoTypeDto);
 			await _unitOfWork.CargoTypes.AddAsync(cargoType);
 			await _unitOfWork.SaveChangesAsync();

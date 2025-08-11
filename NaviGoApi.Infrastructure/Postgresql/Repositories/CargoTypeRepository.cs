@@ -1,7 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
-using NaviGoApi.Infrastructure.Postgresql.Persistence; 
+using NaviGoApi.Infrastructure.Postgresql.Persistence;
+using System.Linq.Expressions;
 
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
@@ -23,6 +24,11 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		{
 			_context.CargoTypes.Remove(cargoType);
 			return Task.CompletedTask;
+		}
+
+		public async Task<bool> ExistsAsync(Expression<Func<CargoType, bool>> predicate)
+		{
+			return await _context.CargoTypes.AnyAsync(predicate);
 		}
 
 		public async Task<IEnumerable<CargoType>> GetAllAsync()

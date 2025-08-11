@@ -3,6 +3,7 @@ using MongoDB.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.MongoDB.Repositories
@@ -55,6 +56,11 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		public async Task UpdateAsync(CargoType cargoType)
 		{
 			await _cargoTypesCollection.ReplaceOneAsync(ct => ct.Id == cargoType.Id, cargoType);
+		}
+
+		public Task<bool> ExistsAsync(Expression<Func<CargoType, bool>> predicate)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

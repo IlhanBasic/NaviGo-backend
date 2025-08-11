@@ -1,5 +1,6 @@
 ﻿using NaviGoApi.Domain.Entities;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Domain.Interfaces
@@ -11,5 +12,6 @@ namespace NaviGoApi.Domain.Interfaces
 		Task AddAsync(CargoType cargoType);
 		Task UpdateAsync(CargoType cargoType);
 		Task DeleteAsync(CargoType cargoType);
+		Task<bool> ExistsAsync(Expression<Func<CargoType, bool>> predicate);
 	}
 }
