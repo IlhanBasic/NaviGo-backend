@@ -6,6 +6,7 @@ using NaviGoApi.Application.DTOs.RoutePrice;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
+using Microsoft.AspNetCore.Authorization;
 
 namespace NaviGoApi.API.Controllers
 {
@@ -49,6 +50,7 @@ namespace NaviGoApi.API.Controllers
 
 		// PUT: api/RoutePrice/{id}
 		[HttpPut("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Update(int id, [FromBody] RoutePriceUpdateDto dto)
 		{
 			try

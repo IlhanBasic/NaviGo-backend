@@ -4,6 +4,7 @@ using NaviGoApi.Infrastructure.Postgresql.Persistence;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq.Expressions;
 
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
@@ -28,6 +29,11 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			{
 				_context.RoutesPrices.Remove(entity);
 			}
+		}
+
+		public async Task<bool> ExistsAsync(Expression<Func<RoutePrice, bool>> predicate)
+		{
+			return await _context.RoutesPrices.AnyAsync(predicate);
 		}
 
 		public async Task<IEnumerable<RoutePrice>> GetAllAsync()

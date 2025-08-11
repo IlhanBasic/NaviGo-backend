@@ -3,6 +3,7 @@ using MongoDB.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.MongoDB.Repositories
@@ -57,6 +58,11 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		{
 			var result = _routePricesCollection.ReplaceOneAsync(rp => rp.Id == price.Id, price);
 			return result.IsCompletedSuccessfully ? Task.CompletedTask : result;
+		}
+
+		public Task<bool> ExistsAsync(Expression<Func<RoutePrice, bool>> predicate)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

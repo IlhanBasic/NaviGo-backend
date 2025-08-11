@@ -17,6 +17,7 @@ using NaviGoApi.Infrastructure.Neo4j.Repositories;
 using NaviGoApi.Infrastructure.Postgresql.Persistence;
 using NaviGoApi.Infrastructure.Postgresql.Repositories;
 using Neo4j.Driver;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 //POSTGRESQL
 var builder = WebApplication.CreateBuilder(args);
@@ -111,7 +112,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // Add services to the container.
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddControllersWithViews();
-
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddValidatorsFromAssemblyContaining<LocationCreateDtoValidator>();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
@@ -131,8 +132,8 @@ builder.Services.AddCors(options =>
 	});
 });
 var jwtSecret = builder.Configuration["JWT_SECRET"];
-var key = Encoding.ASCII.GetBytes(jwtSecret!);
-
+//var key = Encoding.ASCII.GetBytes(jwtSecret!);
+var key = Encoding.UTF8.GetBytes(jwtSecret!);
 builder.Services.AddAuthentication(options =>
 {
 	options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -163,6 +164,7 @@ builder.Services.AddAuthentication(options =>
 		return Task.CompletedTask;
 	};
 });
+
 builder.Services.AddAuthorization();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -215,6 +217,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

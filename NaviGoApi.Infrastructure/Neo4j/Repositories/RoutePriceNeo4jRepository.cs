@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Neo4j.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
+using System.Linq.Expressions;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
@@ -124,6 +125,11 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				PricePerKm = Convert.ToDecimal(node.Properties["PricePerKm"]),
 				MinimumPrice = Convert.ToDecimal(node.Properties["MinimumPrice"])
 			};
+		}
+
+		public Task<bool> ExistsAsync(Expression<Func<RoutePrice, bool>> predicate)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }
