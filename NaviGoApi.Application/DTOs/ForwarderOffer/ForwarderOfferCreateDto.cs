@@ -13,7 +13,6 @@ namespace NaviGoApi.Application.DTOs.ForwarderOffer
 		public int ForwarderId { get; set; }
 		public decimal CommissionRate { get; set; }
 		public string? RejectionReason { get; set; }
-		public DateTime CreatedAt { get; set; }
 		public DateTime ExpiresAt { get; set; }
 		public decimal DiscountRate { get; set; }
 	}
