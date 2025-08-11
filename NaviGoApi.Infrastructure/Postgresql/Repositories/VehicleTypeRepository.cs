@@ -5,6 +5,7 @@ using NaviGoApi.Infrastructure.Postgresql.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
@@ -47,5 +48,10 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			_context.VehicleTypes.Update(vehicleType);
 			return Task.CompletedTask;
 		}
+		public async Task<bool> ExistsAsync(Expression<Func<VehicleType, bool>> predicate)
+		{
+			return await _context.VehicleTypes.AnyAsync(predicate);
+		}
+
 	}
 }

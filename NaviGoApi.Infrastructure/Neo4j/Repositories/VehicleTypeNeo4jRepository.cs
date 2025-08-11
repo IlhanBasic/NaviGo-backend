@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Neo4j.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
+using System.Linq.Expressions;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
@@ -158,6 +159,11 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				Description = node.Properties.ContainsKey("description") ? node.Properties["description"].ToString() : null,
 				RequiresSpecialLicense = node.Properties.ContainsKey("requiresSpecialLicense") && (bool)node.Properties["requiresSpecialLicense"]
 			};
+		}
+
+		public Task<bool> ExistsAsync(Expression<Func<VehicleType, bool>> predicate)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }
