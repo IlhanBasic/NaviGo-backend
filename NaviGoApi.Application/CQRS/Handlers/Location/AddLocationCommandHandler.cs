@@ -4,6 +4,7 @@ using NaviGoApi.Application.CQRS.Commands.Location;
 using NaviGoApi.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,6 +22,9 @@ namespace NaviGoApi.Application.CQRS.Handlers.Location
         }
         public async Task<Unit> Handle(AddLocationCommand request, CancellationToken cancellationToken)
 		{
+			var exist = _unitOfWork.Locations.GetByFullLocationAsync(request.LocationDto.ZIP,request.LocationDto.FullAddress, request.LocationDto.City);
+			if (exist != null)
+				throw new ValidationException($"Location with same ZIP, Address and City is already created.");
 			var location = _mapper.Map<global::NaviGoApi.Domain.Entities.Location>(request.LocationDto);
 			await _unitOfWork.Locations.AddAsync(location);
 			await _unitOfWork.SaveChangesAsync();

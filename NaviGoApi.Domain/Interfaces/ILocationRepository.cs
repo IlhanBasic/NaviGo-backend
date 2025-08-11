@@ -14,5 +14,7 @@ namespace NaviGoApi.Domain.Interfaces
 		Task AddAsync(Location location);
 		Task UpdateAsync(Location location);
 		Task DeleteAsync(int id);
+		Task<Location?> GetByFullLocationAsync(string zip, string fullAddress, string city);
+
 	}
 }

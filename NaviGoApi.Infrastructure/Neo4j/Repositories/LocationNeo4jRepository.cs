@@ -141,5 +141,10 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				FullAddress = node.Properties["FullAddress"].As<string>()
 			};
 		}
+
+		public Task<Location?> GetByFullLocationAsync(string zip, string fullAddress, string city)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

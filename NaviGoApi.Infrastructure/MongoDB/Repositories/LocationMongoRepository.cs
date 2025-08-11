@@ -56,5 +56,10 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		{
 			await _locationsCollection.ReplaceOneAsync(l => l.Id == location.Id, location);
 		}
+
+		public Task<Location?> GetByFullLocationAsync(string zip, string fullAddress, string city)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

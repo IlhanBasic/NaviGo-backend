@@ -36,6 +36,15 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			return await _context.Locations.ToListAsync();
 		}
 
+		public async Task<Location?> GetByFullLocationAsync(string zip, string fullAddress, string city)
+		{
+			return await _context.Locations.FirstOrDefaultAsync(
+				x => x.FullAddress == fullAddress && 
+				x.City == city && 
+				x.ZIP == zip
+				);
+		}
+
 		public async Task<Location?> GetByIdAsync(int id)
 		{
 			return await _context.Locations.FindAsync(id);
