@@ -44,5 +44,13 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		{
 			_context.DelayPenalties.Update(penalty);
 		}
+		public async Task<IEnumerable<DelayPenalty>> GetByContractIdAsync(int contractId)
+		{
+			return await _context.DelayPenalties
+				.Include(dp => dp.Shipment)
+				.Where(dp => dp.Shipment != null && dp.Shipment.ContractId == contractId)
+				.ToListAsync();
+		}
+
 	}
 }

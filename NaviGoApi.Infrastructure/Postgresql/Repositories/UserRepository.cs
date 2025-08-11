@@ -43,6 +43,7 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		public async Task<User?> GetByEmailAsync(string email)
 		{
 			return await _context.Users
+				.Include(u => u.Company)
 				.FirstOrDefaultAsync(u => u.Email == email);
 		}
 		public async Task<User?> GetByPasswordResetTokenAsync(string token)
@@ -53,6 +54,7 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		public async Task<User?> GetByIdAsync(int id)
 		{
 			return await _context.Users
+				.Include(u => u.Company)
 				.FirstOrDefaultAsync(u => u.Id == id);
 		}
 

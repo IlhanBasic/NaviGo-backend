@@ -146,5 +146,10 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				DelayPenaltiesStatus = (DelayPenaltyStatus)node.Properties["DelayPenaltiesStatus"].As<int>()
 			};
 		}
+
+		public Task<IEnumerable<DelayPenalty>> GetByContractIdAsync(int contractId)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

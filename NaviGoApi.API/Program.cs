@@ -109,6 +109,7 @@ builder.Services.AddSingleton<IDriver>(sp =>
 builder.Services.Configure<ApiSettings>(builder.Configuration.GetSection("ApiSettings"));
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IPaymentCalculatorService, PaymentCalculatorService>();
 // Add services to the container.
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddControllersWithViews();

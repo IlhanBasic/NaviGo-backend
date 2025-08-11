@@ -9,9 +9,6 @@ namespace NaviGoApi.Application.DTOs.Payment
 {
 	public class PaymentUpdateDto
 	{
-		public decimal Amount { get; set; }
-		public DateTime PaymentDate { get; set; }
 		public PaymentStatus PaymentStatus { get; set; }
-		public string? ReceiptUrl { get; set; }
 	}
 }

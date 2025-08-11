@@ -56,5 +56,10 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		{
 			await _delayPenaltiesCollection.ReplaceOneAsync(dp => dp.Id == penalty.Id, penalty);
 		}
+
+		public Task<IEnumerable<DelayPenalty>> GetByContractIdAsync(int contractId)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

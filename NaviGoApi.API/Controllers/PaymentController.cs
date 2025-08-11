@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.Payment;
 using NaviGoApi.Application.CQRS.Queries.Payment;
@@ -37,6 +38,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpPost]
+		[Authorize]
 		public async Task<IActionResult> Create([FromBody] PaymentCreateDto dto)
 		{
 			await _mediator.Send(new AddPaymentCommand(dto));
@@ -44,6 +46,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpPut("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Update(int id, [FromBody] PaymentUpdateDto dto)
 		{
 			try
