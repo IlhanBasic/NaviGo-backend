@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Neo4j.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
+using System.Linq.Expressions;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
@@ -296,6 +297,11 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			{
 				await session.CloseAsync();
 			}
+		}
+
+		public Task<bool> ExistsAsync(Expression<Func<Contract, bool>> predicate)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

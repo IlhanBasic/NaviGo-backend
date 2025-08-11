@@ -37,11 +37,6 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 		{
 			var dto = request.UserDto;
 
-			if (dto.UserRole == UserRole.RegularUser && dto.CompanyId != null)
-			{
-				throw new ValidationException("RegularUser cannot be linked to a company.");
-			}
-
 			if ((dto.UserRole == UserRole.CompanyUser || dto.UserRole == UserRole.CompanyAdmin) && dto.CompanyId == null)
 			{
 				throw new ValidationException("CompanyUser or CompanyAdmin must be linked to a company.");

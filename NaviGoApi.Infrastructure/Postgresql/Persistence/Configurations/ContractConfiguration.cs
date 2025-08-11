@@ -14,7 +14,8 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 			builder.Property(c => c.ContractNumber)
 				.IsRequired()
 				.HasMaxLength(50);
-
+			builder.HasIndex(c => c.ContractNumber)
+				.IsUnique();
 			builder.Property(c => c.ContractDate)
 				.IsRequired();
 

@@ -29,8 +29,8 @@ namespace NaviGoApi.Application.Validators.User
 			RuleFor(x => x)
 				.Must(dto =>
 				{
-					if (dto.UserRole == UserRole.RegularUser && dto.CompanyId != null)
-						return false;
+					//if (dto.UserRole == UserRole.RegularUser && dto.CompanyId != null)
+					//	return false;
 
 					if ((dto.UserRole == UserRole.CompanyUser || dto.UserRole == UserRole.CompanyAdmin) && dto.CompanyId == null)
 						return false;

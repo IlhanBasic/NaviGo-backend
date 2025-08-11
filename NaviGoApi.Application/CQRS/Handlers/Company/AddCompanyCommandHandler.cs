@@ -31,7 +31,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Company
 			{
 				throw new ValidationException("Only Forwarder companies can have MaxCommissionRate set.");
 			}
-			var exists = _unitOfWork.Companies.GetByPibAsync(request.CompanyDto.PIB);
+			var exists = await _unitOfWork.Companies.GetByPibAsync(request.CompanyDto.PIB);
 			if (exists != null)
 				throw new ValidationException($"Company with PIB: ${request.CompanyDto.PIB} already exists.");
 

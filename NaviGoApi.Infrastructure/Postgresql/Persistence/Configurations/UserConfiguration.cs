@@ -51,10 +51,11 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 			builder.Property(x => x.CompanyId)
 				.IsRequired(false);
 			builder.HasCheckConstraint("CK_User_CompanyId_Role", @"
-					(""UserRole"" = 1 AND ""CompanyId"" IS NULL) OR
-					(""UserRole"" IN (2, 3) AND ""CompanyId"" IS NOT NULL) OR
-					(""UserRole"" = 4 AND ""CompanyId"" IS NULL)
+					(""UserRole"" = 4 AND ""CompanyId"" IS NULL) OR
+					(""UserRole"" = 1) OR
+					(""UserRole"" IN (2, 3) AND ""CompanyId"" IS NOT NULL)
 				");
+
 
 
 			// Relacije
