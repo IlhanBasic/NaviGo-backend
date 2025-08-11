@@ -1,5 +1,6 @@
 ﻿using NaviGoApi.Domain.Entities;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Domain.Interfaces
@@ -15,5 +16,6 @@ namespace NaviGoApi.Domain.Interfaces
 		// Specifične metode za Route, ako su potrebne
 		Task<IEnumerable<Route>> GetActiveRoutesAsync();
 		Task<IEnumerable<Route>> GetRoutesByCompanyIdAsync(int companyId);
+		Task<bool> ExistsAsync(Expression<Func<Route, bool>> predicate);
 	}
 }

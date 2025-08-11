@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Neo4j.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
+using System.Linq.Expressions;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
@@ -185,6 +186,11 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				GeometryEncoded = node.Properties.ContainsKey("GeometryEncoded") ? node.Properties["GeometryEncoded"].As<string>() : null,
 				GeometryJson = node.Properties.ContainsKey("GeometryJson") ? node.Properties["GeometryJson"].As<string>() : null
 			};
+		}
+
+		public Task<bool> ExistsAsync(Expression<Func<Route, bool>> predicate)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

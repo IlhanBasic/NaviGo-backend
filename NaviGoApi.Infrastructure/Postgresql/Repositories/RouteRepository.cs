@@ -5,6 +5,7 @@ using NaviGoApi.Infrastructure.Postgresql.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
@@ -71,6 +72,11 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.Include(r => r.StartLocation)
 				.Include(r => r.EndLocation)
 				.ToListAsync();
+		}
+
+		public async Task<bool> ExistsAsync(Expression<Func<Route, bool>> predicate)
+		{
+			return await _context.Routes.AnyAsync(predicate);
 		}
 	}
 }

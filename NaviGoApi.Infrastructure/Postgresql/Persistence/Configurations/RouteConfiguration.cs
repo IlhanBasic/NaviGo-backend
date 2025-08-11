@@ -43,6 +43,7 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 
 			builder.Property(x => x.AvailableTo)
 				.IsRequired();
+			builder.HasCheckConstraint("CK_Route_StartEndLocation_Different", "\"StartLocationId\" <> \"EndLocationId\"");
 
 			// Veza Route - Company (M:1)
 			builder.HasOne(x => x.Company)

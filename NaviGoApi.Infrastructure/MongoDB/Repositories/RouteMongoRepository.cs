@@ -4,6 +4,7 @@ using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.MongoDB.Repositories
@@ -70,6 +71,11 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		public async Task<IEnumerable<Route>> GetRoutesByCompanyIdAsync(int companyId)
 		{
 			return await _routesCollection.Find(r => r.CompanyId == companyId).ToListAsync();
+		}
+
+		public Task<bool> ExistsAsync(Expression<Func<Route, bool>> predicate)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }
