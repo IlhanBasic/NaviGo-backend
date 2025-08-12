@@ -55,10 +55,9 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		{
 			return await _context.Shipments
 				.Include(s => s.Contract)
-					.ThenInclude(c => c.Route)
-						.ThenInclude(r => r.RoutePrices)
-				.Include(s => s.Contract)
 					.ThenInclude(c => c.Forwarder)
+				.Include(s => s.Contract)
+					.ThenInclude(c => c.Route)
 				.Include(s => s.Contract)
 					.ThenInclude(c => c.Client)
 				.Include(s => s.Contract)
@@ -68,6 +67,7 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.Include(s => s.CargoType)
 				.FirstOrDefaultAsync(s => s.Id == id);
 		}
+
 
 
 

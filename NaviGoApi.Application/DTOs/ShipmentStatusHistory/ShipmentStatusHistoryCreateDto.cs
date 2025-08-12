@@ -11,8 +11,6 @@ namespace NaviGoApi.Application.DTOs.ShipmentStatusHistory
 	{
 		public int ShipmentId { get; set; }
 		public ShipmentStatus ShipmentStatus { get; set; }
-		public DateTime ChangedAt { get; set; }
-		public int ChangedByUserId { get; set; }
 		public string? Notes { get; set; }
 	}
 }

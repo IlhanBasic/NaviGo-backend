@@ -14,5 +14,6 @@ namespace NaviGoApi.Domain.Interfaces
 		Task AddAsync(ShipmentStatusHistory history);
 		Task UpdateAsync(ShipmentStatusHistory history);
 		Task DeleteAsync(int id);
+		Task<ShipmentStatusHistory?> GetLastStatusForShipmentAsync(int shipmentId);
 	}
 }

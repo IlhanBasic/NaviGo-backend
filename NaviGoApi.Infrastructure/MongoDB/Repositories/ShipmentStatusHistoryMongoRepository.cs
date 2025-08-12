@@ -58,5 +58,10 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		{
 			await _shipmentStatusHistoryCollection.ReplaceOneAsync(e => e.Id == history.Id, history);
 		}
+
+		public Task<ShipmentStatusHistory?> GetLastStatusForShipmentAsync(int shipmentId)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

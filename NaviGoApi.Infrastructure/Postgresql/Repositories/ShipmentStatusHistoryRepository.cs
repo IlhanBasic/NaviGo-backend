@@ -42,13 +42,30 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		{
 			return await _context.ShipmentStatusHistories
 				.Include(s => s.Shipment)
+					.ThenInclude(sh => sh.Contract)
+						.ThenInclude(c => c.Forwarder)
+				.Include(s => s.Shipment)
+					.ThenInclude(sh => sh.Contract)
+						.ThenInclude(c => c.Route)
+				.Include(s => s.Shipment)
+					.ThenInclude(sh => sh.Contract)
+						.ThenInclude(c => c.Client)
 				.Include(s => s.ChangedByUser)
-				.FirstOrDefaultAsync(s => s.Id == (int)(object)id);
+				.FirstOrDefaultAsync(s => s.Id == id);
 		}
+
 
 		public async Task UpdateAsync(ShipmentStatusHistory history)
 		{
 			_context.ShipmentStatusHistories.Update(history);
 		}
+		public async Task<ShipmentStatusHistory?> GetLastStatusForShipmentAsync(int shipmentId)
+		{
+			return await _context.ShipmentStatusHistories
+				.Where(h => h.ShipmentId == shipmentId)
+				.OrderByDescending(h => h.ChangedAt) 
+				.FirstOrDefaultAsync();
+		}
+
 	}
 }

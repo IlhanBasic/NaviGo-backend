@@ -195,5 +195,10 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				await session.CloseAsync();
 			}
 		}
+
+		public Task<ShipmentStatusHistory?> GetLastStatusForShipmentAsync(int shipmentId)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }
