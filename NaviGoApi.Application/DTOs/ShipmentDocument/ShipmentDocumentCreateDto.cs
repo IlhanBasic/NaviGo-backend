@@ -12,9 +12,5 @@ namespace NaviGoApi.Application.DTOs.ShipmentDocument
 		public int ShipmentId { get; set; }
 		public DocumentType DocumentType { get; set; }
 		public string FileUrl { get; set; } = null!;
-		public DateTime UploadDate { get; set; }
-		public bool Verified { get; set; }
-		public int? VerifiedByUserId { get; set; }
-		public DateTime? ExpiryDate { get; set; }
 	}
 }

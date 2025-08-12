@@ -32,8 +32,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 			builder.Property(x => x.VerifiedByUserId)
 				.IsRequired(false);
 
-			builder.Property(x => x.ExpiryDate)
-				.IsRequired(false);
 
 			// Relacije
 

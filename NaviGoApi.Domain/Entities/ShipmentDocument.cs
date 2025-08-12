@@ -26,7 +26,6 @@ namespace NaviGoApi.Domain.Entities
 		public DateTime UploadDate { get; set; }
 		public bool Verified { get; set; }
 		public int? VerifiedByUserId { get; set; }
-		public DateTime? ExpiryDate { get; set; }
 
 		// Navigaciona svojstva
 		public Shipment? Shipment { get; set; }

@@ -21,7 +21,10 @@ namespace NaviGoApi.Domain.Entities
 		public DateTime PaymentDate { get; set; }
 		public PaymentStatus PaymentStatus { get; set; }
 		public string? ReceiptUrl { get; set; }
-		public int ClientId { get; set; }  
+		public int ClientId { get; set; }
+		public decimal? PenaltyAmount { get; set; }
+		public bool IsRefunded { get; set; } = false;
+		public DateTime? RefundDate { get; set; } 
 
 		// Navigaciona svojstva
 		public Contract? Contract { get; set; }

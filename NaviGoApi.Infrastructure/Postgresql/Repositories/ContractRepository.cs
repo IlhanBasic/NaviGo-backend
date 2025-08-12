@@ -38,12 +38,12 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		{
 			return await _context.Contracts
 				.Include(c => c.Client)
+				.Include(c => c.Payment)
 				.Include(c => c.Forwarder)
 				.Include(c => c.Route)
 					.ThenInclude(r => r.StartLocation)
 				.Include(c => c.Route)
 					.ThenInclude(r => r.EndLocation)
-				.AsNoTracking()
 				.ToListAsync();
 		}
 
@@ -51,13 +51,13 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		{
 			return await _context.Contracts
 				.Where(c => c.ClientId == clientId)
+				.Include(c=>c.Payment)
 				.Include(c => c.Client)
 				.Include(c => c.Forwarder)
 				.Include(c => c.Route)
 					.ThenInclude(r => r.StartLocation)
 				.Include(c => c.Route)
 					.ThenInclude(r => r.EndLocation)
-				.AsNoTracking()
 				.ToListAsync();
 		}
 

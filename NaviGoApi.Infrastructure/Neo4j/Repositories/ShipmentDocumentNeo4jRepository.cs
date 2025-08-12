@@ -66,7 +66,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 					uploadDate = document.UploadDate.ToString("o"),
 					verified = document.Verified,
 					verifiedByUserId = document.VerifiedByUserId,
-					expiryDate = document.ExpiryDate?.ToString("o")
 				});
 			}
 			finally
@@ -166,7 +165,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 					uploadDate = document.UploadDate.ToString("o"),
 					verified = document.Verified,
 					verifiedByUserId = document.VerifiedByUserId,
-					expiryDate = document.ExpiryDate?.ToString("o")
 				});
 			}
 			finally
@@ -188,9 +186,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				Verified = Convert.ToBoolean(node.Properties["verified"]),
 				VerifiedByUserId = node.Properties.ContainsKey("verifiedByUserId") && node.Properties["verifiedByUserId"] != null
 					? (int?)Convert.ToInt32(node.Properties["verifiedByUserId"])
-					: null,
-				ExpiryDate = node.Properties.ContainsKey("expiryDate") && node.Properties["expiryDate"] != null
-					? (DateTime?)DateTime.Parse(node.Properties["expiryDate"].ToString())
 					: null
 			};
 		}

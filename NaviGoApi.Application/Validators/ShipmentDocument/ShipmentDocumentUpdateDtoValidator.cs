@@ -14,14 +14,6 @@ namespace NaviGoApi.Application.Validators.ShipmentDocument
 				.NotEmpty().WithMessage("FileUrl is required.")
 				.Must(url => Uri.IsWellFormedUriString(url, UriKind.Absolute))
 				.WithMessage("FileUrl must be a valid URL.");
-
-			RuleFor(x => x.UploadDate)
-				.LessThanOrEqualTo(DateTime.UtcNow)
-				.WithMessage("UploadDate cannot be in the future.");
-
-			RuleFor(x => x.ExpiryDate)
-				.GreaterThan(DateTime.UtcNow).When(x => x.ExpiryDate.HasValue)
-				.WithMessage("ExpiryDate must be in the future.");
 		}
 	}
 }
