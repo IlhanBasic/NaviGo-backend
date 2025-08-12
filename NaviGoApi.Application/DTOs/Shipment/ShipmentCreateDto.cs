@@ -19,10 +19,6 @@ namespace NaviGoApi.Application.DTOs.Shipment
 
 		public DateTime ScheduledDeparture { get; set; }
 		public DateTime ScheduledArrival { get; set; }
-		public DateTime? ActualDeparture { get; set; }
-		public DateTime? ActualArrival { get; set; }
-		public int? DelayHours { get; set; }
-		public decimal? DelayPenaltyAmount { get; set; }
-		public DateTime? PenaltyCalculatedAt { get; set; }
 	}
+
 }

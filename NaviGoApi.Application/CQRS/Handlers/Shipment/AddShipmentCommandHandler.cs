@@ -4,6 +4,7 @@ using NaviGoApi.Application.CQRS.Commands.Shipment;
 using NaviGoApi.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,11 +24,60 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 
 		public async Task<Unit> Handle(AddShipmentCommand request, CancellationToken cancellationToken)
 		{
+			var contract = await _unitOfWork.Contracts.GetByIdAsync(request.ShipmentDto.ContractId);
+			if (contract == null)
+				throw new ValidationException($"Contract with ID {request.ShipmentDto.ContractId} doesn't exist.");
+
+			if (contract.Route == null)
+				throw new ValidationException($"Contract with ID {contract.Id} does not have an associated route.");
+
+			var company = await _unitOfWork.Companies.GetByIdAsync(contract.Route.CompanyId);
+			if (company == null)
+				throw new ValidationException($"Company with ID {contract.Route.CompanyId} doesn't exist.");
+
+			if (company.CompanyType != Domain.Entities.CompanyType.Carrier)
+				throw new ValidationException($"Company that created this route in contract must be a Carrier.");
+
+			var vehicle = await _unitOfWork.Vehicles.GetByIdAsync(request.ShipmentDto.VehicleId);
+			if (vehicle == null)
+				throw new ValidationException($"Vehicle with ID {request.ShipmentDto.VehicleId} doesn't exist.");
+
+			bool vehicleOwnedByCompany = vehicle.CompanyId == company.Id;
+			if (!vehicleOwnedByCompany)
+				throw new ValidationException($"Company {company.CompanyName} doesn't own vehicle {vehicle.Brand}-{vehicle.Model}/{vehicle.ManufactureYear}.");
+
+			var driver = await _unitOfWork.Drivers.GetByIdAsync(request.ShipmentDto.DriverId);
+			if (driver == null)
+				throw new ValidationException($"Driver with ID {request.ShipmentDto.DriverId} doesn't exist.");
+			var companyDrivers = company.Drivers.ToList();
+			if (!companyDrivers.Any(x=>x.Id == request.ShipmentDto.DriverId))
+				throw new ValidationException($"Driver with ID {request.ShipmentDto.DriverId} doesn't work in company {company.CompanyName}.");
+			var driverCategories = driver.LicenseCategories.Split(',', StringSplitOptions.RemoveEmptyEntries);
+			var vehicleCategories = vehicle.Categories.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+			bool hasValidLicense = driverCategories.Any(dc => vehicleCategories.Any(vc => vc.Trim() == dc.Trim()));
+			if (!hasValidLicense)
+				throw new ValidationException($"Driver with ID {request.ShipmentDto.DriverId} doesn't have required licences to drive this vehicle.");
+
+			var cargoType = await _unitOfWork.CargoTypes.GetByIdAsync(request.ShipmentDto.CargoTypeId);
+			if (cargoType == null)
+				throw new ValidationException($"Cargo Type with ID {request.ShipmentDto.CargoTypeId} doesn't exist.");
+
+			var existingShipments = await _unitOfWork.Shipments.GetByContractIdAsync(contract.Id);
+			var totalWeight = existingShipments.Sum(s => s.WeightKg);
+
+			if (totalWeight + request.ShipmentDto.WeightKg > vehicle.CapacityKg)
+				throw new ValidationException($"Vehicle capacity exceeded. Available capacity: {vehicle.CapacityKg - totalWeight} kg.");
+
 			var shipment = _mapper.Map<Domain.Entities.Shipment>(request.ShipmentDto);
 			shipment.Status = Domain.Entities.ShipmentStatus.Scheduled;
+
 			await _unitOfWork.Shipments.AddAsync(shipment);
 			await _unitOfWork.SaveChangesAsync();
+
 			return Unit.Value;
+
 		}
+
 	}
 }

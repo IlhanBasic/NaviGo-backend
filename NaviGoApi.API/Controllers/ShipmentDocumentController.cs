@@ -25,7 +25,7 @@ namespace NaviGoApi.API.Controllers
 		public async Task<ActionResult<IEnumerable<ShipmentDocumentDto>>> GetAll()
 		{
 			var documents = await _mediator.Send(new GetAllShipmentDocumentQuery());
-			return Ok(new { message = "Shipment documents retrieved successfully." });
+			return Ok(documents);
 		}
 
 		// GET: api/ShipmentDocument/{id}
@@ -36,7 +36,7 @@ namespace NaviGoApi.API.Controllers
 			if (document == null)
 				return NotFound(new { message = $"Shipment document with Id {id} not found." });
 
-			return Ok(new { message = "Shipment document retrieved successfully." });
+			return Ok(document);
 		}
 
 		// POST: api/ShipmentDocument

@@ -24,10 +24,7 @@ namespace NaviGoApi.API.Controllers
 		public async Task<IActionResult> GetAll()
 		{
 			var result = await _mediator.Send(new GetAllShipmentQuery());
-			return Ok(new
-			{
-				Message = "Shipments retrieved successfully.",
-			});
+			return Ok(result);
 		}
 
 		// GET: api/Shipment/{id}
@@ -43,10 +40,7 @@ namespace NaviGoApi.API.Controllers
 				});
 			}
 
-			return Ok(new
-			{
-				Message = "Shipment retrieved successfully."
-			});
+			return Ok(result);
 		}
 
 		// POST: api/Shipment

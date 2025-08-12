@@ -54,15 +54,15 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 			builder.Property(x => x.CreatedAt)
 				.IsRequired();
 
-			builder.Property(x => x.DelayHours)
-				.IsRequired(false);
+			//builder.Property(x => x.DelayHours)
+			//	.IsRequired(false);
 
-			builder.Property(x => x.DelayPenaltyAmount)
-				.HasColumnType("decimal(18,2)")
-				.IsRequired(false);
+			//builder.Property(x => x.DelayPenaltyAmount)
+			//	.HasColumnType("decimal(18,2)")
+			//	.IsRequired(false);
 
-			builder.Property(x => x.PenaltyCalculatedAt)
-				.IsRequired(false);
+			//builder.Property(x => x.PenaltyCalculatedAt)
+			//	.IsRequired(false);
 
 			// Relacije
 

@@ -82,9 +82,9 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 					actualDeparture = shipment.ActualDeparture?.ToString("o"),
 					actualArrival = shipment.ActualArrival?.ToString("o"),
 					createdAt = shipment.CreatedAt.ToString("o"),
-					delayHours = shipment.DelayHours,
-					delayPenaltyAmount = shipment.DelayPenaltyAmount,
-					penaltyCalculatedAt = shipment.PenaltyCalculatedAt?.ToString("o")
+					//delayHours = shipment.DelayHours,
+					//delayPenaltyAmount = shipment.DelayPenaltyAmount,
+					//penaltyCalculatedAt = shipment.PenaltyCalculatedAt?.ToString("o")
 				});
 			}
 			finally
@@ -242,9 +242,9 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 					actualDeparture = shipment.ActualDeparture?.ToString("o"),
 					actualArrival = shipment.ActualArrival?.ToString("o"),
 					createdAt = shipment.CreatedAt.ToString("o"),
-					delayHours = shipment.DelayHours,
-					delayPenaltyAmount = shipment.DelayPenaltyAmount,
-					penaltyCalculatedAt = shipment.PenaltyCalculatedAt?.ToString("o")
+					//delayHours = shipment.DelayHours,
+					//delayPenaltyAmount = shipment.DelayPenaltyAmount,
+					//penaltyCalculatedAt = shipment.PenaltyCalculatedAt?.ToString("o")
 				});
 			}
 			finally
@@ -275,15 +275,15 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 					? (DateTime?)DateTime.Parse(node.Properties["actualArrival"].ToString())
 					: null,
 				CreatedAt = DateTime.Parse(node.Properties["createdAt"].ToString()),
-				DelayHours = node.Properties.ContainsKey("delayHours") && node.Properties["delayHours"] != null
-					? (int?)Convert.ToInt32(node.Properties["delayHours"])
-					: null,
-				DelayPenaltyAmount = node.Properties.ContainsKey("delayPenaltyAmount") && node.Properties["delayPenaltyAmount"] != null
-					? (decimal?)Convert.ToDecimal(node.Properties["delayPenaltyAmount"])
-					: null,
-				PenaltyCalculatedAt = node.Properties.ContainsKey("penaltyCalculatedAt") && node.Properties["penaltyCalculatedAt"] != null
-					? (DateTime?)DateTime.Parse(node.Properties["penaltyCalculatedAt"].ToString())
-					: null
+				//DelayHours = node.Properties.ContainsKey("delayHours") && node.Properties["delayHours"] != null
+				//	? (int?)Convert.ToInt32(node.Properties["delayHours"])
+				//	: null,
+				//DelayPenaltyAmount = node.Properties.ContainsKey("delayPenaltyAmount") && node.Properties["delayPenaltyAmount"] != null
+				//	? (decimal?)Convert.ToDecimal(node.Properties["delayPenaltyAmount"])
+				//	: null,
+				//PenaltyCalculatedAt = node.Properties.ContainsKey("penaltyCalculatedAt") && node.Properties["penaltyCalculatedAt"] != null
+				//	? (DateTime?)DateTime.Parse(node.Properties["penaltyCalculatedAt"].ToString())
+				//	: null
 			};
 		}
 	}

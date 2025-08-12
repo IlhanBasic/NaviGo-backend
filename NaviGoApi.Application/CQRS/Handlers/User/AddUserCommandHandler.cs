@@ -73,10 +73,10 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			await _unitOfWork.Users.AddAsync(userEntity);
 			await _unitOfWork.SaveChangesAsync();
 
-			// Slanje verifikacionog mejla
+			
 			var verificationLink = $"{_apiBaseUrl}api/User/verify-email?token={userEntity.EmailVerificationToken}";
-			await _emailService.SendVerificationEmailAsync(userEntity.Email, verificationLink);
-
+			if (userEntity.UserRole != UserRole.SuperAdmin)
+				await _emailService.SendVerificationEmailAsync(userEntity.Email, verificationLink);
 			return _mapper.Map<UserDto>(userEntity);
 		}
 		private string HashPassword(string password)
