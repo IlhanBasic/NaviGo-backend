@@ -55,12 +55,15 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		{
 			return await _context.Shipments
 				.Include(s => s.Contract)
+					.ThenInclude(c => c.Route)
+						.ThenInclude(r => r.RoutePrices) 
 				.Include(s => s.Vehicle)
 				.Include(s => s.Driver)
 				.Include(s => s.CargoType)
-				.AsNoTracking()
 				.FirstOrDefaultAsync(s => s.Id == id);
 		}
+
+
 
 		public async Task<IEnumerable<Shipment>> GetByStatusAsync(ShipmentStatus status)
 		{
@@ -70,7 +73,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.Include(s => s.Vehicle)
 				.Include(s => s.Driver)
 				.Include(s => s.CargoType)
-				.AsNoTracking()
 				.ToListAsync();
 		}
 

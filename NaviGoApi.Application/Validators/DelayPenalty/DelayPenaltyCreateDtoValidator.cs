@@ -10,10 +10,6 @@ namespace NaviGoApi.Application.Validators.DelayPenalty
 			RuleFor(x => x.ShipmentId)
 				.GreaterThan(0).WithMessage("ShipmentId must be greater than 0.");
 
-			RuleFor(x => x.CalculatedAt)
-				.NotEmpty().WithMessage("CalculatedAt is required.")
-				.LessThanOrEqualTo(DateTime.UtcNow).WithMessage("CalculatedAt cannot be in the future.");
-
 			RuleFor(x => x.DelayHours)
 				.GreaterThanOrEqualTo(0).WithMessage("DelayHours must be zero or greater.");
 

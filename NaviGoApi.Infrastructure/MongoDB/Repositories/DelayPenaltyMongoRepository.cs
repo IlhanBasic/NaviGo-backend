@@ -61,5 +61,10 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		{
 			throw new NotImplementedException();
 		}
+
+		public Task<DelayPenalty?> GetByShipmentIdAsync(int shipmentId)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

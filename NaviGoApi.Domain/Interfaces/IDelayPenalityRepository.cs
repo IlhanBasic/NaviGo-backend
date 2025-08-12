@@ -15,6 +15,7 @@ namespace NaviGoApi.Domain.Interfaces
 		Task UpdateAsync(DelayPenalty penalty);
 		Task DeleteAsync(int id);
 		Task<IEnumerable<DelayPenalty>> GetByContractIdAsync(int contractId);
+		Task<DelayPenalty?> GetByShipmentIdAsync(int  shipmentId);
 
 	}
 }

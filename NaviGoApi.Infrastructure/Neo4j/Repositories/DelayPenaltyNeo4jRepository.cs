@@ -151,5 +151,10 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		{
 			throw new NotImplementedException();
 		}
+
+		public Task<DelayPenalty?> GetByShipmentIdAsync(int shipmentId)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }
