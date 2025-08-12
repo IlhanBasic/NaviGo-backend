@@ -15,7 +15,6 @@ namespace NaviGoApi.Domain.Entities
 		public DateTime NewTime { get; set; }
 		public int ChangeCount { get; set; }
 		public decimal AdditionalFee { get; set; }
-		public int PickupChangesStatus { get; set; }
 
 		// Navigaciona svojstva
 		public Shipment? Shipment { get; set; }

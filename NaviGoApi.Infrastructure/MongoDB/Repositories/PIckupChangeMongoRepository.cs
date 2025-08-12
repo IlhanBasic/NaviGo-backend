@@ -56,5 +56,10 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		{
 			await _pickupChangesCollection.ReplaceOneAsync(pc => pc.Id == change.Id, change);
 		}
+
+		public Task<PickupChange?> GetByShipmentAndClientAsync(int shipmentId, int clientId)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

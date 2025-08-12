@@ -14,5 +14,7 @@ namespace NaviGoApi.Domain.Interfaces
 		Task AddAsync(PickupChange change);
 		Task UpdateAsync(PickupChange change);
 		Task DeleteAsync(int id);
+		Task<PickupChange?> GetByShipmentAndClientAsync(int shipmentId, int clientId);
+
 	}
 }

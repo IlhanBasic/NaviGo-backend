@@ -66,7 +66,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 						NewTime = change.NewTime.ToString("o"),
 						change.ChangeCount,
 						change.AdditionalFee,
-						PickupChangesStatus = (int)change.PickupChangesStatus
 					});
 			}
 			finally
@@ -124,8 +123,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 					OldTime = change.OldTime.ToString("o"),
 					NewTime = change.NewTime.ToString("o"),
 					change.ChangeCount,
-					change.AdditionalFee,
-					change.PickupChangesStatus
+					change.AdditionalFee
 				});
 		}
 
@@ -140,8 +138,12 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				NewTime = DateTime.Parse(node.Properties["NewTime"].As<string>()),
 				ChangeCount = node.Properties["ChangeCount"].As<int>(),
 				AdditionalFee = Convert.ToDecimal(node.Properties["AdditionalFee"]),
-				PickupChangesStatus = node.Properties["PickupChangesStatus"].As<int>()
 			};
+		}
+
+		public Task<PickupChange?> GetByShipmentAndClientAsync(int shipmentId, int clientId)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

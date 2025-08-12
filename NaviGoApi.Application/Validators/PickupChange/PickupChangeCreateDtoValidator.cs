@@ -13,11 +13,7 @@ namespace NaviGoApi.Application.Validators.PickupChange
 		public PickupChangeCreateDtoValidator()
 		{
 			RuleFor(x => x.ShipmentId).GreaterThan(0);
-			RuleFor(x => x.ClientId).GreaterThan(0);
-			RuleFor(x => x.OldTime).LessThan(x => x.NewTime).WithMessage("OldTime must be before NewTime");
-			RuleFor(x => x.ChangeCount).GreaterThanOrEqualTo(0);
-			RuleFor(x => x.AdditionalFee).GreaterThanOrEqualTo(0);
-			RuleFor(x => x.PickupChangesStatus).InclusiveBetween(0, 10); // prilagodi prema statusima koje imaš
+			RuleFor(x => x.NewTime).GreaterThan(DateTime.UtcNow).WithMessage("NewTime cannot be in past.");
 		}
 	}
 }

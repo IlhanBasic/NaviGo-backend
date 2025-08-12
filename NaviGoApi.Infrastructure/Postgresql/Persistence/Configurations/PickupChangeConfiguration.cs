@@ -32,8 +32,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 				.IsRequired()
 				.HasColumnType("decimal(18,2)");
 
-			builder.Property(x => x.PickupChangesStatus)
-				.IsRequired();
 
 			// Relations
 			builder.HasOne(x => x.Shipment)

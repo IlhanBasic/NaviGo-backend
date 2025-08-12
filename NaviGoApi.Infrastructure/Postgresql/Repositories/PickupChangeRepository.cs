@@ -46,5 +46,12 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			_context.PickupChanges.Update(change);
 			await Task.CompletedTask; // No actual async operation needed here
 		}
+		public async Task<PickupChange?> GetByShipmentAndClientAsync(int shipmentId, int clientId)
+		{
+			return await _context.PickupChanges
+				.Where(p => p.ShipmentId == shipmentId && p.ClientId == clientId)
+				.OrderByDescending(p => p.Id) 
+				.FirstOrDefaultAsync();
+		}
 	}
 }
