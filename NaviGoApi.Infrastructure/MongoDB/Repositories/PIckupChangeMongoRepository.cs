@@ -57,9 +57,12 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			await _pickupChangesCollection.ReplaceOneAsync(pc => pc.Id == change.Id, change);
 		}
 
-		public Task<PickupChange?> GetByShipmentAndClientAsync(int shipmentId, int clientId)
+		public async Task<PickupChange?> GetByShipmentAndClientAsync(int shipmentId, int clientId)
 		{
-			throw new NotImplementedException();
+			return await _pickupChangesCollection
+				.Find(pc => pc.ShipmentId == shipmentId && pc.ClientId == clientId)
+				.SortByDescending(pc => pc.Id)
+				.FirstOrDefaultAsync();
 		}
 	}
 }

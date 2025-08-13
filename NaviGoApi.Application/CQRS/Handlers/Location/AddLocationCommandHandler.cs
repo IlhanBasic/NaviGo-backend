@@ -22,7 +22,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Location
         }
         public async Task<Unit> Handle(AddLocationCommand request, CancellationToken cancellationToken)
 		{
-			var exist = _unitOfWork.Locations.GetByFullLocationAsync(request.LocationDto.ZIP,request.LocationDto.FullAddress, request.LocationDto.City);
+			var exist = await _unitOfWork.Locations.GetByFullLocationAsync(request.LocationDto.ZIP,request.LocationDto.FullAddress, request.LocationDto.City);
 			if (exist != null)
 				throw new ValidationException($"Location with same ZIP, Address and City is already created.");
 			var location = _mapper.Map<global::NaviGoApi.Domain.Entities.Location>(request.LocationDto);

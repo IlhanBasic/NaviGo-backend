@@ -38,7 +38,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 					Id = id,
 					TypeName = cargoType.TypeName,
 					Description = cargoType.Description,
-					HazardLevel = cargoType.HazardLevel,
 					RequiresSpecialEquipment = cargoType.RequiresSpecialEquipment
 				});
 			}
@@ -106,7 +105,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 						Id = node["Id"].As<int>(),
 						TypeName = node["TypeName"].As<string>(),
 						Description = node["Description"].As<string?>(),
-						HazardLevel = node["HazardLevel"].As<int>(),
 						RequiresSpecialEquipment = node["RequiresSpecialEquipment"].As<bool>()
 					});
 				});
@@ -142,7 +140,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 					Id = node["Id"].As<int>(),
 					TypeName = node["TypeName"].As<string>(),
 					Description = node["Description"].As<string?>(),
-					HazardLevel = node["HazardLevel"].As<int>(),
 					RequiresSpecialEquipment = node["RequiresSpecialEquipment"].As<bool>()
 				};
 			}
@@ -170,7 +167,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 					Id = cargoType.Id,
 					TypeName = cargoType.TypeName,
 					Description = cargoType.Description,
-					HazardLevel = cargoType.HazardLevel,
 					RequiresSpecialEquipment = cargoType.RequiresSpecialEquipment
 				});
 			}

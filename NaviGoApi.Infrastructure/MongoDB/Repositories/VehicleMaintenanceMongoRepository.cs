@@ -1,4 +1,73 @@
-﻿using MongoDB.Bson;
+﻿//using MongoDB.Bson;
+//using MongoDB.Driver;
+//using NaviGoApi.Domain.Entities;
+//using NaviGoApi.Domain.Interfaces;
+//using System.Collections.Generic;
+//using System.Threading.Tasks;
+
+//namespace NaviGoApi.Infrastructure.MongoDB.Repositories
+//{
+//	public class VehicleMaintenanceMongoRepository : IVehicleMaintenanceRepository
+//	{
+//		private readonly IMongoCollection<VehicleMaintenance> _vehicleMaintenancesCollection;
+
+//		public VehicleMaintenanceMongoRepository(IMongoDatabase database)
+//		{
+//			_vehicleMaintenancesCollection = database.GetCollection<VehicleMaintenance>("VehicleMaintenances");
+//		}
+
+//		public async Task AddAsync(VehicleMaintenance maintenance)
+//		{
+//			maintenance.Id = await GetNextIdAsync();
+//			await _vehicleMaintenancesCollection.InsertOneAsync(maintenance);
+//		}
+
+//		private async Task<int> GetNextIdAsync()
+//		{
+//			var counters = _vehicleMaintenancesCollection.Database.GetCollection<BsonDocument>("Counters");
+
+//			var filter = Builders<BsonDocument>.Filter.Eq("_id", "VehicleMaintenances");
+//			var update = Builders<BsonDocument>.Update.Inc("SequenceValue", 1);
+
+//			var options = new FindOneAndUpdateOptions<BsonDocument>
+//			{
+//				IsUpsert = true,
+//				ReturnDocument = ReturnDocument.After
+//			};
+
+//			var result = await counters.FindOneAndUpdateAsync(filter, update, options);
+//			return result["SequenceValue"].AsInt32;
+//		}
+
+//		public async Task DeleteAsync(int id)
+//		{
+//			await _vehicleMaintenancesCollection.DeleteOneAsync(vm => vm.Id == id);
+//		}
+
+//		public async Task<IEnumerable<VehicleMaintenance>> GetAllAsync()
+//		{
+//			return await _vehicleMaintenancesCollection.Find(_ => true).ToListAsync();
+//		}
+
+//		public async Task<VehicleMaintenance?> GetByIdAsync(int id)
+//		{
+//			return await _vehicleMaintenancesCollection.Find(vm => vm.Id == id).FirstOrDefaultAsync();
+//		}
+
+//		public async Task UpdateAsync(VehicleMaintenance maintenance)
+//		{
+//			await _vehicleMaintenancesCollection.ReplaceOneAsync(vm => vm.Id == maintenance.Id, maintenance);
+//		}
+
+//		public Task SaveChangesAsync()
+//		{
+//			// MongoDB operacije su odmah sačuvane, pa nema potrebe za eksplicitnim SaveChanges.
+//			return Task.CompletedTask;
+//		}
+//	}
+//}
+
+using MongoDB.Bson;
 using MongoDB.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
@@ -25,16 +94,13 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		private async Task<int> GetNextIdAsync()
 		{
 			var counters = _vehicleMaintenancesCollection.Database.GetCollection<BsonDocument>("Counters");
-
 			var filter = Builders<BsonDocument>.Filter.Eq("_id", "VehicleMaintenances");
 			var update = Builders<BsonDocument>.Update.Inc("SequenceValue", 1);
-
 			var options = new FindOneAndUpdateOptions<BsonDocument>
 			{
 				IsUpsert = true,
 				ReturnDocument = ReturnDocument.After
 			};
-
 			var result = await counters.FindOneAndUpdateAsync(filter, update, options);
 			return result["SequenceValue"].AsInt32;
 		}
@@ -46,12 +112,20 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 
 		public async Task<IEnumerable<VehicleMaintenance>> GetAllAsync()
 		{
-			return await _vehicleMaintenancesCollection.Find(_ => true).ToListAsync();
+			var list = await _vehicleMaintenancesCollection.Find(_ => true).ToListAsync();
+			foreach (var vm in list)
+				await LoadNavigationPropertiesAsync(vm);
+
+			return list;
 		}
 
 		public async Task<VehicleMaintenance?> GetByIdAsync(int id)
 		{
-			return await _vehicleMaintenancesCollection.Find(vm => vm.Id == id).FirstOrDefaultAsync();
+			var maintenance = await _vehicleMaintenancesCollection.Find(vm => vm.Id == id).FirstOrDefaultAsync();
+			if (maintenance != null)
+				await LoadNavigationPropertiesAsync(maintenance);
+
+			return maintenance;
 		}
 
 		public async Task UpdateAsync(VehicleMaintenance maintenance)
@@ -61,8 +135,26 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 
 		public Task SaveChangesAsync()
 		{
-			// MongoDB operacije su odmah sačuvane, pa nema potrebe za eksplicitnim SaveChanges.
+			// MongoDB operacije su odmah sačuvane
 			return Task.CompletedTask;
+		}
+
+		// Helper metoda za učitavanje navigacionih property-ja
+		private async Task LoadNavigationPropertiesAsync(VehicleMaintenance? maintenance)
+		{
+			if (maintenance == null) return;
+
+			if (maintenance.VehicleId != 0)
+			{
+				var vehiclesCollection = _vehicleMaintenancesCollection.Database.GetCollection<Vehicle>("Vehicles");
+				maintenance.Vehicle = await vehiclesCollection.Find(v => v.Id == maintenance.VehicleId).FirstOrDefaultAsync();
+			}
+
+			if (maintenance.ReportedByUserId != 0)
+			{
+				var usersCollection = _vehicleMaintenancesCollection.Database.GetCollection<User>("Users");
+				maintenance.ReportedByUser = await usersCollection.Find(u => u.Id == maintenance.ReportedByUserId).FirstOrDefaultAsync();
+			}
 		}
 	}
 }

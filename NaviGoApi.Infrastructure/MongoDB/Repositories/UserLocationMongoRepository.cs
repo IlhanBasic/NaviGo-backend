@@ -51,7 +51,7 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return await _userLocationsCollection.Find(filter).ToListAsync();
 		}
 
-		// MongoDB nema SaveChanges jer su promene odmah upisane, pa samo vrati CompletedTask
+		// MongoDB nema SaveChanges jer se odmah zapisuje, pa samo vrati CompletedTask
 		public Task SaveChangesAsync()
 		{
 			return Task.CompletedTask;

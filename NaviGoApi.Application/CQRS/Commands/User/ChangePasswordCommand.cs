@@ -9,13 +9,11 @@ namespace NaviGoApi.Application.CQRS.Commands.User
 {
 	public class ChangePasswordCommand : IRequest<bool>
 	{
-		public int UserId { get; }
 		public string CurrentPassword { get; }
 		public string NewPassword { get; }
 
-		public ChangePasswordCommand(int userId, string currentPassword, string newPassword)
+		public ChangePasswordCommand(string currentPassword, string newPassword)
 		{
-			UserId = userId;
 			CurrentPassword = currentPassword;
 			NewPassword = newPassword;
 		}

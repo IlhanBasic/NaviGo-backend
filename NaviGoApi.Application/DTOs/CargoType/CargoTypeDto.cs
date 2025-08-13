@@ -11,7 +11,6 @@ namespace NaviGoApi.Application.DTOs.CargoType
 		public int Id { get; set; }
 		public string TypeName { get; set; } = null!;
 		public string? Description { get; set; }
-		public int HazardLevel { get; set; }
 		public bool RequiresSpecialEquipment { get; set; }
 	}
 }

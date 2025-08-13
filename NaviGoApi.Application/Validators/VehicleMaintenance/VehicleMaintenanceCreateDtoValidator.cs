@@ -15,16 +15,9 @@ namespace NaviGoApi.Application.Validators.VehicleMaintenance
 			RuleFor(x => x.VehicleId)
 				.GreaterThan(0).WithMessage("VehicleId must be greater than 0.");
 
-			RuleFor(x => x.ReportedByUserId)
-				.GreaterThan(0).WithMessage("ReportedByUserId must be greater than 0.");
-
 			RuleFor(x => x.Description)
 				.NotEmpty().WithMessage("Description is required.")
 				.MaximumLength(1000).WithMessage("Description can't be longer than 1000 characters.");
-
-			RuleFor(x => x.ReportedAt)
-				.NotEmpty().WithMessage("ReportedAt is required.");
-
 			RuleFor(x => x.Severity)
 				.IsInEnum().WithMessage("Invalid severity level.");
 

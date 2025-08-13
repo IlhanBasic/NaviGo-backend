@@ -15,9 +15,6 @@ namespace NaviGoApi.Application.Validators.CargoType
 				.MaximumLength(500).WithMessage("Description must not exceed 500 characters.")
 				.When(x => x.Description != null);
 
-			RuleFor(x => x.HazardLevel)
-				.GreaterThanOrEqualTo(0).WithMessage("HazardLevel must be zero or greater.");
-
 			RuleFor(x => x.RequiresSpecialEquipment)
 				.NotNull().WithMessage("RequiresSpecialEquipment is required.");
 		}

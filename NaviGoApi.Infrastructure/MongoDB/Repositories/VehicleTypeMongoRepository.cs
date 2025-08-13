@@ -58,9 +58,12 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			await _vehicleTypesCollection.ReplaceOneAsync(vt => vt.Id == vehicleType.Id, vehicleType);
 		}
 
-		public Task<bool> ExistsAsync(Expression<Func<VehicleType, bool>> predicate)
+		public async Task<bool> ExistsAsync(Expression<Func<VehicleType, bool>> predicate)
 		{
-			throw new NotImplementedException();
+			var count = await _vehicleTypesCollection.CountDocumentsAsync(predicate);
+			return count > 0;
 		}
+
+
 	}
 }

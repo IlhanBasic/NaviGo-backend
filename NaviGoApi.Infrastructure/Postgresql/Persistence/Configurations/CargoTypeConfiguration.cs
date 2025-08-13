@@ -18,8 +18,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 			builder.Property(ct => ct.Description)
 				   .HasMaxLength(500);
 
-			builder.Property(ct => ct.HazardLevel)
-				   .IsRequired();
 
 			builder.Property(ct => ct.RequiresSpecialEquipment)
 				   .IsRequired();

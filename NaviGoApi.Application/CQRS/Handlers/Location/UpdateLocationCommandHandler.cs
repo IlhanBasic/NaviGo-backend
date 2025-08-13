@@ -28,7 +28,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Location
 			if(location != null)
 			{
 				_mapper.Map(request.LocationDto, location);
-				var exists = _unitOfWork.Locations.GetByFullLocationAsync(location.ZIP, location.FullAddress, location.City);
+				var exists = await _unitOfWork.Locations.GetByFullLocationAsync(location.ZIP, location.FullAddress, location.City);
 				if (exists != null)
 					throw new ValidationException("Location with same ZIP, Address and City is already created.");
 				await _unitOfWork.Locations.UpdateAsync(location);

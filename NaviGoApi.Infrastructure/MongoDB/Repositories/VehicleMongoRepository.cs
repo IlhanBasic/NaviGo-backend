@@ -69,9 +69,11 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			await _vehiclesCollection.ReplaceOneAsync(v => v.Id == vehicle.Id, vehicle);
 		}
 
-		public Task<Vehicle?> GetByRegistrationNumberAsync(string RegistrationNumber)
+		public async Task<Vehicle?> GetByRegistrationNumberAsync(string registrationNumber)
 		{
-			throw new NotImplementedException();
+			return await _vehiclesCollection
+				.Find(v => v.RegistrationNumber == registrationNumber)
+				.FirstOrDefaultAsync();
 		}
 	}
 }

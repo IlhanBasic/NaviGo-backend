@@ -2,7 +2,9 @@
 using MongoDB.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
+using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.MongoDB.Repositories
@@ -10,10 +12,12 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 	public class DriverMongoRepository : IDriverRepository
 	{
 		private readonly IMongoCollection<Driver> _driversCollection;
+		private readonly IMongoCollection<BsonDocument> _countersCollection;
 
 		public DriverMongoRepository(IMongoDatabase database)
 		{
 			_driversCollection = database.GetCollection<Driver>("Drivers");
+			_countersCollection = database.GetCollection<BsonDocument>("Counters");
 		}
 
 		public async Task AddAsync(Driver driver)
@@ -24,7 +28,6 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 
 		private async Task<int> GetNextIdAsync()
 		{
-			var counters = _driversCollection.Database.GetCollection<BsonDocument>("Counters");
 			var filter = Builders<BsonDocument>.Filter.Eq("_id", "Drivers");
 			var update = Builders<BsonDocument>.Update.Inc("SequenceValue", 1);
 			var options = new FindOneAndUpdateOptions<BsonDocument>
@@ -33,13 +36,15 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 				ReturnDocument = ReturnDocument.After
 			};
 
-			var result = await counters.FindOneAndUpdateAsync(filter, update, options);
+			var result = await _countersCollection.FindOneAndUpdateAsync(filter, update, options);
 			return result["SequenceValue"].AsInt32;
 		}
 
 		public async Task DeleteAsync(Driver driver)
 		{
-			await _driversCollection.DeleteOneAsync(d => d.Id == driver.Id);
+			var result = await _driversCollection.DeleteOneAsync(d => d.Id == driver.Id);
+			if (result.DeletedCount == 0)
+				throw new KeyNotFoundException($"Driver with Id {driver.Id} not found for deletion.");
 		}
 
 		public async Task<IEnumerable<Driver>> GetAllAsync()
@@ -70,8 +75,12 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		{
 			var result = await _driversCollection.ReplaceOneAsync(d => d.Id == driver.Id, driver);
 			if (result.MatchedCount == 0)
-				throw new Exception($"Driver with Id {driver.Id} not found for update.");
+				throw new KeyNotFoundException($"Driver with Id {driver.Id} not found for update.");
 		}
 
+		public async Task<bool> ExistsAsync(Expression<System.Func<Driver, bool>> predicate)
+		{
+			return await _driversCollection.Find(predicate).AnyAsync();
+		}
 	}
 }

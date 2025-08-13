@@ -3,6 +3,7 @@ using MongoDB.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Infrastructure.MongoDB.Repositories
@@ -39,7 +40,9 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 
 		public async Task DeleteAsync(int id)
 		{
-			await _locationsCollection.DeleteOneAsync(l => l.Id == id);
+			var result = await _locationsCollection.DeleteOneAsync(l => l.Id == id);
+			if (result.DeletedCount == 0)
+				throw new KeyNotFoundException($"Location with Id {id} not found for deletion.");
 		}
 
 		public async Task<IEnumerable<Location>> GetAllAsync()
@@ -52,14 +55,22 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return await _locationsCollection.Find(l => l.Id == id).FirstOrDefaultAsync();
 		}
 
-		public async Task UpdateAsync(Location location)
+		public async Task<Location?> GetByFullLocationAsync(string zip, string fullAddress, string city)
 		{
-			await _locationsCollection.ReplaceOneAsync(l => l.Id == location.Id, location);
+			var filter = Builders<Location>.Filter.And(
+				Builders<Location>.Filter.Eq(l => l.ZIP, zip),
+				Builders<Location>.Filter.Eq(l => l.FullAddress, fullAddress),
+				Builders<Location>.Filter.Eq(l => l.City, city)
+			);
+
+			return await _locationsCollection.Find(filter).FirstOrDefaultAsync();
 		}
 
-		public Task<Location?> GetByFullLocationAsync(string zip, string fullAddress, string city)
+		public async Task UpdateAsync(Location location)
 		{
-			throw new NotImplementedException();
+			var result = await _locationsCollection.ReplaceOneAsync(l => l.Id == location.Id, location);
+			if (result.MatchedCount == 0)
+				throw new ValidationException($"Location with Id {location.Id} not found for update.");
 		}
 	}
 }

@@ -24,25 +24,25 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 	options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 //INTERFACES + REPOSITORIES FOR POSTGRESQL
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<ICargoTypeRepository, CargoTypeRepository>();
-builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
-builder.Services.AddScoped<IDelayPenaltyRepository, DelayPenalityRepository>();
-builder.Services.AddScoped<IDriverRepository, DriverRepository>();
-builder.Services.AddScoped<IForwarderOfferRepository, ForwarderOfferRepository>();
-builder.Services.AddScoped<ILocationRepository, LocationRepository>();
-builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
-builder.Services.AddScoped<IPickupChangeRepository, PickupChangeRepository>();
-builder.Services.AddScoped<IRouteRepository, RouteRepository>();
-builder.Services.AddScoped<IRoutePriceRepository, RoutePriceRepository>();
-builder.Services.AddScoped<IShipmentRepository, ShipmentRepository>();
-builder.Services.AddScoped<IShipmentDocumentRepository, ShipmentDocumentRepository>();
-builder.Services.AddScoped<IShipmentStatusHistoryRepository, ShipmentStatusHistoryRepository>();
-builder.Services.AddScoped<IVehicleMaintenanceRepository, VehicleMaintenanceRepository>();
-builder.Services.AddScoped<IVehicleTypeRepository, VehicleTypeRepository>();
-builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
-builder.Services.AddScoped<IContractRepository, ContractRepository>();
-builder.Services.AddScoped<IUserLocationRepository, UserLocationRepository>();
+//builder.Services.AddScoped<IUserRepository, UserRepository>();
+//builder.Services.AddScoped<ICargoTypeRepository, CargoTypeRepository>();
+//builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
+//builder.Services.AddScoped<IDelayPenaltyRepository, DelayPenalityRepository>();
+//builder.Services.AddScoped<IDriverRepository, DriverRepository>();
+//builder.Services.AddScoped<IForwarderOfferRepository, ForwarderOfferRepository>();
+//builder.Services.AddScoped<ILocationRepository, LocationRepository>();
+//builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+//builder.Services.AddScoped<IPickupChangeRepository, PickupChangeRepository>();
+//builder.Services.AddScoped<IRouteRepository, RouteRepository>();
+//builder.Services.AddScoped<IRoutePriceRepository, RoutePriceRepository>();
+//builder.Services.AddScoped<IShipmentRepository, ShipmentRepository>();
+//builder.Services.AddScoped<IShipmentDocumentRepository, ShipmentDocumentRepository>();
+//builder.Services.AddScoped<IShipmentStatusHistoryRepository, ShipmentStatusHistoryRepository>();
+//builder.Services.AddScoped<IVehicleMaintenanceRepository, VehicleMaintenanceRepository>();
+//builder.Services.AddScoped<IVehicleTypeRepository, VehicleTypeRepository>();
+//builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+//builder.Services.AddScoped<IContractRepository, ContractRepository>();
+//builder.Services.AddScoped<IUserLocationRepository, UserLocationRepository>();
 //MONGODB
 builder.Services.AddSingleton<IMongoClient>(sp =>
 {
@@ -51,25 +51,25 @@ builder.Services.AddSingleton<IMongoClient>(sp =>
 	return new MongoClient(connectionString);
 });
 //INTERFACES + REPOSITORIES FOR MONGODB
-//builder.Services.AddScoped<IUserRepository, UserMongoRepository>();
-//builder.Services.AddScoped<ICargoTypeRepository, CargoTypeMongoRepository>();
-//builder.Services.AddScoped<ICompanyRepository, CompanyMongoRepository>();
-//builder.Services.AddScoped<IDelayPenaltyRepository, DelayPenaltyMongoRepository>();
-//builder.Services.AddScoped<IDriverRepository, DriverMongoRepository>();
-//builder.Services.AddScoped<IForwarderOfferRepository, ForwarderOfferMongoRepository>();
-//builder.Services.AddScoped<ILocationRepository, LocationMongoRepository>();
-//builder.Services.AddScoped<IPaymentRepository, PaymentMongoRepository>();
-//builder.Services.AddScoped<IPickupChangeRepository, PickupChangeMongoRepository>();
-//builder.Services.AddScoped<IRouteRepository, RouteMongoRepository>();
-//builder.Services.AddScoped<IRoutePriceRepository, RoutePriceMongoRepository>();
-//builder.Services.AddScoped<IShipmentRepository, ShipmentMongoRepository>();
-//builder.Services.AddScoped<IShipmentDocumentRepository, ShipmentDocumentMongoRepository>();
-//builder.Services.AddScoped<IShipmentStatusHistoryRepository, ShipmentStatusHistoryMongoRepository>();
-//builder.Services.AddScoped<IVehicleMaintenanceRepository, VehicleMaintenanceMongoRepository>();
-//builder.Services.AddScoped<IVehicleTypeRepository, VehicleTypeMongoRepository>();
-//builder.Services.AddScoped<IVehicleRepository, VehicleMongoRepository>();
-//builder.Services.AddScoped<IContractRepository, ContractMongoRepository>();
-//builder.Services.AddScoped<IUserLocationRepository, UserLocationMongoRepository>();
+builder.Services.AddScoped<IUserRepository, UserMongoRepository>();
+builder.Services.AddScoped<ICargoTypeRepository, CargoTypeMongoRepository>();
+builder.Services.AddScoped<ICompanyRepository, CompanyMongoRepository>();
+builder.Services.AddScoped<IDelayPenaltyRepository, DelayPenaltyMongoRepository>();
+builder.Services.AddScoped<IDriverRepository, DriverMongoRepository>();
+builder.Services.AddScoped<IForwarderOfferRepository, ForwarderOfferMongoRepository>();
+builder.Services.AddScoped<ILocationRepository, LocationMongoRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentMongoRepository>();
+builder.Services.AddScoped<IPickupChangeRepository, PickupChangeMongoRepository>();
+builder.Services.AddScoped<IRouteRepository, RouteMongoRepository>();
+builder.Services.AddScoped<IRoutePriceRepository, RoutePriceMongoRepository>();
+builder.Services.AddScoped<IShipmentRepository, ShipmentMongoRepository>();
+builder.Services.AddScoped<IShipmentDocumentRepository, ShipmentDocumentMongoRepository>();
+builder.Services.AddScoped<IShipmentStatusHistoryRepository, ShipmentStatusHistoryMongoRepository>();
+builder.Services.AddScoped<IVehicleMaintenanceRepository, VehicleMaintenanceMongoRepository>();
+builder.Services.AddScoped<IVehicleTypeRepository, VehicleTypeMongoRepository>();
+builder.Services.AddScoped<IVehicleRepository, VehicleMongoRepository>();
+builder.Services.AddScoped<IContractRepository, ContractMongoRepository>();
+builder.Services.AddScoped<IUserLocationRepository, UserLocationMongoRepository>();
 builder.Services.AddScoped(sp =>
 {
 	var client = sp.GetRequiredService<IMongoClient>();

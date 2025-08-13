@@ -34,16 +34,16 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		public async Task<IEnumerable<VehicleMaintenance>> GetAllAsync()
 		{
 			return await _context.VehicleMaintenances
-				//.Include(vm => vm.Vehicle)             // ako mi zatreba
-				//.Include(vm => vm.ReportedByUser)      // ako mi zatreba
+				.Include(vm => vm.Vehicle)          
+				.Include(vm => vm.ReportedByUser)     
 				.ToListAsync();
 		}
 
 		public async Task<VehicleMaintenance?> GetByIdAsync(int id)
 		{
 			return await _context.VehicleMaintenances
-				//.Include(vm => vm.Vehicle)             // ako mi zatreba
-				//.Include(vm => vm.ReportedByUser)      // ako mi zatreba
+				.Include(vm => vm.Vehicle)            
+				.Include(vm => vm.ReportedByUser)     
 				.FirstOrDefaultAsync(vm => vm.Id == id);
 		}
 
