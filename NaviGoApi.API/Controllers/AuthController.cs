@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.User;
@@ -81,6 +82,13 @@ namespace NaviGoApi.API.Controllers
 				accessToken = result.Value.accessToken,
 				refreshToken = result.Value.refreshToken
 			});
+		}
+		[HttpPost("logout")]
+		[Authorize]
+		public async Task<IActionResult> Logout([FromBody] LogoutRequestDto dto)
+		{
+			await _mediator.Send(new LogoutCommand(dto));
+			return NoContent(); 
 		}
 	}
 }

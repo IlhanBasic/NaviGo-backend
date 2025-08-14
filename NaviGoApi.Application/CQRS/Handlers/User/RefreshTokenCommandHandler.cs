@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using NaviGoApi.Application.CQRS.Commands.User;
@@ -19,12 +20,13 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 	{
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly string _jwtSecret;
-
-		public RefreshTokenCommandHandler(IUnitOfWork unitOfWork, IConfiguration configuration)
+		private readonly IHttpContextAccessor _httpContextAccessor;
+		public RefreshTokenCommandHandler(IUnitOfWork unitOfWork, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
 		{
 			_unitOfWork = unitOfWork;
 			_jwtSecret = configuration["JWT_SECRET"]
 				?? throw new Exception("JWT_SECRET nije pronađen u konfiguraciji.");
+			_httpContextAccessor = httpContextAccessor;
 		}
 
 		public async Task<(string accessToken, string refreshToken)?> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
@@ -38,13 +40,13 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			if (refreshToken == null || !refreshToken.IsActive)
 				return null;
 
-			refreshToken.Revoked = DateTime.UtcNow;
-			refreshToken.RevokedByIp = request.IpAddress;
-
 			//var newRefreshToken = GenerateRefreshToken(request.IpAddress);
 			//user.RefreshTokens.Add(newRefreshToken);
 			//await _unitOfWork.SaveChangesAsync();
-			var newRefreshToken = GenerateRefreshToken(request.IpAddress);
+			refreshToken.Revoked = DateTime.UtcNow;
+			refreshToken.RevokedByIp = GetIpAddress(); 
+
+			var newRefreshToken = GenerateRefreshToken(GetIpAddress());
 			user.RefreshTokens.Add(newRefreshToken);
 			await _unitOfWork.Users.AddRefreshTokenAsync(newRefreshToken);
 			await _unitOfWork.SaveChangesAsync();
@@ -88,5 +90,13 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 
 			return new JwtSecurityTokenHandler().WriteToken(token);
 		}
+		private string GetIpAddress()
+		{
+			var httpContext = _httpContextAccessor.HttpContext
+				?? throw new InvalidOperationException("HttpContext is not available.");
+
+			return httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+		}
+	
 	}
 }

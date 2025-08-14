@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using NaviGoApi.Application.CQRS.Commands.User;
@@ -19,12 +20,13 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 	{
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly string _jwtSecret;
-
-		public AuthenticateCommandHandler(IUnitOfWork unitOfWork, IConfiguration configuration)
+		private readonly IHttpContextAccessor _httpContextAccessor;
+		public AuthenticateCommandHandler(IUnitOfWork unitOfWork, IConfiguration configuration,IHttpContextAccessor httpContextAccessor)
 		{
 			_unitOfWork = unitOfWork;
 			_jwtSecret = configuration["JWT_SECRET"]
 				?? throw new Exception("JWT_SECRET nije pronađen u konfiguraciji.");
+			_httpContextAccessor = httpContextAccessor;
 		}
 
 		public async Task<(string accessToken, string refreshToken)?> Handle(AuthenticateCommand request, CancellationToken cancellationToken)
@@ -41,8 +43,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 
 			//user.RefreshTokens.Add(refreshToken);
 			//await _unitOfWork.SaveChangesAsync();
-			var refreshToken = GenerateRefreshToken("");
-			Console.WriteLine($"Adding refresh token for UserId: {user.Id}, Token: {refreshToken.Token}");
+			var refreshToken = GenerateRefreshToken(GetIpAddress());
 			user.RefreshTokens.Add(refreshToken);
 			await _unitOfWork.Users.AddRefreshTokenAsync(refreshToken);
 			await _unitOfWork.SaveChangesAsync();
@@ -94,5 +95,13 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 
 			return new JwtSecurityTokenHandler().WriteToken(token);
 		}
+		private string GetIpAddress()
+		{
+			var httpContext = _httpContextAccessor.HttpContext
+				?? throw new InvalidOperationException("HttpContext is not available.");
+
+			return httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+		}
+
 	}
 }
