@@ -34,20 +34,11 @@ namespace NaviGoApi.Application.Validators.Company
 			RuleFor(x => x.Description)
 				.MaximumLength(1000).WithMessage("Description cannot exceed 1000 characters.");
 
-			RuleFor(x => x.CompanyType)
-				.IsInEnum().WithMessage("Invalid company type.");
-
-			RuleFor(x => x.CompanyStatus)
-				.IsInEnum().WithMessage("Invalid company status.");
 
 			RuleFor(x => x.MaxCommissionRate)
 				.GreaterThanOrEqualTo(0).WithMessage("Max commission rate must be non-negative.")
 				.LessThanOrEqualTo(100).WithMessage("Max commission rate cannot exceed 100%")
 				.When(x => x.MaxCommissionRate.HasValue);
-
-			RuleFor(x => x.SaldoAmount)
-				.GreaterThanOrEqualTo(0).WithMessage("Saldo amount must be non-negative.")
-				.When(x => x.SaldoAmount.HasValue);
 
 			RuleFor(x => x.ProofFileUrl)
 				.Must(url => Uri.IsWellFormedUriString(url, UriKind.Absolute))

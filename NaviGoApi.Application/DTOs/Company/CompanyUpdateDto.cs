@@ -15,10 +15,7 @@ namespace NaviGoApi.Application.DTOs.Company
 		public string ContactEmail { get; set; } = null!;
 		public string? Website { get; set; }
 		public string? Description { get; set; }
-		public CompanyType CompanyType { get; set; }
-		public CompanyStatus CompanyStatus { get; set; }
 		public decimal? MaxCommissionRate { get; set; }
-		public decimal? SaldoAmount { get; set; }
 		public string? ProofFileUrl { get; set; }
 	}
 }

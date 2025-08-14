@@ -1,9 +1,11 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.Company;
 using NaviGoApi.Application.CQRS.Queries.Company;
 using NaviGoApi.Application.DTOs.Company;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.API.Controllers
@@ -52,6 +54,29 @@ namespace NaviGoApi.API.Controllers
 
 			return Ok(new { message = "Company updated successfully.", company = updated });
 		}
+		[HttpPatch("{id}/status")]
+		[Authorize]
+		public async Task<IActionResult> UpdateStatus(int id, [FromBody] CompanyUpdateStatusDto dto)
+		{
+			try
+			{
+				await _mediator.Send(new UpdateCompanyStatusCommand(id, dto));
+				return Ok(new { message = "Company status updated successfully." });
+			}
+			catch (UnauthorizedAccessException ex)
+			{
+				return Forbid(ex.Message);
+			}
+			catch (KeyNotFoundException ex)
+			{
+				return NotFound(new { error = "NotFound", message = ex.Message });
+			}
+			catch (ValidationException ex)
+			{
+				return BadRequest(new { error = "ValidationError", message = ex.Message });
+			}
+		}
+
 
 		[HttpDelete("{id}")]
 		public async Task<IActionResult> Delete(int id)

@@ -34,11 +34,22 @@ namespace NaviGoApi.Application.CQRS.Handlers.Company
 			var exists = await _unitOfWork.Companies.GetByPibAsync(request.CompanyDto.PIB);
 			if (exists != null)
 				throw new ValidationException($"Company with PIB: ${request.CompanyDto.PIB} already exists.");
-
+			if (request.CompanyDto.CompanyType != CompanyType.Forwarder)
+			{
+				request.CompanyDto.MaxCommissionRate = null;
+			}
 			var entity = _mapper.Map<Domain.Entities.Company>(request.CompanyDto);
+			entity.CompanyStatus = CompanyStatus.Pending;
+			if(request.CompanyDto.CompanyType == CompanyType.Forwarder)
+			{
+				entity.SaldoAmount = 0;
+			}
+			else
+			{
+				entity.SaldoAmount = null;
+			}
 			await _unitOfWork.Companies.AddAsync(entity);
 			await _unitOfWork.SaveChangesAsync();
-
 			return _mapper.Map<CompanyDto>(entity);
 		}
 	}
