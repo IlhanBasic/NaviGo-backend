@@ -24,9 +24,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 				.IsRequired()
 				.HasMaxLength(20);
 
-			// Dodajemo unique constraint na ZIP
-			builder.HasIndex(x => x.ZIP).IsUnique();
-
 			builder.Property(x => x.Latitude)
 				.IsRequired();
 

@@ -34,9 +34,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 				.HasPrecision(5, 2)
 				.IsRequired();
 
-			builder.Property(c => c.ValidUntil)
-				.IsRequired();
-
 			// FK: User (Client)
 			builder.HasOne(c => c.Client)
 				.WithMany()

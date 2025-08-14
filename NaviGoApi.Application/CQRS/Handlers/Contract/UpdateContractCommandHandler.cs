@@ -23,9 +23,6 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 		public async Task<Unit> Handle(UpdateContractCommand request, CancellationToken cancellationToken)
 		{
 			var dto = request.ContractDto;
-			if (dto.SignedDate.HasValue &&
-				(dto.SignedDate.Value > dto.ValidUntil))
-				throw new ValidationException("Signed date must be between contract date and valid until.");
 			if (dto.PenaltyRatePerHour < 0)
 				throw new ValidationException("Penalty rate cannot be negative.");
 

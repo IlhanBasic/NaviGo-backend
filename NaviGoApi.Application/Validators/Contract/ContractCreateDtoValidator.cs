@@ -34,8 +34,6 @@ namespace NaviGoApi.Application.Validators.Contract
 			RuleFor(x => x.MaxPenaltyPercent)
 				.InclusiveBetween(0, 100).WithMessage("MaxPenaltyPercent must be between 0 and 100.");
 
-			RuleFor(x => x.ValidUntil)
-				.GreaterThan(DateTime.UtcNow).WithMessage("ValidUntil must be in the future.");
 		}
 	}
 }

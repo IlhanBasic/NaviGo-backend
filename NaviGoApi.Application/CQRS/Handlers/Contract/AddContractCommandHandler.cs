@@ -40,29 +40,32 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 			var forwarder = await _unitOfWork.Companies.GetByIdAsync(dto.ForwarderId);
 			if (forwarder == null)
 				throw new ValidationException($"Forwarder with ID {dto.ForwarderId} not found.");
-			if (clientIsCompany && client.CompanyId == forwarder.Id)
-				throw new ValidationException("Client and forwarder cannot be the same company.");
 			var route = await _unitOfWork.Routes.GetByIdAsync(dto.RouteId);
 			if (route == null)
 				throw new ValidationException($"Route with ID {dto.RouteId} not found.");
+			if (clientIsCompany)
+			{
+				var company = await _unitOfWork.Companies.GetByIdAsync(client.CompanyId.Value);
+				if (company == null)
+					throw new ValidationException($"Company with ID {client.CompanyId.Value} doesn't exists.");
+				if (company.CompanyType != CompanyType.Client)
+					throw new ValidationException($"Company with ID {client.CompanyId.Value} must be Client.");
+			}
+			if (clientIsCompany && client.CompanyId == forwarder.Id)
+				throw new ValidationException("Client and forwarder cannot be the same company.");
 
-			if (forwarder.Routes.Any(x=>x.Id==request.ContractDto.RouteId))
+			var forwarderRoutes = await _unitOfWork.ForwarderOffers.GetByForwarderIdAsync(forwarder.Id);
+			bool hasRoute = forwarderRoutes.Any(x => x.RouteId == request.ContractDto.RouteId);
+
+			if (!hasRoute)
 				throw new ValidationException("Forwarder does not have offer for this selected route.");
+
 			//var exists = await _unitOfWork.Contracts.ExistsAsync(c => c.ContractNumber == dto.ContractNumber);
 			//if (exists)
 			//	throw new ValidationException($"Contract with number {dto.ContractNumber} already exists.");
 			var exists = await _unitOfWork.Contracts.DuplicateContract(dto.ContractNumber);
 			if(exists)
 				throw new ValidationException($"Contract with number {dto.ContractNumber} already exists.");
-			if (dto.ContractDate.Date > DateTime.UtcNow.Date)
-				throw new ValidationException("Contract date cannot be in the future.");
-
-			if (dto.ValidUntil <= dto.ContractDate)
-				throw new ValidationException("ValidUntil must be after ContractDate.");
-
-			if (dto.SignedDate.HasValue &&
-				(dto.SignedDate.Value < dto.ContractDate || dto.SignedDate.Value > dto.ValidUntil))
-				throw new ValidationException("Signed date must be between contract date and valid until.");
 			if (dto.PenaltyRatePerHour < 0)
 				throw new ValidationException("Penalty rate cannot be negative.");
 
@@ -70,7 +73,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 				throw new ValidationException("Max penalty percent must be between 0 and 100.");
 			var contractEntity = _mapper.Map<NaviGoApi.Domain.Entities.Contract>(dto);
 			contractEntity.ContractStatus = Domain.Entities.ContractStatus.Pending;
-
+			contractEntity.SignedDate = DateTime.UtcNow;
+			contractEntity.ContractDate = DateTime.UtcNow;
 			await _unitOfWork.Contracts.AddAsync(contractEntity);
 			await _unitOfWork.SaveChangesAsync();
 

@@ -37,6 +37,10 @@ namespace NaviGoApi.Application.Validators.Vehicle
 			RuleFor(v => v.InsuranceExpiry)
 				.GreaterThan(DateTime.UtcNow).When(v => v.InsuranceExpiry.HasValue).WithMessage("InsuranceExpiry must be in the future.");
 
+			RuleFor(v => v)
+				.Must(v => !v.LastInspectionDate.HasValue || v.LastInspectionDate.Value.Year <= v.ManufactureYear)
+				.WithMessage("Last Inspection Date cannot be before Manufacture Year.");
+
 			RuleFor(v => v.Categories)
 				.MaximumLength(200).WithMessage("Categories can be at most 200 characters.");
 			RuleFor(v => v.Brand)

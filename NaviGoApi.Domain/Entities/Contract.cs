@@ -30,7 +30,7 @@ namespace NaviGoApi.Domain.Entities
 		public decimal PenaltyRatePerHour { get; set; }
 		public decimal MaxPenaltyPercent { get; set; }
 
-		public DateTime ValidUntil { get; set; }
+		//public DateTime ValidUntil { get; set; }
 		public DateTime? SignedDate { get; set; }
 
 		// Navigaciona svojstva

@@ -362,7 +362,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
                     ContractStatus: $contractStatus,
                     PenaltyRatePerHour: $penaltyRatePerHour,
                     MaxPenaltyPercent: $maxPenaltyPercent,
-                    ValidUntil: $validUntil,
                     SignedDate: $signedDate
                 })";
 
@@ -379,7 +378,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				contractStatus = (int)contract.ContractStatus,
 				penaltyRatePerHour = contract.PenaltyRatePerHour,
 				maxPenaltyPercent = contract.MaxPenaltyPercent,
-				validUntil = contract.ValidUntil,
 				signedDate = contract.SignedDate
 			});
 			await session.CloseAsync();
@@ -450,7 +448,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
             ContractStatus: $contractStatus,
             PenaltyRatePerHour: $penaltyRatePerHour,
             MaxPenaltyPercent: $maxPenaltyPercent,
-            ValidUntil: $validUntil,
             SignedDate: $signedDate
         })
     ";
@@ -470,7 +467,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 					contractStatus = (int)existing.ContractStatus,
 					penaltyRatePerHour = existing.PenaltyRatePerHour,
 					maxPenaltyPercent = existing.MaxPenaltyPercent,
-					validUntil = existing.ValidUntil,
 					signedDate = existing.SignedDate
 				});
 			}
@@ -580,7 +576,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
                     c.ContractStatus = $contractStatus,
                     c.PenaltyRatePerHour = $penaltyRatePerHour,
                     c.MaxPenaltyPercent = $maxPenaltyPercent,
-                    c.ValidUntil = $validUntil,
                     c.SignedDate = $signedDate";
 
 			var session = _driver.AsyncSession();
@@ -596,7 +591,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				contractStatus = (int)contract.ContractStatus,
 				penaltyRatePerHour = contract.PenaltyRatePerHour,
 				maxPenaltyPercent = contract.MaxPenaltyPercent,
-				validUntil = contract.ValidUntil,
 				signedDate = contract.SignedDate
 			});
 			await session.CloseAsync();
@@ -653,7 +647,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				ContractStatus = (ContractStatus)(int)node.Properties["ContractStatus"].As<long>(),
 				PenaltyRatePerHour = node.Properties["PenaltyRatePerHour"].As<decimal>(),
 				MaxPenaltyPercent = node.Properties["MaxPenaltyPercent"].As<decimal>(),
-				ValidUntil = ConvertNeo4jDateTime("ValidUntil"),
 				SignedDate = ConvertNeo4jDateTimeNullable("SignedDate")
 			};
 		}

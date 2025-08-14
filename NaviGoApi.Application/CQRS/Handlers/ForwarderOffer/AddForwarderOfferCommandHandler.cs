@@ -28,7 +28,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.ForwarderOffer
 			var forwarderExists = await _unitOfWork.Companies.GetByIdAsync(request.ForwarderOfferDto.ForwarderId);
 			if (forwarderExists == null)
 				throw new ValidationException("Forwarder does not exist.");
-
+			if (forwarderExists.CompanyType == CompanyType.Carrier || forwarderExists.CompanyType == CompanyType.Client)
+				throw new ValidationException("Forwarder cannot be Client or Carrier.");
 			var routeExists = await _unitOfWork.Routes.GetByIdAsync(request.ForwarderOfferDto.RouteId);
 			if (routeExists == null)
 				throw new ValidationException("Route does not exist.");

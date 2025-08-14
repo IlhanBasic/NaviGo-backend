@@ -16,8 +16,6 @@ namespace NaviGoApi.Application.DTOs.Vehicle
 		public string? VehiclePicture {  get; set; }
 		public int VehicleTypeId { get; set; }
 
-		public string RegistrationNumber { get; set; } = null!;
-
 		public int CapacityKg { get; set; }
 
 		public int ManufactureYear { get; set; }

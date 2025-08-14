@@ -42,7 +42,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 			{
 				throw new ValidationException($"Company with ID {dto.CompanyId} does not exist.");
 			}
-
+			if (company.CompanyType != Domain.Entities.CompanyType.Carrier)
+				throw new ValidationException("Only Carrier companies can have registrated vehicles on this platform");
 			// Provera da li vehicle type postoji
 			var vehicleType = await _unitOfWork.VehicleTypes.GetByIdAsync(dto.VehicleTypeId);
 			if (vehicleType == null)
@@ -66,7 +67,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 			{
 				throw new ValidationException($"Registration number '{dto.RegistrationNumber}' is already assigned to another vehicle.");
 			}
-
+			if (dto.LastInspectionDate.HasValue && dto.LastInspectionDate.Value.Year < dto.ManufactureYear)
+				throw new ValidationException("Inspection Date cannot be before Manufacture Year.");
 			var vehicleEntity = _mapper.Map<Domain.Entities.Vehicle>(dto);
 			vehicleEntity.VehicleStatus = Domain.Entities.VehicleStatus.Free;
 

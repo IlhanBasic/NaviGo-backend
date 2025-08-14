@@ -22,15 +22,5 @@ namespace NaviGoApi.Application.DTOs.Shipment
 		public DateTime ScheduledArrival { get; set; }
 		public DateTime? ActualDeparture { get; set; }
 		public DateTime? ActualArrival { get; set; }
-		public DateTime CreatedAt { get; set; }
-		public int? DelayHours { get; set; }
-		public decimal? DelayPenaltyAmount { get; set; }
-		public DateTime? PenaltyCalculatedAt { get; set; }
-
-		// Opcionalno — nazivi vezanih entiteta
-		public string? ContractNumber { get; set; }
-		public string? VehicleRegistration { get; set; }
-		public string? DriverName { get; set; }
-		public string? CargoTypeName { get; set; }
 	}
 }

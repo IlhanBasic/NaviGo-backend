@@ -36,7 +36,9 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 		public async Task<UserDto> Handle(AddUserCommand request, CancellationToken cancellationToken)
 		{
 			var dto = request.UserDto;
-
+			var existsUser = await _unitOfWork.Users.GetByEmailAsync(dto.Email);
+			if (existsUser != null)
+				throw new ValidationException($"User with EMAIL {dto.Email} already exists.");
 			if ((dto.UserRole == UserRole.CompanyUser || dto.UserRole == UserRole.CompanyAdmin) && dto.CompanyId == null)
 			{
 				throw new ValidationException("CompanyUser or CompanyAdmin must be linked to a company.");

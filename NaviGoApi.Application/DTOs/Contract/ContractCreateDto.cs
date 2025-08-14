@@ -14,13 +14,10 @@ namespace NaviGoApi.Application.DTOs.Contract
 		public int RouteId { get; set; }        
 
 		public string ContractNumber { get; set; } = null!;
-		public DateTime ContractDate { get; set; }
 		public string Terms { get; set; } = null!;
 
 		public decimal PenaltyRatePerHour { get; set; }
 		public decimal MaxPenaltyPercent { get; set; }
 
-		public DateTime ValidUntil { get; set; }
-		public DateTime? SignedDate { get; set; }
 	}
 }

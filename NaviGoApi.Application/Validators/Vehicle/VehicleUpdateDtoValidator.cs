@@ -19,10 +19,6 @@ namespace NaviGoApi.Application.Validators.Vehicle
 			RuleFor(v => v.VehicleTypeId)
 				.GreaterThan(0).WithMessage("VehicleTypeId must be greater than zero.");
 
-			RuleFor(v => v.RegistrationNumber)
-				.NotEmpty().WithMessage("RegistrationNumber is required.")
-				.MaximumLength(50).WithMessage("RegistrationNumber can be at most 50 characters.");
-
 			RuleFor(v => v.CapacityKg)
 				.GreaterThan(0).WithMessage("CapacityKg must be greater than zero.");
 
