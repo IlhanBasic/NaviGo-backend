@@ -29,9 +29,9 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			return Task.CompletedTask;
 		}
 
-		public Task<bool> DuplicateContract(string contractNumber)
+		public async Task<bool> DuplicateContract(string contractNumber)
 		{
-			throw new NotImplementedException();
+			return  await _context.Contracts.FirstOrDefaultAsync(x => x.ContractNumber == contractNumber) != null;
 		}
 
 		public async Task<bool> ExistsAsync(Expression<Func<Contract, bool>> predicate)

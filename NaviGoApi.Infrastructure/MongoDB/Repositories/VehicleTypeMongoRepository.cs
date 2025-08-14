@@ -64,9 +64,11 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return count > 0;
 		}
 
-		public Task<VehicleType?> GetByTypeName(string typeName)
+		public async Task<VehicleType?> GetByTypeName(string typeName)
 		{
-			throw new NotImplementedException();
+			return await _vehicleTypesCollection
+				.Find(vt => vt.TypeName == typeName)
+				.FirstOrDefaultAsync();
 		}
 	}
 }

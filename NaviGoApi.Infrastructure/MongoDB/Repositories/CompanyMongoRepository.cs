@@ -4,6 +4,7 @@ using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -45,7 +46,7 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			var result = await _companiesCollection.DeleteOneAsync(c => c.Id == company.Id);
 			if (result.DeletedCount == 0)
 			{
-				throw new KeyNotFoundException($"Company with Id {company.Id} not found for deletion.");
+				throw new ValidationException($"Company with Id {company.Id} not found for deletion.");
 			}
 		}
 
@@ -84,7 +85,7 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			var result = await _companiesCollection.ReplaceOneAsync(c => c.Id == company.Id, company);
 			if (result.MatchedCount == 0)
 			{
-				throw new KeyNotFoundException($"Company with Id {company.Id} not found for update.");
+				throw new ValidationException($"Company with Id {company.Id} not found for update.");
 			}
 		}
 

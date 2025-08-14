@@ -42,7 +42,7 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		{
 			var result = await _locationsCollection.DeleteOneAsync(l => l.Id == id);
 			if (result.DeletedCount == 0)
-				throw new KeyNotFoundException($"Location with Id {id} not found for deletion.");
+				throw new ValidationException($"Location with Id {id} not found for deletion.");
 		}
 
 		public async Task<IEnumerable<Location>> GetAllAsync()

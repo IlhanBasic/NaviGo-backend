@@ -1,77 +1,10 @@
-﻿//using MongoDB.Bson;
-//using MongoDB.Driver;
-//using NaviGoApi.Domain.Entities;
-//using NaviGoApi.Domain.Interfaces;
-//using System;
-//using System.Collections.Generic;
-//using System.Linq.Expressions;
-//using System.Threading.Tasks;
-
-//namespace NaviGoApi.Infrastructure.MongoDB.Repositories
-//{
-//	public class RoutePriceMongoRepository : IRoutePriceRepository
-//	{
-//		private readonly IMongoCollection<RoutePrice> _routePricesCollection;
-
-//		public RoutePriceMongoRepository(IMongoDatabase database)
-//		{
-//			_routePricesCollection = database.GetCollection<RoutePrice>("RoutePrices");
-//		}
-
-//		public async Task AddAsync(RoutePrice price)
-//		{
-//			price.Id = await GetNextIdAsync();
-//			await _routePricesCollection.InsertOneAsync(price);
-//		}
-
-//		private async Task<int> GetNextIdAsync()
-//		{
-//			var counters = _routePricesCollection.Database.GetCollection<BsonDocument>("Counters");
-
-//			var filter = Builders<BsonDocument>.Filter.Eq("_id", "RoutePrices");
-//			var update = Builders<BsonDocument>.Update.Inc("SequenceValue", 1);
-//			var options = new FindOneAndUpdateOptions<BsonDocument>
-//			{
-//				IsUpsert = true,
-//				ReturnDocument = ReturnDocument.After
-//			};
-
-//			var result = await counters.FindOneAndUpdateAsync(filter, update, options);
-//			return result["SequenceValue"].AsInt32;
-//		}
-
-//		public async Task DeleteAsync(int id)
-//		{
-//			await _routePricesCollection.DeleteOneAsync(rp => rp.Id == id);
-//		}
-
-//		public async Task<IEnumerable<RoutePrice>> GetAllAsync()
-//		{
-//			return await _routePricesCollection.Find(_ => true).ToListAsync();
-//		}
-
-//		public async Task<RoutePrice?> GetByIdAsync(int id)
-//		{
-//			return await _routePricesCollection.Find(rp => rp.Id == id).FirstOrDefaultAsync();
-//		}
-
-//		public async Task UpdateAsync(RoutePrice price)
-//		{
-//			await _routePricesCollection.ReplaceOneAsync(rp => rp.Id == price.Id, price);
-//		}
-
-//		public async Task<bool> ExistsAsync(Expression<Func<RoutePrice, bool>> predicate)
-//		{
-//			return await _routePricesCollection.Find(predicate).AnyAsync();
-//		}
-//	}
-//}
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -113,7 +46,7 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		{
 			var result = await _routePricesCollection.DeleteOneAsync(rp => rp.Id == id);
 			if (result.DeletedCount == 0)
-				throw new KeyNotFoundException($"RoutePrice with Id {id} not found for deletion.");
+				throw new ValidationException($"RoutePrice with Id {id} not found for deletion.");
 		}
 
 		public async Task<IEnumerable<RoutePrice>> GetAllAsync()
@@ -135,7 +68,7 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		{
 			var result = await _routePricesCollection.ReplaceOneAsync(rp => rp.Id == price.Id, price);
 			if (result.MatchedCount == 0)
-				throw new KeyNotFoundException($"RoutePrice with Id {price.Id} not found for update.");
+				throw new ValidationException($"RoutePrice with Id {price.Id} not found for update.");
 		}
 
 		public async Task<bool> ExistsAsync(Expression<Func<RoutePrice, bool>> predicate)
@@ -160,9 +93,11 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return list;
 		}
 
-		public Task<RoutePrice?> DuplicateRoutePrice(int routeId, int vehicleTypeId)
+		public async Task<RoutePrice?> DuplicateRoutePrice(int routeId, int vehicleTypeId)
 		{
-			throw new NotImplementedException();
+			return await _routePricesCollection
+				.Find(rp => rp.RouteId == routeId && rp.VehicleTypeId == vehicleTypeId)
+				.FirstOrDefaultAsync();
 		}
 	}
 }

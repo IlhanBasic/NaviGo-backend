@@ -4,6 +4,7 @@ using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -60,7 +61,7 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			var result = await _cargoTypesCollection.ReplaceOneAsync(ct => ct.Id == cargoType.Id, cargoType);
 			if (result.MatchedCount == 0)
 			{
-				throw new KeyNotFoundException($"CargoType with Id {cargoType.Id} not found for update.");
+				throw new ValidationException($"CargoType with Id {cargoType.Id} not found for update.");
 			}
 		}
 
@@ -69,9 +70,12 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return await _cargoTypesCollection.Find(predicate).AnyAsync();
 		}
 
-		public Task<CargoType> GetByTypeName(string name)
+		public async Task<CargoType?> GetByTypeName(string name)
 		{
-			throw new NotImplementedException();
+			return await _cargoTypesCollection
+				.Find(ct => ct.TypeName == name)
+				.FirstOrDefaultAsync();
 		}
+
 	}
 }

@@ -4,6 +4,7 @@ using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -44,7 +45,7 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		{
 			var result = await _driversCollection.DeleteOneAsync(d => d.Id == driver.Id);
 			if (result.DeletedCount == 0)
-				throw new KeyNotFoundException($"Driver with Id {driver.Id} not found for deletion.");
+				throw new ValidationException($"Driver with Id {driver.Id} not found for deletion.");
 		}
 
 		public async Task<IEnumerable<Driver>> GetAllAsync()
@@ -75,7 +76,7 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		{
 			var result = await _driversCollection.ReplaceOneAsync(d => d.Id == driver.Id, driver);
 			if (result.MatchedCount == 0)
-				throw new KeyNotFoundException($"Driver with Id {driver.Id} not found for update.");
+				throw new ValidationException($"Driver with Id {driver.Id} not found for update.");
 		}
 
 		public async Task<bool> ExistsAsync(Expression<System.Func<Driver, bool>> predicate)

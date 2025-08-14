@@ -1,139 +1,10 @@
-﻿//using MongoDB.Bson;
-//using MongoDB.Driver;
-//using NaviGoApi.Domain.Entities;
-//using NaviGoApi.Domain.Interfaces;
-//using System;
-//using System.Collections.Generic;
-//using System.Linq.Expressions;
-//using System.Threading.Tasks;
-
-//namespace NaviGoApi.Infrastructure.MongoDB.Repositories
-//{
-//	public class ContractMongoRepository : IContractRepository
-//	{
-//		private readonly IMongoCollection<Contract> _contractsCollection;
-//		private readonly IMongoCollection<BsonDocument> _countersCollection;
-
-//		public ContractMongoRepository(IMongoDatabase database)
-//		{
-//			_contractsCollection = database.GetCollection<Contract>("Contracts");
-//			_countersCollection = database.GetCollection<BsonDocument>("Counters");
-//		}
-
-//		public async Task AddAsync(Contract contract)
-//		{
-//			contract.Id = await GetNextIdAsync();
-//			await _contractsCollection.InsertOneAsync(contract);
-//		}
-
-//		private async Task<int> GetNextIdAsync()
-//		{
-//			var filter = Builders<BsonDocument>.Filter.Eq("_id", "Contracts");
-//			var update = Builders<BsonDocument>.Update.Inc("SequenceValue", 1);
-//			var options = new FindOneAndUpdateOptions<BsonDocument>
-//			{
-//				IsUpsert = true,
-//				ReturnDocument = ReturnDocument.After
-//			};
-
-//			var result = await _countersCollection.FindOneAndUpdateAsync(filter, update, options);
-//			return result["SequenceValue"].AsInt32;
-//		}
-
-//		public async Task DeleteAsync(Contract contract)
-//		{
-//			var result = await _contractsCollection.DeleteOneAsync(c => c.Id == contract.Id);
-//			if (result.DeletedCount == 0)
-//			{
-//				throw new KeyNotFoundException($"Contract with Id {contract.Id} not found for deletion.");
-//			}
-//		}
-
-//		public async Task<IEnumerable<Contract>> GetAllAsync()
-//		{
-//			return await _contractsCollection.Find(_ => true).ToListAsync();
-//		}
-
-//		public async Task<IEnumerable<Contract>> GetByClientIdAsync(int clientId)
-//		{
-//			return await _contractsCollection.Find(c => c.ClientId == clientId).ToListAsync();
-//		}
-
-//		public async Task<IEnumerable<Contract>> GetByForwarderIdAsync(int forwarderId)
-//		{
-//			return await _contractsCollection.Find(c => c.ForwarderId == forwarderId).ToListAsync();
-//		}
-
-//		public async Task<Contract?> GetByIdAsync(int id)
-//		{
-//			// Dohvati contract
-//			var contract = await _contractsCollection.Find(c => c.Id == id).FirstOrDefaultAsync();
-//			if (contract == null)
-//				return null;
-
-//			// Učitaj Client
-//			if (contract.ClientId != 0)
-//			{
-//				var usersCollection = _contractsCollection.Database.GetCollection<User>("Users");
-//				contract.Client = await usersCollection.Find(u => u.Id == contract.ClientId).FirstOrDefaultAsync();
-//			}
-
-//			// Učitaj Forwarder (Company)
-//			if (contract.ForwarderId != 0)
-//			{
-//				var companiesCollection = _contractsCollection.Database.GetCollection<Company>("Companies");
-//				contract.Forwarder = await companiesCollection.Find(f => f.Id == contract.ForwarderId).FirstOrDefaultAsync();
-//			}
-
-//			// Učitaj Payment
-//			var paymentsCollection = _contractsCollection.Database.GetCollection<Payment>("Payments");
-//			contract.Payment = await paymentsCollection.Find(p => p.ContractId == contract.Id).FirstOrDefaultAsync();
-
-//			// Učitaj Route
-//			if (contract.RouteId != 0)
-//			{
-//				var routesCollection = _contractsCollection.Database.GetCollection<Route>("Routes");
-//				contract.Route = await routesCollection.Find(r => r.Id == contract.RouteId).FirstOrDefaultAsync();
-
-//				if (contract.Route != null)
-//				{
-//					// Učitaj start i end location
-//					var locationsCollection = _contractsCollection.Database.GetCollection<Location>("Locations");
-//					contract.Route.StartLocation = await locationsCollection.Find(l => l.Id == contract.Route.StartLocationId).FirstOrDefaultAsync();
-//					contract.Route.EndLocation = await locationsCollection.Find(l => l.Id == contract.Route.EndLocationId).FirstOrDefaultAsync();
-
-//					// Učitaj RoutePrices ako postoji
-//					var routePricesCollection = _contractsCollection.Database.GetCollection<RoutePrice>("RoutePrices");
-//					contract.Route.RoutePrices = await routePricesCollection
-//						.Find(rp => rp.RouteId == contract.Route.Id)
-//						.ToListAsync();
-//				}
-//			}
-
-//			return contract;
-//		}
-
-//		public async Task UpdateAsync(Contract contract)
-//		{
-//			var result = await _contractsCollection.ReplaceOneAsync(c => c.Id == contract.Id, contract);
-//			if (result.MatchedCount == 0)
-//			{
-//				throw new KeyNotFoundException($"Contract with Id {contract.Id} not found for update.");
-//			}
-//		}
-
-//		public async Task<bool> ExistsAsync(Expression<Func<Contract, bool>> predicate)
-//		{
-//			return await _contractsCollection.Find(predicate).AnyAsync();
-//		}
-//	}
-//}
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -176,7 +47,7 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			var result = await _contractsCollection.DeleteOneAsync(c => c.Id == contract.Id);
 			if (result.DeletedCount == 0)
 			{
-				throw new KeyNotFoundException($"Contract with Id {contract.Id} not found for deletion.");
+				throw new ValidationException($"Contract with Id {contract.Id} not found for deletion.");
 			}
 		}
 
@@ -212,7 +83,7 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			var result = await _contractsCollection.ReplaceOneAsync(c => c.Id == contract.Id, contract);
 			if (result.MatchedCount == 0)
 			{
-				throw new KeyNotFoundException($"Contract with Id {contract.Id} not found for update.");
+				throw new ValidationException($"Contract with Id {contract.Id} not found for update.");
 			}
 		}
 
@@ -264,9 +135,11 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return contractList;
 		}
 
-		public Task<bool> DuplicateContract(string contractNumber)
+		public async Task<bool> DuplicateContract(string contractNumber)
 		{
-			throw new NotImplementedException();
+			return await _contractsCollection
+				.Find(c => c.ContractNumber == contractNumber)
+				.AnyAsync();
 		}
 	}
 }
