@@ -1,54 +1,62 @@
-﻿using NaviGoApi.Application.Services;
+﻿using Microsoft.AspNetCore.Http;
+using NaviGoApi.Application.Services;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 public class GeoLocationValidationMiddleware
 {
 	private readonly RequestDelegate _next;
 	private readonly IGeoLocationService _geoLocationService;
-	private readonly ILogger<GeoLocationValidationMiddleware> _logger;
-	private readonly IUnitOfWork _unitOfWork;
 
-	private static readonly HashSet<string> _blockedRegions = new()
-	{
-		"BlockedCountryCode1",
-		"BlockedCountryCode2"
-	};
+	// Zabranjene zemlje
+	private readonly string[] _blockedCountries = { "US", "DE" };
 
-	public GeoLocationValidationMiddleware(RequestDelegate next,
-		IGeoLocationService geoLocationService,
-		IUnitOfWork unitOfWork,
-		ILogger<GeoLocationValidationMiddleware> logger)
+	public GeoLocationValidationMiddleware(RequestDelegate next, IGeoLocationService geoLocationService)
 	{
 		_next = next;
 		_geoLocationService = geoLocationService;
-		_unitOfWork = unitOfWork;
-		_logger = logger;
 	}
 
 	public async Task InvokeAsync(HttpContext context)
 	{
-		var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-		var userIdClaim = context.User.FindFirst("id")?.Value;
+		var unitOfWork = context.RequestServices.GetRequiredService<IUnitOfWork>();
 
-		string? region = await _geoLocationService.GetRegionByIpAsync(ipAddress);
+		var ipAddress = context.Request.Headers["X-Forwarded-For"].FirstOrDefault()
+				?? context.Connection.RemoteIpAddress?.ToString()
+				?? "unknown";
 
-		if (region != null && _blockedRegions.Contains(region))
+		var region = await _geoLocationService.GetRegionByIpAsync(ipAddress);
+
+
+		if (region != null && _blockedCountries.Contains(region))
 		{
-			_logger.LogWarning("Access denied from blocked region {Region} for user {UserId}, IP: {Ip}", region, userIdClaim, ipAddress);
+			context.Response.StatusCode = StatusCodes.Status403Forbidden;
+			await context.Response.WriteAsync("Access denied from your region.");
+			return;
+		}
 
-			if (int.TryParse(userIdClaim, out var userId))
+		if (context.User.Identity?.IsAuthenticated == true)
+		{
+			var userEmail = context.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+			if (!string.IsNullOrWhiteSpace(userEmail))
 			{
-				// Log suspicious attempt (ovde samo primer, možeš da napraviš novu tabelu za logove)
-				var user = await _unitOfWork.Users.GetByIdAsync(userId);
+				var user = await unitOfWork.Users.GetByEmailAsync(userEmail);
 				if (user != null)
 				{
-					// Npr. možeš kreirati i sačuvati log o pokušaju (nije implementirano)
+					var userLocation = new UserLocation
+					{
+						UserId = user.Id,
+						IpAddress = ipAddress,
+						Region = region ?? "Unknown",
+						AccessTime = DateTime.UtcNow
+					};
+					user.UserLocations.Add(userLocation);
+					await unitOfWork.SaveChangesAsync();
 				}
 			}
-
-			context.Response.StatusCode = StatusCodes.Status403Forbidden;
-			await context.Response.WriteAsync("Access denied: your region is not allowed.");
-			return;
 		}
 
 		await _next(context);

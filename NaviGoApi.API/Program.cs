@@ -205,10 +205,8 @@ builder.Services.AddSwaggerGen(options =>
 var app = builder.Build();
 
 //Middlewares
-//app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
-//app.UseMiddleware<GeoLocationValidationMiddleware>();
-//app.UseMiddleware<SessionLockMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -222,6 +220,8 @@ app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseMiddleware<GeoLocationValidationMiddleware>();
+app.UseMiddleware<SessionLockMiddleware>();
 app.MapControllers();
 
 app.Run();

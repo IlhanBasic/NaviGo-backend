@@ -1,31 +1,36 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace NaviGoApi.Application.Services
 {
 	public class GeoLocationService : IGeoLocationService
 	{
 		private readonly HttpClient _httpClient;
+		private readonly ILogger<GeoLocationService> _logger;
 
-		public GeoLocationService(HttpClient httpClient)
+		public GeoLocationService(HttpClient httpClient, ILogger<GeoLocationService> logger)
 		{
 			_httpClient = httpClient;
+			_logger = logger;
 		}
 
 		public async Task<string?> GetRegionByIpAsync(string ipAddress)
 		{
 			if (string.IsNullOrWhiteSpace(ipAddress))
 				return null;
-
-			// ip-api.com URL, vraća JSON sa informacijama o IP adresi
-			string requestUri = $"http://ip-api.com/json/{ipAddress}?fields=status,countryCode,message";
-
+			var ipOnly = ipAddress.Split(':')[0];
+			string requestUri = $"http://ip-api.com/json/{ipOnly}?fields=status,countryCode,message";
 			try
 			{
 				var response = await _httpClient.GetAsync(requestUri);
 				if (!response.IsSuccessStatusCode)
+				{
+					_logger.LogWarning("GeoLocation API returned non-success status {StatusCode} for IP {Ip}", response.StatusCode, ipOnly);
 					return null;
+				}
 
 				var content = await response.Content.ReadAsStringAsync();
 
@@ -35,18 +40,18 @@ namespace NaviGoApi.Application.Services
 				});
 
 				if (result == null || result.Status != "success")
+				{
+					_logger.LogWarning("GeoLocation API failed for IP {Ip}: {Message}", ipOnly, result?.Message);
 					return null;
-
-				// Vraća ISO 3166-1 alpha-2 country code, npr. "RS", "US"
+				}
 				return result.CountryCode;
 			}
-			catch
+			catch (Exception ex)
 			{
-				// Loguj po potrebi
+				_logger.LogError(ex, "Exception while calling GeoLocation API for IP {Ip}", ipOnly);
 				return null;
 			}
 		}
-
 		private class IpApiResponse
 		{
 			public string? Status { get; set; }
