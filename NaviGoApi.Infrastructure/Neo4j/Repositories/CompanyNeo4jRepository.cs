@@ -18,19 +18,24 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 
 		private async Task<int> GetNextIdAsync(string entityName)
 		{
-			var query = @"
-            MERGE (c:Counter { name: $entityName })
-            ON CREATE SET c.lastId = 1
-            ON MATCH SET c.lastId = c.lastId + 1
-            RETURN c.lastId as lastId
-        ";
+			var session = _driver.AsyncSession(o => o.WithDefaultAccessMode(AccessMode.Write));
 
-			var session = _driver.AsyncSession();
 			try
 			{
-				var result = await session.RunAsync(query, new { entityName });
-				var record = await result.SingleAsync();
-				return record["lastId"].As<int>();
+				var result = await session.WriteTransactionAsync(async tx =>
+				{
+					var query = @"
+                MERGE (c:Counter { name: $entityName })
+                ON CREATE SET c.lastId = 1
+                ON MATCH SET c.lastId = c.lastId + 1
+                RETURN c.lastId as lastId
+            ";
+					var res = await tx.RunAsync(query, new { entityName });
+					var record = await res.SingleAsync();
+					return record["lastId"].As<int>();
+				});
+
+				return result;
 			}
 			finally
 			{
@@ -127,17 +132,30 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 
 		public async Task<Company?> GetByIdAsync(int id)
 		{
-			var query = @"MATCH (c:Company { Id: $Id }) RETURN c";
+			var query = @"
+        MATCH (c:Company {Id: $Id})
+        OPTIONAL MATCH (c)-[:HAS_DRIVER]->(d:Driver)
+        RETURN c, collect(d) AS drivers
+        LIMIT 1
+    ";
+
 			var session = _driver.AsyncSession();
 			try
 			{
 				var result = await session.RunAsync(query, new { Id = id });
-				var records = await result.ToListAsync();
-				var record = records.FirstOrDefault();
 
-				if (record == null) return null;
+				if (!await result.FetchAsync())
+					return null;
 
-				return MapCompanyNode(record["c"].As<INode>());
+				var cNode = result.Current["c"].As<INode>();
+				var driversList = result.Current["drivers"].As<List<INode>>();
+
+				var company = MapCompanyNode(cNode);
+
+				// Mapiranje vozača u navigaciono svojstvo
+				company.Drivers = driversList.Select(MapDriverNode).ToList();
+
+				return company;
 			}
 			finally
 			{
@@ -230,7 +248,27 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				await session.CloseAsync();
 			}
 		}
-
+		private Driver MapDriverNode(INode node)
+		{
+			return new Driver
+			{
+				Id = node.Properties["Id"].As<int>(),
+				CompanyId = node.Properties.ContainsKey("CompanyId") ? node.Properties["CompanyId"].As<int>() : 0,
+				FirstName = node.Properties.GetValueOrDefault("FirstName")?.As<string>() ?? string.Empty,
+				LastName = node.Properties.GetValueOrDefault("LastName")?.As<string>() ?? string.Empty,
+				PhoneNumber = node.Properties.GetValueOrDefault("PhoneNumber")?.As<string>() ?? string.Empty,
+				LicenseNumber = node.Properties.GetValueOrDefault("LicenseNumber")?.As<string>() ?? string.Empty,
+				LicenseExpiry = node.Properties.ContainsKey("LicenseExpiry") && node.Properties["LicenseExpiry"] != null
+					? ((ZonedDateTime)node.Properties["LicenseExpiry"]).ToDateTimeOffset().DateTime
+					: (DateTime?)null,
+				LicenseCategories = node.Properties.GetValueOrDefault("LicenseCategories")?.As<string>() ?? string.Empty,
+				HireDate = node.Properties.ContainsKey("HireDate")
+					? ((ZonedDateTime)node.Properties["HireDate"]).ToDateTimeOffset().DateTime
+					: DateTime.MinValue,
+				DriverStatus = node.Properties.ContainsKey("DriverStatus") ? (DriverStatus)(int)node.Properties["DriverStatus"].As<long>() : DriverStatus.Available,
+				Shipments = new List<Shipment>()
+			};
+		}
 		private Company MapCompanyNode(INode node)
 		{
 			return new Company
@@ -247,7 +285,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				CompanyStatus = (CompanyStatus)node["CompanyStatus"].As<int>(),
 				MaxCommissionRate = node.Properties.ContainsKey("MaxCommissionRate") ? node["MaxCommissionRate"].As<decimal?>() : null,
 				SaldoAmount = node.Properties.ContainsKey("SaldoAmount") ? node["SaldoAmount"].As<decimal?>() : null,
-				CreatedAt = node["CreatedAt"].As<DateTime>(),
+				CreatedAt = node["CreatedAt"].As<ZonedDateTime>().ToDateTimeOffset().UtcDateTime,
 				ProofFileUrl = node.Properties.ContainsKey("ProofFileUrl") ? node["ProofFileUrl"].As<string?>() : null
 			};
 		}

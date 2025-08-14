@@ -35,13 +35,25 @@ namespace NaviGoApi.Application.CQRS.Handlers.ShipmentDocument
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail);
 			if (user == null)
 				throw new ValidationException("User not found.");
-			if (user.Company == null)
+			if(user.CompanyId == null)
+				throw new ValidationException("User doesn't work in any company.");
+			var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value);
+			if (company == null)
 				throw new ValidationException("User is not associated with any company.");
 			var shipment = await _unitOfWork.Shipments.GetByIdAsync(request.ShipmentDocumentDto.ShipmentId);
-			if (shipment == null || shipment.Contract==null || shipment.Contract.Forwarder == null || shipment.Contract.Route==null)
-				throw new ValidationException("Shipment isn't valid.");
-			if (user.Company.Id != shipment.Contract.Forwarder.Id &&
-				user.Company.Id != shipment.Contract.Route.CompanyId)
+			if(shipment == null)
+				throw new ValidationException("Company isn't valid.");
+			var contract = await _unitOfWork.Contracts.GetByIdAsync(shipment.ContractId);
+			if(contract == null)
+				throw new ValidationException("Contract isn't valid.");
+			var forwarder = await _unitOfWork.Companies.GetByIdAsync(contract.ForwarderId);
+			if(forwarder == null)
+				throw new ValidationException("Forwarder isn't valid.");
+			var route = await _unitOfWork.Routes.GetByIdAsync(contract.RouteId);
+			if(route == null)
+				throw new ValidationException("Route isn't valid.");
+			if (company.Id != forwarder.Id &&
+				company.Id != route.CompanyId)
 				throw new ValidationException("User doesn't have permission to upload documents for this shipment.");
 			var entity = _mapper.Map<Domain.Entities.ShipmentDocument>(request.ShipmentDocumentDto);
 			entity.Verified = true;

@@ -48,8 +48,11 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 
 			if (forwarder.Routes.Any(x=>x.Id==request.ContractDto.RouteId))
 				throw new ValidationException("Forwarder does not have offer for this selected route.");
-			var exists = await _unitOfWork.Contracts.ExistsAsync(c => c.ContractNumber == dto.ContractNumber);
-			if (exists)
+			//var exists = await _unitOfWork.Contracts.ExistsAsync(c => c.ContractNumber == dto.ContractNumber);
+			//if (exists)
+			//	throw new ValidationException($"Contract with number {dto.ContractNumber} already exists.");
+			var exists = await _unitOfWork.Contracts.DuplicateContract(dto.ContractNumber);
+			if(exists)
 				throw new ValidationException($"Contract with number {dto.ContractNumber} already exists.");
 			if (dto.ContractDate.Date > DateTime.UtcNow.Date)
 				throw new ValidationException("Contract date cannot be in the future.");

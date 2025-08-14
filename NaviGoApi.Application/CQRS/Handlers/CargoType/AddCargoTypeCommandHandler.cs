@@ -24,10 +24,14 @@ namespace NaviGoApi.Application.CQRS.Handlers.CargoType
 		{
 			var typeName = request.CargoTypeDto.TypeName.Trim();
 
-			bool exists = await _unitOfWork.CargoTypes
-				.ExistsAsync(vt => vt.TypeName.ToLower() == typeName.ToLower());
-
-			if (exists)
+			//bool exists = await _unitOfWork.CargoTypes
+			//	.ExistsAsync(vt => vt.TypeName.ToLower() == typeName.ToLower());
+			//if (exists)
+			//{
+			//	throw new ValidationException($"Cargo type with name '{typeName}' already exists.");
+			//}
+			var exists = await _unitOfWork.CargoTypes.GetByTypeName(typeName);
+			if (exists!=null)
 			{
 				throw new ValidationException($"Cargo type with name '{typeName}' already exists.");
 			}

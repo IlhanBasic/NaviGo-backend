@@ -64,6 +64,9 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return count > 0;
 		}
 
-
+		public Task<VehicleType?> GetByTypeName(string typeName)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

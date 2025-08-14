@@ -31,6 +31,11 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			}
 		}
 
+		public Task<RoutePrice?> DuplicateRoutePrice(int routeId, int vehicleTypeId)
+		{
+			throw new NotImplementedException();
+		}
+
 		public async Task<bool> ExistsAsync(Expression<Func<RoutePrice, bool>> predicate)
 		{
 			return await _context.RoutesPrices.AnyAsync(predicate);

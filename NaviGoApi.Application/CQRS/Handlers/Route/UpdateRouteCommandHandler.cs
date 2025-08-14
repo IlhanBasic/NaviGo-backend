@@ -180,14 +180,24 @@ namespace NaviGoApi.Application.CQRS.Handlers.Route
 			if (request.RouteDto.BasePrice < 0)
 				throw new ValidationException("Base price cannot be negative.");
 
-			bool exists = await _unitOfWork.Routes.ExistsAsync(r =>
-				r.Id != request.Id &&
-				r.CompanyId == existingRoute.CompanyId &&
-				r.StartLocationId == request.RouteDto.StartLocationId &&
-				r.EndLocationId == request.RouteDto.EndLocationId);
+			//bool exists = await _unitOfWork.Routes.ExistsAsync(r =>
+			//	r.Id != request.Id &&
+			//	r.CompanyId == existingRoute.CompanyId &&
+			//	r.StartLocationId == request.RouteDto.StartLocationId &&
+			//	r.EndLocationId == request.RouteDto.EndLocationId);
+
+			//if (exists)
+			//	throw new ValidationException("A route with the same start and end locations already exists for this company.");
+			var exists = await _unitOfWork.Routes.DuplicateRouteUpdate(
+				company.Id,
+				request.RouteDto.StartLocationId,
+				request.RouteDto.EndLocationId,
+				request.Id
+			);
 
 			if (exists)
 				throw new ValidationException("A route with the same start and end locations already exists for this company.");
+
 
 			bool locationsChanged = existingRoute.StartLocationId != request.RouteDto.StartLocationId
 									|| existingRoute.EndLocationId != request.RouteDto.EndLocationId;

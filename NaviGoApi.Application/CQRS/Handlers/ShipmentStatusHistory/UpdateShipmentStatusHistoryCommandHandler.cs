@@ -37,22 +37,24 @@ namespace NaviGoApi.Application.CQRS.Handlers.ShipmentStatusHistory
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
 				?? throw new ValidationException("User not found.");
 
-			if (user.Company == null)
+			var company = await _unitOfWork.Companies.GetByIdAsync(user.Id);
+			if (company == null)
 				throw new ValidationException("User is not associated with any company.");
-
 			var existing = await _unitOfWork.ShipmentStatusHistories.GetByIdAsync(request.Id)
 				?? throw new KeyNotFoundException($"ShipmentStatusHistory with Id {request.Id} not found.");
 
-			// Proveri da li user ima pravo pristupa ovoj pošiljci
-			if (existing.Shipment?.Contract == null ||
-				existing.Shipment.Contract.Forwarder == null ||
-				existing.Shipment.Contract.Route == null)
-				throw new ValidationException("Shipment is not linked with a valid contract.");
+			var shipment = await _unitOfWork.Shipments.GetByIdAsync(existing.ShipmentId)
+				?? throw new ValidationException("Shipment not found.");
 
-			if (user.Company.Id != existing.Shipment.Contract.Forwarder.Id &&
-				user.Company.Id != existing.Shipment.Contract.Route.CompanyId)
-				throw new ValidationException("User is not authorized to update shipment status history.");
-
+			var contract = await _unitOfWork.Contracts.GetByIdAsync(shipment.ContractId)
+				?? throw new ValidationException("Contract isn't valid."); ;
+			var forwarder = await _unitOfWork.Companies.GetByIdAsync(contract.ForwarderId)
+				?? throw new ValidationException("Forwarder isn't valid."); ;
+			var route = await _unitOfWork.Routes.GetByIdAsync(contract.RouteId)
+				?? throw new ValidationException("Route isn't valid.");
+			if (company.Id != forwarder.Id &&
+				company.Id != route.CompanyId)
+				throw new ValidationException("User is not authorized to change shipment status.");
 			// Validacija statusa (ako se menja)
 			if (request.ShipmentStatusHistoryDto.ShipmentStatus != existing.ShipmentStatus)
 			{
@@ -60,10 +62,10 @@ namespace NaviGoApi.Application.CQRS.Handlers.ShipmentStatusHistory
 					.GetLastStatusForShipmentAsync(existing.ShipmentId);
 
 				if (lastStatus?.ShipmentStatus == ShipmentStatus.Delivered)
-					throw new InvalidOperationException("Cannot change status after delivery.");
+					throw new ValidationException("Cannot change status after delivery.");
 
 				if (lastStatus?.ShipmentStatus == ShipmentStatus.Cancelled)
-					throw new InvalidOperationException("Cannot change status after cancellation.");
+					throw new ValidationException("Cannot change status after cancellation.");
 
 				existing.ShipmentStatus = request.ShipmentStatusHistoryDto.ShipmentStatus;
 			}

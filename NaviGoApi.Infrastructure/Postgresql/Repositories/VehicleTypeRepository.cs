@@ -53,5 +53,9 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			return await _context.VehicleTypes.AnyAsync(predicate);
 		}
 
+		public Task<VehicleType?> GetByTypeName(string typeName)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

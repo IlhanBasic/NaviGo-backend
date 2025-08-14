@@ -35,36 +35,37 @@ namespace NaviGoApi.Application.CQRS.Handlers.ShipmentDocument
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail);
 			if (user == null)
 				throw new ValidationException("User not found.");
-
-			if (user.Company == null)
+			if (user.CompanyId == null)
+				throw new ValidationException();
+			var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value);
+			if (company == null)
 				throw new ValidationException("User is not associated with any company.");
 
-			// Prvo dohvati shipment dokument po ID-u iz request.Id
 			var shipmentDocument = await _unitOfWork.ShipmentDocuments.GetByIdAsync(request.Id);
 			if (shipmentDocument == null)
 				throw new ValidationException($"Shipment Document with ID {request.Id} doesn't exist.");
 
-			// Iz dokumenta dohvati shipment
 			var shipment = await _unitOfWork.Shipments.GetByIdAsync(shipmentDocument.ShipmentId);
-			if (shipment == null || shipment.Contract == null || shipment.Contract.Forwarder == null || shipment.Contract.Route == null)
+			if(shipment == null)
+				throw new ValidationException("Shipment isn't valid.");
+			var contract = await _unitOfWork.Contracts.GetByIdAsync(shipment.ContractId);
+			if(contract == null)
+				throw new ValidationException("Shipment isn't valid.");
+			var forwarder = await _unitOfWork.Companies.GetByIdAsync(contract.ForwarderId);
+			if(forwarder == null)
+				throw new ValidationException("Shipment isn't valid.");
+			var route = await _unitOfWork.Routes.GetByIdAsync(contract.RouteId);
+			if(route == null)
 				throw new ValidationException("Shipment isn't valid.");
 
-			// Provera dozvole: da li korisnikova kompanija pripada forwarderu ili ruti u ugovoru
-			if (user.Company.Id != shipment.Contract.Forwarder.Id &&
-				user.Company.Id != shipment.Contract.Route.CompanyId)
+			if (company.Id != forwarder.Id &&
+				company.Id != route.CompanyId)
 				throw new ValidationException("User doesn't have permission to update shipment documents.");
-
-			// Ažuriraj polja
 			shipmentDocument.UploadDate = DateTime.UtcNow;
 			shipmentDocument.Verified = true;
-
-			// Mapiraj ostala polja iz DTO na entitet
 			_mapper.Map(request.ShipmentDocumentDto, shipmentDocument);
-
-			// Snimi promene
 			await _unitOfWork.ShipmentDocuments.UpdateAsync(shipmentDocument);
 			await _unitOfWork.SaveChangesAsync();
-
 			return Unit.Value;
 		}
 	}

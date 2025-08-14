@@ -28,12 +28,16 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 			if (contract == null)
 				throw new ValidationException($"Contract with ID {request.ShipmentDto.ContractId} doesn't exist.");
 
-			if (contract.Route == null)
+			if (contract.RouteId == null)
 				throw new ValidationException($"Contract with ID {contract.Id} does not have an associated route.");
 
-			var company = await _unitOfWork.Companies.GetByIdAsync(contract.Route.CompanyId);
+			var route = await _unitOfWork.Routes.GetByIdAsync(contract.RouteId);
+			if (route == null)
+				throw new ValidationException($"Route with ID {contract.RouteId} does not exist.");
+
+			var company = await _unitOfWork.Companies.GetByIdAsync(route.CompanyId);
 			if (company == null)
-				throw new ValidationException($"Company with ID {contract.Route.CompanyId} doesn't exist.");
+				throw new ValidationException($"Company with ID {route.CompanyId} doesn't exist.");
 
 			if (company.CompanyType != Domain.Entities.CompanyType.Carrier)
 				throw new ValidationException($"Company that created this route in contract must be a Carrier.");
@@ -46,12 +50,15 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 			if (!vehicleOwnedByCompany)
 				throw new ValidationException($"Company {company.CompanyName} doesn't own vehicle {vehicle.Brand}-{vehicle.Model}/{vehicle.ManufactureYear}.");
 
-			var driver = await _unitOfWork.Drivers.GetByIdAsync(request.ShipmentDto.DriverId);
-			if (driver == null)
-				throw new ValidationException($"Driver with ID {request.ShipmentDto.DriverId} doesn't exist.");
-			var companyDrivers = company.Drivers.ToList();
-			if (!companyDrivers.Any(x=>x.Id == request.ShipmentDto.DriverId))
+			// Dohvati sve drivere iz baze i filtriraj po kompaniji
+			var allDrivers = await _unitOfWork.Drivers.GetAllAsync();
+			var companyDrivers = allDrivers.Where(d => d.CompanyId == company.Id).ToList();
+
+			if (!companyDrivers.Any(x => x.Id == request.ShipmentDto.DriverId))
 				throw new ValidationException($"Driver with ID {request.ShipmentDto.DriverId} doesn't work in company {company.CompanyName}.");
+
+			var driver = companyDrivers.First(d => d.Id == request.ShipmentDto.DriverId);
+
 			var driverCategories = driver.LicenseCategories.Split(',', StringSplitOptions.RemoveEmptyEntries);
 			var vehicleCategories = vehicle.Categories.Split(',', StringSplitOptions.RemoveEmptyEntries);
 
@@ -76,7 +83,6 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 			await _unitOfWork.SaveChangesAsync();
 
 			return Unit.Value;
-
 		}
 
 	}

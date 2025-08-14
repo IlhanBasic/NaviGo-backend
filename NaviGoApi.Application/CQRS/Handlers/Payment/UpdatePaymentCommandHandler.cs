@@ -34,8 +34,14 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 				throw new ValidationException("User email not found in authentication token.");
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
 				?? throw new ValidationException($"User with email '{userEmail}' not found.");
-			if (user.CompanyId == null || (user.CompanyId !=null && user.Company.CompanyType==Domain.Entities.CompanyType.Client))
-				throw new ValidationException($"This user doesn't have premission to change this payment, only Forwarder or Carrier have that option.");
+			if (user.CompanyId == null)
+				throw new ValidationException($"User with email '{userEmail}' isn't is regular user and doesn't have premission to change this payment.");
+			var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value);
+			if (company.CompanyType == Domain.Entities.CompanyType.Client)
+			{
+				throw new ValidationException($"This user doesn't have permission to change this payment, only Forwarder or Carrier have that option.");
+			}
+
 			var payment = await _unitOfWork.Payments.GetByIdAsync(request.Id);
 			if (payment == null)
 				throw new ValidationException($"Payment with Id {request.Id} not found.");

@@ -36,6 +36,11 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			return await _context.CargoTypes.ToListAsync();
 		}
 
+		public Task<CargoType> GetByTypeName(string name)
+		{
+			throw new NotImplementedException();
+		}
+
 		public async Task<CargoType?> GetByIdAsync(int id)
 		{
 			return await _context.CargoTypes.FindAsync(id);

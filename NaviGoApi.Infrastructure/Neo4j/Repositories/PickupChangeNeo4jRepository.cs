@@ -54,8 +54,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
                     OldTime: datetime($OldTime),
                     NewTime: datetime($NewTime),
                     ChangeCount: $ChangeCount,
-                    AdditionalFee: $AdditionalFee,
-                    PickupChangesStatus: $PickupChangesStatus
+                    AdditionalFee: $AdditionalFee
                 })",
 					new
 					{
@@ -113,8 +112,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 					pc.OldTime = datetime($OldTime),
 					pc.NewTime = datetime($NewTime),
 					pc.ChangeCount = $ChangeCount,
-					pc.AdditionalFee = $AdditionalFee,
-					pc.PickupChangesStatus = $PickupChangesStatus",
+					pc.AdditionalFee = $AdditionalFee",
 				new
 				{
 					change.Id,
@@ -134,16 +132,45 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				Id = node.Properties["Id"].As<int>(),
 				ShipmentId = node.Properties["ShipmentId"].As<int>(),
 				ClientId = node.Properties["ClientId"].As<int>(),
-				OldTime = DateTime.Parse(node.Properties["OldTime"].As<string>()),
-				NewTime = DateTime.Parse(node.Properties["NewTime"].As<string>()),
+				OldTime = ConvertToDateTime(node.Properties["OldTime"]),
+				NewTime = ConvertToDateTime(node.Properties["NewTime"]),
 				ChangeCount = node.Properties["ChangeCount"].As<int>(),
 				AdditionalFee = Convert.ToDecimal(node.Properties["AdditionalFee"]),
 			};
 		}
 
-		public Task<PickupChange?> GetByShipmentAndClientAsync(int shipmentId, int clientId)
+		// Helper metoda
+		private DateTime ConvertToDateTime(object value)
 		{
-			throw new NotImplementedException();
+			return value switch
+			{
+				ZonedDateTime zdt => zdt.ToDateTimeOffset().UtcDateTime,
+				LocalDateTime ldt => ldt.ToDateTime(),
+				DateTime dt => dt,
+				string s => DateTime.Parse(s),
+				_ => throw new InvalidCastException($"Unexpected date type: {value.GetType()}")
+			};
 		}
+
+
+		public async Task<PickupChange?> GetByShipmentAndClientAsync(int shipmentId, int clientId)
+		{
+			await using var session = _driver.AsyncSession();
+
+			var query = @"
+        MATCH (pc:PickupChange)
+        WHERE pc.ShipmentId = $ShipmentId AND pc.ClientId = $ClientId
+        RETURN pc
+        LIMIT 1";
+
+			var cursor = await session.RunAsync(query, new { ShipmentId = shipmentId, ClientId = clientId });
+			var record = (await cursor.ToListAsync()).FirstOrDefault();
+
+			if (record == null)
+				return null;
+
+			return MapNodeToEntity(record["pc"].As<INode>());
+		}
+
 	}
 }

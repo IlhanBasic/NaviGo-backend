@@ -140,21 +140,52 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			{
 				Id = node.Properties["Id"].As<int>(),
 				ShipmentId = node.Properties["ShipmentId"].As<int>(),
-				CalculatedAt = node.Properties["CalculatedAt"].As<DateTime>(),
+				CalculatedAt = ConvertNeo4jDateTime(node.Properties["CalculatedAt"]),
 				DelayHours = node.Properties["DelayHours"].As<int>(),
 				PenaltyAmount = node.Properties["PenaltyAmount"].As<decimal>(),
 				DelayPenaltiesStatus = (DelayPenaltyStatus)node.Properties["DelayPenaltiesStatus"].As<int>()
 			};
 		}
 
-		public Task<IEnumerable<DelayPenalty>> GetByContractIdAsync(int contractId)
+		public async Task<IEnumerable<DelayPenalty>> GetByContractIdAsync(int contractId)
 		{
-			throw new NotImplementedException();
+			await using var session = _driver.AsyncSession();
+			var cursor = await session.RunAsync(@"
+        MATCH (p:DelayPenalty)-[:BELONGS_TO]->(c:Contract {Id: $ContractId})
+        RETURN p",
+				new { ContractId = contractId });
+
+			var records = await cursor.ToListAsync();
+			var list = new List<DelayPenalty>();
+			foreach (var record in records)
+			{
+				list.Add(MapNodeToEntity(record["p"].As<INode>()));
+			}
+
+			return list;
 		}
 
-		public Task<DelayPenalty?> GetByShipmentIdAsync(int shipmentId)
+		public async Task<DelayPenalty?> GetByShipmentIdAsync(int shipmentId)
 		{
-			throw new NotImplementedException();
+			await using var session = _driver.AsyncSession();
+			var cursor = await session.RunAsync(@"
+        MATCH (p:DelayPenalty {ShipmentId: $ShipmentId})
+        RETURN p LIMIT 1",
+				new { ShipmentId = shipmentId });
+
+			var record = (await cursor.ToListAsync()).FirstOrDefault();
+			if (record == null) return null;
+
+			return MapNodeToEntity(record["p"].As<INode>());
 		}
+		private DateTime ConvertNeo4jDateTime(object neo4jValue)
+		{
+			if (neo4jValue is ZonedDateTime zdt)
+				return zdt.ToDateTimeOffset().DateTime;
+			if (neo4jValue is LocalDateTime ldt)
+				return ldt.ToDateTime();
+			throw new InvalidCastException($"Unexpected date type: {neo4jValue.GetType()}");
+		}
+
 	}
 }

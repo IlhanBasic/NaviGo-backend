@@ -68,19 +68,19 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				await session.RunAsync(query, new
 				{
 					id = id,
-					vehicle.CompanyId,
-					vehicle.Brand,
-					vehicle.Model,
-					vehicle.EngineCapacityCc,
+					companyId=vehicle.CompanyId,
+					brand=vehicle.Brand,
+					model=vehicle.Model,
+					engineCapacityCc=vehicle.EngineCapacityCc,
 					vehiclePicture=vehicle.VehiclePicture ?? "",
-					vehicle.VehicleTypeId,
-					vehicle.RegistrationNumber,
-					vehicle.CapacityKg,
-					vehicle.ManufactureYear,
+					vehicleTypeId=vehicle.VehicleTypeId,
+					registrationNumber=vehicle.RegistrationNumber,
+					capacityKg=vehicle.CapacityKg,
+					manufactureYear=vehicle.ManufactureYear,
 					vehicleStatus = vehicle.VehicleStatus.ToString(),
 					lastInspectionDate = vehicle.LastInspectionDate?.ToString("o"),
 					insuranceExpiry = vehicle.InsuranceExpiry?.ToString("o"),
-					vehicle.CurrentLocationId,
+					currentLocationId=vehicle.CurrentLocationId,
 					createdAt = vehicle.CreatedAt.ToString("o"),
 					categories = vehicle.Categories ?? ""
 				});
@@ -274,9 +274,29 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			};
 		}
 
-		public Task<Vehicle?> GetByRegistrationNumberAsync(string RegistrationNumber)
+		public async Task<Vehicle?> GetByRegistrationNumberAsync(string registrationNumber)
 		{
-			throw new NotImplementedException();
+			var query = @"
+        MATCH (v:Vehicle {registrationNumber: $registrationNumber})
+        RETURN v
+        LIMIT 1";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { registrationNumber });
+
+				var found = await result.FetchAsync();
+				if (!found) return null;
+
+				var node = result.Current["v"].As<INode>();
+				return NodeToEntity(node);
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
+
 	}
 }

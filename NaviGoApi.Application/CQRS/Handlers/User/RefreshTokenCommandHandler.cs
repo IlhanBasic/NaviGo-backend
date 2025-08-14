@@ -41,9 +41,12 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			refreshToken.Revoked = DateTime.UtcNow;
 			refreshToken.RevokedByIp = request.IpAddress;
 
+			//var newRefreshToken = GenerateRefreshToken(request.IpAddress);
+			//user.RefreshTokens.Add(newRefreshToken);
+			//await _unitOfWork.SaveChangesAsync();
 			var newRefreshToken = GenerateRefreshToken(request.IpAddress);
 			user.RefreshTokens.Add(newRefreshToken);
-
+			await _unitOfWork.Users.AddRefreshTokenAsync(newRefreshToken);
 			await _unitOfWork.SaveChangesAsync();
 
 			var newAccessToken = GenerateJwtToken(user);

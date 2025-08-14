@@ -177,9 +177,9 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				LastName = node.Properties["LastName"].As<string>(),
 				PhoneNumber = node.Properties["PhoneNumber"].As<string>(),
 				LicenseNumber = node.Properties["LicenseNumber"].As<string>(),
-				LicenseExpiry = node.Properties.ContainsKey("LicenseExpiry") ? node.Properties["LicenseExpiry"].As<DateTime?>() : null,
+				LicenseExpiry = node.Properties.ContainsKey("LicenseExpiry") ? node.Properties["LicenseExpiry"].As<ZonedDateTime>().ToDateTimeOffset().LocalDateTime : null,
 				LicenseCategories = node.Properties["LicenseCategories"].As<string>(),
-				HireDate = node.Properties["HireDate"].As<DateTime>(),
+				HireDate = node.Properties["HireDate"].As<ZonedDateTime>().ToDateTimeOffset().LocalDateTime,
 				DriverStatus = (DriverStatus)node.Properties["DriverStatus"].As<int>()
 			};
 		}

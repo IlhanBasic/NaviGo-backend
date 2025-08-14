@@ -263,5 +263,10 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 
 			return contractList;
 		}
+
+		public Task<bool> DuplicateContract(string contractNumber)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

@@ -159,5 +159,10 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 
 			return list;
 		}
+
+		public Task<RoutePrice?> DuplicateRoutePrice(int routeId, int vehicleTypeId)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

@@ -187,5 +187,15 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 
 			return list;
 		}
+
+		public Task<bool> DuplicateRoute(int companyId, int startLocationId, int endLocationId)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<bool> DuplicateRouteUpdate(int companyId, int startLocationId, int endLocationId, int routeId)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

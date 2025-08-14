@@ -50,8 +50,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
                 fileUrl: $fileUrl,
                 uploadDate: datetime($uploadDate),
                 verified: $verified,
-                verifiedByUserId: $verifiedByUserId,
-                expiryDate: $expiryDate
+                verifiedByUserId: $verifiedByUserId
             })";
 
 			var session = _driver.AsyncSession();
@@ -64,8 +63,8 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 					documentType = (int)document.DocumentType,
 					fileUrl = document.FileUrl,
 					uploadDate = document.UploadDate.ToString("o"),
-					verified = document.Verified,
-					verifiedByUserId = document.VerifiedByUserId,
+					verified = false,
+					verifiedByUserId = document.VerifiedByUserId
 				});
 			}
 			finally
@@ -151,7 +150,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
                     d.uploadDate = datetime($uploadDate),
                     d.verified = $verified,
                     d.verifiedByUserId = $verifiedByUserId,
-                    d.expiryDate = $expiryDate";
+					d.expiryDate=$expiryDate";
 
 			var session = _driver.AsyncSession();
 			try
@@ -165,6 +164,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 					uploadDate = document.UploadDate.ToString("o"),
 					verified = document.Verified,
 					verifiedByUserId = document.VerifiedByUserId,
+					expiryDate= (DateTime?)null
 				});
 			}
 			finally

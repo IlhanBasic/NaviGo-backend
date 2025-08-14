@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MediatR;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using NaviGoApi.Application.CQRS.Commands.VehicleType;
 using NaviGoApi.Domain.Interfaces;
 using System.ComponentModel.DataAnnotations;
@@ -26,14 +27,18 @@ namespace NaviGoApi.Application.CQRS.Handlers.VehicleType
 
 			var newTypeName = request.VehicleTypeDto.TypeName.Trim();
 
-			bool existsWithSameName = await _unitOfWork.VehicleTypes
-				.ExistsAsync(vt => vt.TypeName.ToLower() == newTypeName.ToLower() && vt.Id != request.Id);
+			//bool existsWithSameName = await _unitOfWork.VehicleTypes
+			//	.ExistsAsync(vt => vt.TypeName.ToLower() == newTypeName.ToLower() && vt.Id != request.Id);
 
-			if (existsWithSameName)
+			//if (existsWithSameName)
+			//{
+			//	throw new ValidationException($"Another vehicle type with name '{newTypeName}' already exists.");
+			//}
+			var exists = await _unitOfWork.VehicleTypes.GetByTypeName(newTypeName);
+			if (exists != null && exists.Id!=request.Id)
 			{
-				throw new ValidationException($"Another vehicle type with name '{newTypeName}' already exists.");
+				throw new ValidationException($"Vehicle type with name '{newTypeName}' already exists.");
 			}
-
 			_mapper.Map(request.VehicleTypeDto, existing);
 			await _unitOfWork.VehicleTypes.UpdateAsync(existing);
 			await _unitOfWork.SaveChangesAsync();

@@ -116,15 +116,23 @@ namespace NaviGoApi.Application.CQRS.Handlers.Route
 			if (request.RouteDto.BasePrice < 0)
 				throw new ValidationException("Base price cannot be negative.");
 
-			var existingRoute = await _unitOfWork.Routes.ExistsAsync(r =>
-				r.CompanyId == request.RouteDto.CompanyId &&
-				r.StartLocationId == request.RouteDto.StartLocationId &&
-				r.EndLocationId == request.RouteDto.EndLocationId);
+			//var existingRoute = await _unitOfWork.Routes.ExistsAsync(r =>
+			//	r.CompanyId == request.RouteDto.CompanyId &&
+			//	r.StartLocationId == request.RouteDto.StartLocationId &&
+			//	r.EndLocationId == request.RouteDto.EndLocationId);
+
+			//if (existingRoute)
+			//	throw new ValidationException("A route with the same start and end locations already exists for this company.");
+			var existingRoute = await _unitOfWork.Routes.DuplicateRoute(
+				request.RouteDto.CompanyId,
+				request.RouteDto.StartLocationId,
+				request.RouteDto.EndLocationId
+			);
 
 			if (existingRoute)
 				throw new ValidationException("A route with the same start and end locations already exists for this company.");
 
-			
+
 			var route = _mapper.Map<Domain.Entities.Route>(request.RouteDto);
 
 			var requestBody = new

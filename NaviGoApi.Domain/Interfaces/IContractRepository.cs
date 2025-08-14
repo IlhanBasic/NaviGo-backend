@@ -17,5 +17,6 @@ namespace NaviGoApi.Domain.Interfaces
 		// Primer specifičnih metoda:
 		Task<IEnumerable<Contract>> GetByClientIdAsync(int clientId);
 		Task<IEnumerable<Contract>> GetByForwarderIdAsync(int forwarderId);
+		Task<bool> DuplicateContract(string contractNumber);
 	}
 }

@@ -57,9 +57,9 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				await session.RunAsync(query, new
 				{
 					id = id,
-					vehicleType.TypeName,
+					typeName=vehicleType.TypeName,
 					description = vehicleType.Description ?? "",
-					vehicleType.RequiresSpecialLicense
+					requiresSpecialLicense=vehicleType.RequiresSpecialLicense
 				});
 			}
 			finally
@@ -165,5 +165,26 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		{
 			throw new NotImplementedException();
 		}
+
+		public async Task<VehicleType?> GetByTypeName(string typeName)
+		{
+			var query = @"MATCH (vt:VehicleType {typeName: $typeName}) RETURN vt LIMIT 1";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { typeName });
+				var found = await result.FetchAsync();
+				if (!found) return null;
+
+				var node = result.Current["vt"].As<INode>();
+				return NodeToEntity(node);
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
 	}
 }

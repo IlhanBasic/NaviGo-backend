@@ -78,5 +78,15 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		{
 			return await _context.Routes.AnyAsync(predicate);
 		}
+
+		public Task<bool> DuplicateRoute(int companyId, int startLocationId, int endLocationId)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<bool> DuplicateRouteUpdate(int companyId, int startLocationId, int endLocationId, int routeId)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

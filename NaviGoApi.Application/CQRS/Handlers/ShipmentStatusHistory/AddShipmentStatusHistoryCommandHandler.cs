@@ -38,20 +38,23 @@ namespace NaviGoApi.Application.CQRS.Handlers.ShipmentStatusHistory
 
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
 				?? throw new ValidationException("User not found.");
-
-			if (user.Company == null)
+			var company = await _unitOfWork.Companies.GetByIdAsync(user.Id);
+			if (company == null)
 				throw new ValidationException("User is not associated with any company.");
 
 			// 🔹 2. Provera pošiljke
 			var shipment = await _unitOfWork.Shipments.GetByIdAsync(request.ShipmentStatusHistoryDto.ShipmentId)
-				?? throw new KeyNotFoundException("Shipment not found.");
+				?? throw new ValidationException("Shipment not found.");
 
-			if (shipment.Contract == null || shipment.Contract.Forwarder == null || shipment.Contract.Route == null)
-				throw new ValidationException("Shipment is not linked with a valid contract.");
-
+			var contract = await _unitOfWork.Contracts.GetByIdAsync(shipment.ContractId)
+				?? throw new ValidationException("Contract isn't valid."); ;
+			var forwarder = await _unitOfWork.Companies.GetByIdAsync(contract.ForwarderId)
+				?? throw new ValidationException("Forwarder isn't valid."); ;
+			var route = await _unitOfWork.Routes.GetByIdAsync(contract.RouteId)
+				?? throw new ValidationException("Route isn't valid."); ;
 			// 🔹 3. Provera da li user ima pravo da menja status
-			if (user.Company.Id != shipment.Contract.Forwarder.Id &&
-				user.Company.Id != shipment.Contract.Route.CompanyId)
+			if (company.Id != forwarder.Id &&
+				company.Id != route.CompanyId)
 				throw new ValidationException("User is not authorized to change shipment status.");
 
 			// 🔹 4. Preuzimanje poslednjeg statusa

@@ -37,11 +37,15 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			if (user.PasswordHash != hashedPassword)
 				return null;
 
-			var refreshToken = GenerateRefreshToken(""); 
+			//var refreshToken = GenerateRefreshToken("");
 
+			//user.RefreshTokens.Add(refreshToken);
+			//await _unitOfWork.SaveChangesAsync();
+			var refreshToken = GenerateRefreshToken("");
+			Console.WriteLine($"Adding refresh token for UserId: {user.Id}, Token: {refreshToken.Token}");
 			user.RefreshTokens.Add(refreshToken);
+			await _unitOfWork.Users.AddRefreshTokenAsync(refreshToken);
 			await _unitOfWork.SaveChangesAsync();
-
 			var accessToken = GenerateJwtToken(user);
 
 			return (accessToken, refreshToken.Token);

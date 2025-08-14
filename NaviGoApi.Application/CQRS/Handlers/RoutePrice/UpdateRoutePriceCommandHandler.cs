@@ -118,13 +118,17 @@ namespace NaviGoApi.Application.CQRS.Handlers.RoutePrice
 			if (request.RoutePriceDto.MinimumPrice < 0)
 				throw new ValidationException("Minimum price cannot be negative.");
 
-			var exists = await _unitOfWork.RoutePrices.ExistsAsync(rp =>
-				rp.Id != request.Id &&
-				rp.RouteId == request.RoutePriceDto.RouteId &&
-				rp.VehicleTypeId == request.RoutePriceDto.VehicleTypeId);
+			//var exists = await _unitOfWork.RoutePrices.ExistsAsync(rp =>
+			//	rp.Id != request.Id &&
+			//	rp.RouteId == request.RoutePriceDto.RouteId &&
+			//	rp.VehicleTypeId == request.RoutePriceDto.VehicleTypeId);
 
-			if (exists)
+			//if (exists)
+			//	throw new ValidationException("Price for this route and vehicle type already exists.");
+			var exists = await _unitOfWork.RoutePrices.DuplicateRoutePrice(request.RoutePriceDto.RouteId, request.RoutePriceDto.VehicleTypeId);
+			if (exists != null && exists.Id != request.Id)
 				throw new ValidationException("Price for this route and vehicle type already exists.");
+			
 
 			_mapper.Map(request.RoutePriceDto, entity);
 

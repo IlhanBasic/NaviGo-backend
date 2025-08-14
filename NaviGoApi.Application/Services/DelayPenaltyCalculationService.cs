@@ -28,22 +28,30 @@ namespace NaviGoApi.Application.Services
 			int delayHours = (int)Math.Ceiling(delayHoursDecimal);
 			Console.WriteLine($"DEBUG: DelayHoursDecimal = {delayHoursDecimal}, Zaokruženo DelayHours = {delayHours}");
 
-			var contract = shipment.Contract ?? throw new ValidationException("Contract is not loaded for shipment.");
-			var payment = contract.Payment;
+			//var contract = shipment.Contract ?? throw new ValidationException("Contract is not loaded for shipment.");
+			var contract = await _unitOfWork.Contracts.GetByIdAsync(shipment.ContractId);
+			if(contract==null)
+				throw new ValidationException("Contract is not loaded for shipment.");
+			//var payment = contract.Payment;
+			var payment = (await _unitOfWork.Payments.GetByContractIdAsync(contract.Id)).FirstOrDefault();
 			if (payment == null)
 				throw new ValidationException("Payment is not loaded or not found for this contract.");
 
-			var route = contract.Route ?? throw new ValidationException("Route is not loaded for shipment.");
 
-			if (shipment.Vehicle?.VehicleTypeId == null)
-				throw new ValidationException("Vehicle type is not defined for this shipment.");
+			var route = await _unitOfWork.Routes.GetByIdAsync(contract.RouteId);
+			if(route ==null)
+				throw new ValidationException("Route is not loaded for shipment.");
 
-			var vehicleTypeId = shipment.Vehicle.VehicleTypeId;
+			//if (shipment.Vehicle?.VehicleTypeId == null)
+			//	throw new ValidationException("Vehicle type is not defined for this shipment.");
+			var vehicle = await _unitOfWork.Vehicles.GetByIdAsync(shipment.VehicleId);
+			var vehicleTypeId = vehicle.VehicleTypeId;
 			Console.WriteLine($"DEBUG: VehicleTypeId = {vehicleTypeId}");
 
-			var routePrice = route.RoutePrices?.FirstOrDefault(rp => rp.VehicleTypeId == vehicleTypeId)
-				?? throw new ValidationException($"No price defined for vehicle type ID {vehicleTypeId} on this route.");
-
+			//var routePrice = route.RoutePrices?.FirstOrDefault(rp => rp.VehicleTypeId == vehicleTypeId)
+			//	?? throw new ValidationException($"No price defined for vehicle type ID {vehicleTypeId} on this route.");
+			var routePrices = await _unitOfWork.RoutePrices.GetAllAsync();
+			var routePrice = routePrices.FirstOrDefault(rp => rp.VehicleTypeId == vehicleTypeId);
 			var transportPrice = (decimal)route.DistanceKm * routePrice.PricePerKm;
 			Console.WriteLine($"DEBUG: DistanceKm = {route.DistanceKm}, PricePerKm = {routePrice.PricePerKm}, TransportPrice = {transportPrice}");
 

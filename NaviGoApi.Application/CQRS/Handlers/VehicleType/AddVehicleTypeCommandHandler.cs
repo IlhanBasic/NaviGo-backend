@@ -24,14 +24,18 @@ namespace NaviGoApi.Application.CQRS.Handlers.VehicleType
 		{
 			var typeName = request.VehicleTypeDto.TypeName.Trim();
 
-			bool exists = await _unitOfWork.VehicleTypes
-				.ExistsAsync(vt => vt.TypeName.ToLower() == typeName.ToLower());
+			//bool exists = await _unitOfWork.VehicleTypes
+			//	.ExistsAsync(vt => vt.TypeName.ToLower() == typeName.ToLower());
 
-			if (exists)
+			//if (exists)
+			//{
+			//	throw new ValidationException($"Vehicle type with name '{typeName}' already exists.");
+			//}
+			var exists = await _unitOfWork.VehicleTypes.GetByTypeName(typeName);
+			if(exists != null)
 			{
 				throw new ValidationException($"Vehicle type with name '{typeName}' already exists.");
 			}
-
 			var vehicleType = _mapper.Map<global::NaviGoApi.Domain.Entities.VehicleType>(request.VehicleTypeDto);
 			await _unitOfWork.VehicleTypes.AddAsync(vehicleType);
 			await _unitOfWork.SaveChangesAsync();

@@ -68,5 +68,10 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		{
 			return await _cargoTypesCollection.Find(predicate).AnyAsync();
 		}
+
+		public Task<CargoType> GetByTypeName(string name)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

@@ -49,6 +49,11 @@ namespace NaviGoApi.API.Controllers
 		[Authorize]
 		public async Task<IActionResult> Update(int id, [FromBody] PaymentUpdateDto dto)
 		{
+			if (dto == null)
+			{
+				return BadRequest(new { error = "InvalidData", message = "Payment data is required." });
+			}
+
 			try
 			{
 				await _mediator.Send(new UpdatePaymentCommand(dto) { Id = id });
@@ -59,6 +64,7 @@ namespace NaviGoApi.API.Controllers
 				return NotFound(new { error = "NotFound", message = $"Payment with ID {id} not found." });
 			}
 		}
+
 
 		[HttpDelete("{id}")]
 		public async Task<IActionResult> Delete(int id)
