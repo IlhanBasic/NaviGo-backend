@@ -69,7 +69,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 				userEntity.EmailVerified = true;
 			}
 
-			userEntity.UserStatus = UserStatus.Active;
+			userEntity.UserStatus = UserStatus.Inactive;
 
 			// Čuvanje u bazi
 			await _unitOfWork.Users.AddAsync(userEntity);

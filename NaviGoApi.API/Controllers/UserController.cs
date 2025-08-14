@@ -138,5 +138,13 @@ namespace NaviGoApi.API.Controllers
 				return BadRequest(new { message = "Current password is incorrect or password change failed." });
 			return Ok(new { message = "Password has been changed successfully." });
 		}
+		[HttpPatch("activate/{id}")]
+		[Authorize]
+		public async Task<IActionResult> ActivateUser(int id, [FromBody] UserActivationDto userActivationDto)
+		{
+			await _mediator.Send(new ActivateUserCommand(id, userActivationDto));
+			return NoContent();
+		}
+
 	}
 }
