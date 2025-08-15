@@ -111,6 +111,7 @@ builder.Services.Configure<ApiSettings>(builder.Configuration.GetSection("ApiSet
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IPaymentCalculatorService, PaymentCalculatorService>();
 builder.Services.AddScoped<IDelayPenaltyCalculationService, DelayPenaltyCalculationService>();
+builder.Services.AddScoped<ILocationService, LocationService>();
 // Add services to the container.
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddControllersWithViews();

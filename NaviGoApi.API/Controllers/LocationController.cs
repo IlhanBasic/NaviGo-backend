@@ -25,9 +25,10 @@ namespace NaviGoApi.API.Controllers
 		[Authorize]
 		public async Task<IActionResult> Create([FromBody] LocationCreateDto dto)
 		{
-			await _mediator.Send(new AddLocationCommand(dto));
-			return Ok(new { message = "Location created successfully." });
+			var location = await _mediator.Send(new AddLocationCommand(dto));
+			return Ok(location);
 		}
+
 
 		// GET: api/location
 		[HttpGet]

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.CQRS.Commands.Location
 {
-	public class AddLocationCommand:IRequest<Unit>
+	public class AddLocationCommand:IRequest<LocationDto?>
 	{
         public LocationCreateDto LocationDto { get; set; }
         public AddLocationCommand(LocationCreateDto dto)
