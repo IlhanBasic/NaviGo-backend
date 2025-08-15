@@ -124,15 +124,28 @@ builder.Services.AddMediatR(typeof(GetAllUserQuery).Assembly);
 builder.Services.AddHttpClient<IGeoLocationService, GeoLocationService>();
 builder.Services.AddHttpClient();
 
+
+//builder.Services.AddCors(options =>
+//{
+//	options.AddPolicy("AllowAll", policy =>
+//	{
+//		policy.AllowAnyOrigin()
+//			  .AllowAnyMethod()
+//			  .AllowAnyHeader();
+//	});
+//});
+var frontendUrl = builder.Configuration["ApiSettings:FrontendUrl"];
 builder.Services.AddCors(options =>
 {
 	options.AddPolicy("AllowAll", policy =>
 	{
-		policy.AllowAnyOrigin()
+		policy.WithOrigins(frontendUrl)
+			  .AllowAnyHeader()
 			  .AllowAnyMethod()
-			  .AllowAnyHeader();
+			  .AllowCredentials();
 	});
 });
+
 var jwtSecret = builder.Configuration["JWT_SECRET"];
 //var key = Encoding.ASCII.GetBytes(jwtSecret!);
 var key = Encoding.UTF8.GetBytes(jwtSecret!);

@@ -302,8 +302,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				CreatedAt = node.Properties.ContainsKey("CreatedAt") ? Convert.ToDateTime(node.Properties["CreatedAt"]) : DateTime.UtcNow,
 				AvailableFrom = node.Properties.ContainsKey("AvailableFrom") ? Convert.ToDateTime(node.Properties["AvailableFrom"]) : DateTime.UtcNow,
 				AvailableTo = node.Properties.ContainsKey("AvailableTo") ? Convert.ToDateTime(node.Properties["AvailableTo"]) : DateTime.UtcNow,
-				GeometryEncoded = node.Properties.ContainsKey("GeometryEncoded") ? node.Properties["GeometryEncoded"].ToString() : null,
-				GeometryJson = node.Properties.ContainsKey("GeometryJson") ? node.Properties["GeometryJson"].ToString() : null
+				GeometryEncoded = node.Properties.ContainsKey("GeometryEncoded") ? node.Properties["GeometryEncoded"].ToString() : null
 			};
 		}
 

@@ -56,6 +56,9 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 				{
 					throw new ValidationException($"Company with ID {dto.CompanyId} does not exist.");
 				}
+				if (companyExists.CompanyType != CompanyType.Client && dto.UserRole == UserRole.RegularUser)
+					throw new ValidationException($"RegularUser must work in Client company.");
+
 			}
 
 			var userEntity = _mapper.Map<Domain.Entities.User>(dto);

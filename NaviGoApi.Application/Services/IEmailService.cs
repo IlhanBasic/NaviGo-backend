@@ -10,6 +10,7 @@ namespace NaviGoApi.Application.Services
 	{
 		Task SendVerificationEmailAsync(string toEmail, string verificationLink);
 		Task SendResetPasswordPinEmailAsync(string toEmail, string pin);
+		Task SendSuspendEmailAsync (string toEmail);
 
 	}
 

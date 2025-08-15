@@ -37,8 +37,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
                     CreatedAt: $CreatedAt,
                     AvailableFrom: $AvailableFrom,
                     AvailableTo: $AvailableTo,
-                    GeometryEncoded: $GeometryEncoded,
-                    GeometryJson: $GeometryJson
+                    GeometryEncoded: $GeometryEncoded
                 })
             ";
 
@@ -59,7 +58,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 					route.AvailableFrom,
 					route.AvailableTo,
 					route.GeometryEncoded,
-					route.GeometryJson
 				});
 			}
 			finally
@@ -82,8 +80,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
                     r.CreatedAt = $CreatedAt,
                     r.AvailableFrom = $AvailableFrom,
                     r.AvailableTo = $AvailableTo,
-                    r.GeometryEncoded = $GeometryEncoded,
-                    r.GeometryJson = $GeometryJson
+                    r.GeometryEncoded = $GeometryEncoded
             ";
 
 			var session = _driver.AsyncSession();
@@ -100,8 +97,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				route.CreatedAt,
 				route.AvailableFrom,
 				route.AvailableTo,
-				route.GeometryEncoded,
-				route.GeometryJson
+				route.GeometryEncoded
 			});
 		}
 

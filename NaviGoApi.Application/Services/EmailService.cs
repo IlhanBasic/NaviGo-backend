@@ -133,5 +133,94 @@ namespace NaviGoApi.Application.Services
         </body>
         </html>";
 		}
+		private string GenerateSuspendEmailHtml(string email)
+		{
+			return $@"
+    <html>
+    <head>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                margin: 0;
+                padding: 0;
+            }}
+            .container {{
+                max-width: 600px;
+                margin: 50px auto;
+                padding: 30px;
+                background-color: #ffffff;
+                border-radius: 12px;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+                text-align: center;
+            }}
+            h2 {{
+                color: #dc3545;
+                margin-bottom: 20px;
+            }}
+            p {{
+                color: #333333;
+                font-size: 16px;
+                line-height: 1.5;
+            }}
+            .highlight {{
+                font-weight: bold;
+                color: #007bff;
+            }}
+            .footer {{
+                margin-top: 30px;
+                font-size: 14px;
+                color: #888888;
+            }}
+            .button {{
+                display: inline-block;
+                margin-top: 25px;
+                padding: 12px 25px;
+                background-color: #dc3545;
+                color: #ffffff;
+                text-decoration: none;
+                border-radius: 5px;
+                font-weight: bold;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class='container'>
+            <h2>Account Suspended</h2>
+            <p>Dear <span class='highlight'>{email}</span>,</p>
+            <p>We noticed that after logging in once, multiple requests to our services were made from different IP addresses in a short period of time.</p>
+            <p>As a precaution, your account has been temporarily suspended to protect your data and prevent misuse.</p>
+            <p>If you believe this is a mistake or need assistance, please contact our support team immediately.</p>
+            <a href='mailto:support@navigo.com' class='button'>Contact Support</a>
+            <div class='footer'>
+                – NaviGo Team
+            </div>
+        </div>
+    </body>
+    </html>";
+		}
+
+		public async Task SendSuspendEmailAsync(string toEmail)
+		{
+			var htmlBody = GenerateSuspendEmailHtml(toEmail);
+			var message = new MailMessage
+			{
+				From = new MailAddress(_smtpSettings.FromEmail, _smtpSettings.DisplayName),
+				Subject = "Suspended Your NaviGo Account",
+				Body = htmlBody,
+				IsBodyHtml = true
+			};
+
+			message.To.Add(toEmail);
+
+			using var client = new SmtpClient(_smtpSettings.Host, _smtpSettings.Port)
+			{
+				Credentials = new NetworkCredential(_smtpSettings.Username, _smtpSettings.Password),
+				EnableSsl = _smtpSettings.EnableSsl
+			};
+
+			await client.SendMailAsync(message);
+		}
 	}
+
 }

@@ -1,6 +1,7 @@
 ﻿using NaviGoApi.Application.Services;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
+using System.ComponentModel.DataAnnotations;
 
 public class SessionLockMiddleware
 {
@@ -26,20 +27,24 @@ public class SessionLockMiddleware
 				var user = await unitOfWork.Users.GetByEmailAsync(email);
 				if (user != null)
 				{
-					var recentLocations = user.UserLocations
-						.Where(l => l.AccessTime >= DateTime.UtcNow - _interval)
+					var recentLocations = await unitOfWork.UserLocations
+						.GetRecentLocationsAsync(user.Id, _interval);
+
+					var distinctRegions = recentLocations
 						.Select(l => l.Region)
 						.Distinct()
 						.ToList();
 
-					if (recentLocations.Count > 1)
+					if (distinctRegions.Count > 1)
 					{
 						user.UserStatus = UserStatus.Inactive;
 						await unitOfWork.SaveChangesAsync();
-						await _emailService.SendVerificationEmailAsync(user.Email, "Your account has been locked due to suspicious activity.");
+						await _emailService.SendSuspendEmailAsync(user.Email);
+
 						context.Response.StatusCode = StatusCodes.Status403Forbidden;
 						await context.Response.WriteAsync("Your account has been locked due to suspicious activity.");
-						return;
+						throw new ValidationException("Your account has been locked due to suspicious activity.");
+						
 					}
 				}
 			}

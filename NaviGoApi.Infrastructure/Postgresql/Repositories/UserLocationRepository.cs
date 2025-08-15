@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
@@ -25,12 +27,12 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 
 		public async Task<List<UserLocation>> GetRecentLocationsAsync(int userId, TimeSpan interval)
 		{
-			//var cutoff = DateTime.UtcNow.Subtract(interval);
-			//return await _context.UserLocations
-			//	.Where(ul => ul.UserId == userId && ul.AccessTime >= cutoff)
-			//	.ToListAsync();
-			return null;
+			var cutoff = DateTime.UtcNow.Subtract(interval);
+			return await _context.UserLocations
+				.Where(ul => ul.UserId == userId && ul.AccessTime >= cutoff)
+				.ToListAsync();
 		}
+
 
 		public async Task SaveChangesAsync()
 		{
