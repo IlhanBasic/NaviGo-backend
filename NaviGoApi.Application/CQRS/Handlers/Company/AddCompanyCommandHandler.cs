@@ -40,14 +40,6 @@ namespace NaviGoApi.Application.CQRS.Handlers.Company
 			}
 			var entity = _mapper.Map<Domain.Entities.Company>(request.CompanyDto);
 			entity.CompanyStatus = CompanyStatus.Pending;
-			if(request.CompanyDto.CompanyType == CompanyType.Forwarder)
-			{
-				entity.SaldoAmount = 0;
-			}
-			else
-			{
-				entity.SaldoAmount = null;
-			}
 			await _unitOfWork.Companies.AddAsync(entity);
 			await _unitOfWork.SaveChangesAsync();
 			return _mapper.Map<CompanyDto>(entity);

@@ -8,7 +8,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 	{
 		public void Configure(EntityTypeBuilder<Contract> builder)
 		{
-
 			builder.HasKey(c => c.Id);
 
 			builder.Property(c => c.ContractNumber)
@@ -16,6 +15,7 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 				.HasMaxLength(50);
 			builder.HasIndex(c => c.ContractNumber)
 				.IsUnique();
+
 			builder.Property(c => c.ContractDate)
 				.IsRequired();
 
@@ -50,6 +50,18 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 			builder.HasOne(c => c.Route)
 				.WithMany(r => r.Contracts)
 				.HasForeignKey(c => c.RouteId)
+				.OnDelete(DeleteBehavior.Restrict);
+
+			// FK: RoutePrice (obavezno)
+			builder.HasOne(c => c.RoutePrice)
+				.WithMany()
+				.HasForeignKey(c => c.RoutePriceId)
+				.OnDelete(DeleteBehavior.Restrict);
+
+			// FK: ForwarderOffer (obavezno)
+			builder.HasOne(c => c.ForwarderOffer)
+				.WithMany()
+				.HasForeignKey(c => c.ForwarderOfferId)
 				.OnDelete(DeleteBehavior.Restrict);
 
 			// 1:1 Payment

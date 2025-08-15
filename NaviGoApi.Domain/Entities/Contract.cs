@@ -18,9 +18,9 @@ namespace NaviGoApi.Domain.Entities
 	{
 		public int Id { get; set; }
 
-		public int ClientId { get; set; }         // FK na User (klijent)
-		public int ForwarderId { get; set; }      // FK na Company (špediter)
-		public int RouteId { get; set; }           // FK na Route
+		public int ClientId { get; set; }    
+		public int ForwarderId { get; set; }
+		public int RouteId { get; set; }       
 
 		public string ContractNumber { get; set; } = null!;
 		public DateTime ContractDate { get; set; }
@@ -33,12 +33,17 @@ namespace NaviGoApi.Domain.Entities
 		//public DateTime ValidUntil { get; set; }
 		public DateTime? SignedDate { get; set; }
 
-		// Navigaciona svojstva
 		public User? Client { get; set; }
 		public Company? Forwarder { get; set; }
 		public Route? Route { get; set; }
 
 		public ICollection<Shipment>? Shipments { get; set; }
 		public Payment? Payment { get; set; }  // 1:1 sa Payment
+		public int RoutePriceId { get; set; }
+		public RoutePrice RoutePrice { get; set; }
+
+		public int ForwarderOfferId { get; set; }
+		public ForwarderOffer ForwarderOffer { get; set; }
+
 	}
 }

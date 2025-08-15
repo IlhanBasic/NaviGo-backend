@@ -28,10 +28,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 			builder.Property(x => x.EstimatedDurationHours)
 				.IsRequired();
 
-			builder.Property(x => x.BasePrice)
-				.IsRequired()
-				.HasColumnType("decimal(18,2)");
-
 			builder.Property(x => x.IsActive)
 				.IsRequired();
 

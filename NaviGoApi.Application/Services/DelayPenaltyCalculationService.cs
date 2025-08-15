@@ -21,6 +21,7 @@ namespace NaviGoApi.Application.Services
 			if (!shipment.ActualArrival.HasValue)
 				return null;
 
+			// Izračun kašnjenja u satima
 			var delayHoursDecimal = (shipment.ActualArrival.Value - shipment.ScheduledArrival).TotalHours;
 			if (delayHoursDecimal <= 0)
 				return null;
@@ -28,50 +29,53 @@ namespace NaviGoApi.Application.Services
 			int delayHours = (int)Math.Ceiling(delayHoursDecimal);
 			Console.WriteLine($"DEBUG: DelayHoursDecimal = {delayHoursDecimal}, Zaokruženo DelayHours = {delayHours}");
 
-			//var contract = shipment.Contract ?? throw new ValidationException("Contract is not loaded for shipment.");
-			var contract = await _unitOfWork.Contracts.GetByIdAsync(shipment.ContractId);
-			if(contract==null)
-				throw new ValidationException("Contract is not loaded for shipment.");
-			//var payment = contract.Payment;
-			var payment = (await _unitOfWork.Payments.GetByContractIdAsync(contract.Id)).FirstOrDefault();
-			if (payment == null)
-				throw new ValidationException("Payment is not loaded or not found for this contract.");
+			// Učitavanje ugovora
+			var contract = await _unitOfWork.Contracts.GetByIdAsync(shipment.ContractId)
+						   ?? throw new ValidationException("Contract is not loaded for shipment.");
 
+			// Učitavanje plaćanja
+			var payment = (await _unitOfWork.Payments.GetByContractIdAsync(contract.Id)).FirstOrDefault()
+						  ?? throw new ValidationException("Payment is not loaded or not found for this contract.");
 
-			var route = await _unitOfWork.Routes.GetByIdAsync(contract.RouteId);
-			if(route ==null)
-				throw new ValidationException("Route is not loaded for shipment.");
+			// Učitavanje rute
+			var route = await _unitOfWork.Routes.GetByIdAsync(contract.RouteId)
+						?? throw new ValidationException("Route is not loaded for shipment.");
 
-			//if (shipment.Vehicle?.VehicleTypeId == null)
-			//	throw new ValidationException("Vehicle type is not defined for this shipment.");
-			var vehicle = await _unitOfWork.Vehicles.GetByIdAsync(shipment.VehicleId);
+			// Učitavanje vozila i tipa
+			var vehicle = await _unitOfWork.Vehicles.GetByIdAsync(shipment.VehicleId)
+						  ?? throw new ValidationException("Vehicle not found.");
 			var vehicleTypeId = vehicle.VehicleTypeId;
-			Console.WriteLine($"DEBUG: VehicleTypeId = {vehicleTypeId}");
 
-			//var routePrice = route.RoutePrices?.FirstOrDefault(rp => rp.VehicleTypeId == vehicleTypeId)
-			//	?? throw new ValidationException($"No price defined for vehicle type ID {vehicleTypeId} on this route.");
+			// Učitavanje cene po tipu vozila
 			var routePrices = await _unitOfWork.RoutePrices.GetAllAsync();
-			var routePrice = routePrices.FirstOrDefault(rp => rp.VehicleTypeId == vehicleTypeId);
-			var transportPrice = (decimal)route.DistanceKm * routePrice.PricePerKm;
-			Console.WriteLine($"DEBUG: DistanceKm = {route.DistanceKm}, PricePerKm = {routePrice.PricePerKm}, TransportPrice = {transportPrice}");
+			var routePrice = routePrices.FirstOrDefault(rp => rp.VehicleTypeId == vehicleTypeId)
+							 ?? throw new ValidationException($"No price defined for vehicle type ID {vehicleTypeId} on this route.");
 
+			// Osnovna cena transporta
+			decimal transportPrice = (decimal)route.DistanceKm * routePrice.PricePerKm;
+
+			// Učitavanje eventualnog popusta od špediter ponude
+			var forwarderOffer = (await _unitOfWork.ForwarderOffers.GetByRouteIdAsync(route.Id))
+								 .FirstOrDefault(f => f.ForwarderOfferStatus == ForwarderOfferStatus.Accepted);
+			var discountPercent = forwarderOffer?.DiscountRate ?? 0;
+			transportPrice = transportPrice * (1 - discountPercent / 100m);
+
+			Console.WriteLine($"DEBUG: DistanceKm = {route.DistanceKm}, PricePerKm = {routePrice.PricePerKm}, Discount = {discountPercent}%, TransportPriceAfterDiscount = {transportPrice}");
+
+			// Penal po satu i maksimalni procenat
 			var penaltyRatePerHour = contract.PenaltyRatePerHour;
 			var maxPenaltyPercent = contract.MaxPenaltyPercent;
 
-			Console.WriteLine($"DEBUG: PenaltyRatePerHour = {penaltyRatePerHour}, MaxPenaltyPercent = {maxPenaltyPercent}");
-
 			decimal penaltyAmount = transportPrice * (penaltyRatePerHour / 100m) * delayHours;
-			Console.WriteLine($"DEBUG: RawPenaltyAmount = {penaltyAmount}");
-
 			decimal maxPenaltyAmount = transportPrice * (maxPenaltyPercent / 100m);
-			Console.WriteLine($"DEBUG: MaxPenaltyAmount = {maxPenaltyAmount}");
 
 			if (penaltyAmount > maxPenaltyAmount)
 			{
-				Console.WriteLine("DEBUG: Penal je veći od maksimalnog - primenjujem MaxPenaltyAmount");
 				penaltyAmount = maxPenaltyAmount;
+				Console.WriteLine("DEBUG: Penal je veći od maksimalnog - primenjujem MaxPenaltyAmount");
 			}
 
+			// Provera da li već postoji penal za pošiljku
 			var existingPenalty = await _unitOfWork.DelayPenalties.GetByShipmentIdAsync(shipment.Id);
 			if (existingPenalty != null)
 			{
@@ -95,18 +99,18 @@ namespace NaviGoApi.Application.Services
 
 				await _unitOfWork.DelayPenalties.AddAsync(delayPenalty);
 			}
+
+			// Ažuriranje plaćanja
 			payment.PenaltyAmount = penaltyAmount;
-			payment.IsRefunded = true; 
+			payment.IsRefunded = true;
 			payment.RefundDate = shipment.ActualArrival.Value;
 
 			await _unitOfWork.Payments.UpdateAsync(payment);
-
 			await _unitOfWork.SaveChangesAsync();
 
 			Console.WriteLine($"DEBUG: FinalPenaltyAmount = {penaltyAmount}");
 
 			return await _unitOfWork.DelayPenalties.GetByShipmentIdAsync(shipment.Id);
 		}
-
 	}
 }

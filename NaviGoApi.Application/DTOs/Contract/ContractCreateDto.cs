@@ -9,15 +9,16 @@ namespace NaviGoApi.Application.DTOs.Contract
 {
 	public class ContractCreateDto
 	{
-		public int ClientId { get; set; }      
-		public int ForwarderId { get; set; }     
-		public int RouteId { get; set; }        
+		public int ClientId { get; set; }
+		public int ForwarderId { get; set; }
+		public int RouteId { get; set; }
+		public int RoutePriceId { get; set; }         
+		public int ForwarderOfferId { get; set; }      
 
 		public string ContractNumber { get; set; } = null!;
 		public string Terms { get; set; } = null!;
 
 		public decimal PenaltyRatePerHour { get; set; }
 		public decimal MaxPenaltyPercent { get; set; }
-
 	}
 }

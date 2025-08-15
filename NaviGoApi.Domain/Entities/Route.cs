@@ -15,7 +15,6 @@ namespace NaviGoApi.Domain.Entities
 		public int EndLocationId { get; set; }
 		public double DistanceKm { get; set; }
 		public double EstimatedDurationHours { get; set; }
-		public decimal BasePrice { get; set; }
 		public bool IsActive { get; set; }
 		public DateTime CreatedAt { get; set; }
 		public DateTime AvailableFrom { get; set; }

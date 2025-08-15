@@ -60,7 +60,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
                 CompanyType: $CompanyType,
                 CompanyStatus: $CompanyStatus,
                 MaxCommissionRate: $MaxCommissionRate,
-                SaldoAmount: $SaldoAmount,
                 CreatedAt: $CreatedAt,
                 ProofFileUrl: $ProofFileUrl
             })
@@ -82,7 +81,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 					CompanyType = (int)company.CompanyType,
 					CompanyStatus = (int)company.CompanyStatus,
 					company.MaxCommissionRate,
-					company.SaldoAmount,
 					company.CreatedAt,
 					company.ProofFileUrl
 				});
@@ -217,7 +215,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
                     c.CompanyType = $CompanyType,
                     c.CompanyStatus = $CompanyStatus,
                     c.MaxCommissionRate = $MaxCommissionRate,
-                    c.SaldoAmount = $SaldoAmount,
                     c.CreatedAt = $CreatedAt,
                     c.ProofFileUrl = $ProofFileUrl
             ";
@@ -238,7 +235,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 					CompanyType = (int)company.CompanyType,
 					CompanyStatus = (int)company.CompanyStatus,
 					company.MaxCommissionRate,
-					company.SaldoAmount,
 					company.CreatedAt,
 					company.ProofFileUrl
 				});
@@ -284,7 +280,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				CompanyType = (CompanyType)node["CompanyType"].As<int>(),
 				CompanyStatus = (CompanyStatus)node["CompanyStatus"].As<int>(),
 				MaxCommissionRate = node.Properties.ContainsKey("MaxCommissionRate") ? node["MaxCommissionRate"].As<decimal?>() : null,
-				SaldoAmount = node.Properties.ContainsKey("SaldoAmount") ? node["SaldoAmount"].As<decimal?>() : null,
 				CreatedAt = node["CreatedAt"].As<ZonedDateTime>().ToDateTimeOffset().UtcDateTime,
 				ProofFileUrl = node.Properties.ContainsKey("ProofFileUrl") ? node["ProofFileUrl"].As<string?>() : null
 			};

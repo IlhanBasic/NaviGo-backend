@@ -71,5 +71,18 @@ namespace NaviGoApi.API.Controllers
 				return NotFound(new { error = "NotFound", message = $"Forwarder offer with ID {id} not found." });
 			}
 		}
+		[HttpPut("{id}/status")]
+		public async Task<IActionResult> UpdateStatus(int id, [FromBody] ForwarderOfferStatusUpdateDto dto)
+		{
+			try
+			{
+				await _mediator.Send(new UpdateForwarderOfferStatusCommand(id,dto));
+				return Ok(new { message = "Forwarder offer status updated successfully." });
+			}
+			catch (KeyNotFoundException)
+			{
+				return NotFound(new { error = "NotFound", message = $"Forwarder offer with ID {id} not found." });
+			}
+		}
 	}
 }

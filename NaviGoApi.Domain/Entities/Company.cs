@@ -47,8 +47,6 @@ namespace NaviGoApi.Domain.Entities
 
 		public decimal? MaxCommissionRate { get; set; }
 
-		public decimal? SaldoAmount { get; set; }
-
 		public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 		public string? ProofFileUrl { get; set; }
 

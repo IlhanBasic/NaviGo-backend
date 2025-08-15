@@ -1,7 +1,4 @@
-﻿
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -19,8 +16,6 @@ namespace NaviGoApi.Domain.Entities
 
 	public class ForwarderOffer
 	{
-		[BsonId]
-		[BsonRepresentation(BsonType.Int32)]
 		public int Id { get; set; }
 		public int RouteId { get; set; }
 		public int ForwarderId { get; set; }

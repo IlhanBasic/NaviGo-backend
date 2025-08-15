@@ -1,10 +1,5 @@
 ﻿using FluentValidation;
 using NaviGoApi.Application.DTOs.Contract;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.Validators.Contract
 {
@@ -21,6 +16,12 @@ namespace NaviGoApi.Application.Validators.Contract
 			RuleFor(x => x.RouteId)
 				.GreaterThan(0).WithMessage("RouteId is required.");
 
+			RuleFor(x => x.RoutePriceId)
+				.GreaterThan(0).WithMessage("RoutePriceId is required."); 
+
+			RuleFor(x => x.ForwarderOfferId)
+				.GreaterThan(0).WithMessage("ForwarderOfferId is required.");
+
 			RuleFor(x => x.ContractNumber)
 				.NotEmpty().WithMessage("ContractNumber is required.")
 				.MaximumLength(50);
@@ -33,7 +34,6 @@ namespace NaviGoApi.Application.Validators.Contract
 
 			RuleFor(x => x.MaxPenaltyPercent)
 				.InclusiveBetween(0, 100).WithMessage("MaxPenaltyPercent must be between 0 and 100.");
-
 		}
 	}
 }

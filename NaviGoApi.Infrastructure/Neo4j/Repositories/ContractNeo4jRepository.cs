@@ -297,7 +297,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				EndLocationId = node.Properties["EndLocationId"].As<int>(),
 				DistanceKm = node.Properties.ContainsKey("DistanceKm") ? Convert.ToDouble(node.Properties["DistanceKm"]) : 0,
 				EstimatedDurationHours = node.Properties.ContainsKey("EstimatedDurationHours") ? Convert.ToDouble(node.Properties["EstimatedDurationHours"]) : 0,
-				BasePrice = node.Properties.ContainsKey("BasePrice") ? Convert.ToDecimal(node.Properties["BasePrice"]) : 0,
 				IsActive = node.Properties.ContainsKey("IsActive") ? Convert.ToBoolean(node.Properties["IsActive"]) : true,
 				CreatedAt = node.Properties.ContainsKey("CreatedAt") ? Convert.ToDateTime(node.Properties["CreatedAt"]) : DateTime.UtcNow,
 				AvailableFrom = node.Properties.ContainsKey("AvailableFrom") ? Convert.ToDateTime(node.Properties["AvailableFrom"]) : DateTime.UtcNow,

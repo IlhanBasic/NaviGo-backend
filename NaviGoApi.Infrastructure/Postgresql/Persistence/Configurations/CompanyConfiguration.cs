@@ -48,9 +48,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Persistence.Configurations
 			builder.Property(c => c.MaxCommissionRate)
 				   .HasPrecision(5, 2); 
 
-			builder.Property(c => c.SaldoAmount)
-				   .HasPrecision(18, 2);
-
 			builder.Property(c => c.CreatedAt)
 				   .IsRequired();
 

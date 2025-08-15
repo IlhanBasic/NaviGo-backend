@@ -71,6 +71,15 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 
 			if (dto.MaxPenaltyPercent < 0 || dto.MaxPenaltyPercent > 100)
 				throw new ValidationException("Max penalty percent must be between 0 and 100.");
+			// Nakon što dobiješ route i forwarder
+			var routePrice = await _unitOfWork.RoutePrices.GetByIdAsync(dto.RoutePriceId);
+			if (routePrice == null || routePrice.RouteId != route.Id)
+				throw new ValidationException($"RoutePrice with ID {dto.RoutePriceId} is invalid for this route.");
+
+			var forwarderOffer = await _unitOfWork.ForwarderOffers.GetByIdAsync(dto.ForwarderOfferId);
+			if (forwarderOffer == null || forwarderOffer.RouteId != route.Id || forwarderOffer.ForwarderId != forwarder.Id)
+				throw new ValidationException($"ForwarderOffer with ID {dto.ForwarderOfferId} is invalid for this route or forwarder.");
+
 			var contractEntity = _mapper.Map<NaviGoApi.Domain.Entities.Contract>(dto);
 			contractEntity.ContractStatus = Domain.Entities.ContractStatus.Pending;
 			contractEntity.SignedDate = DateTime.UtcNow;
