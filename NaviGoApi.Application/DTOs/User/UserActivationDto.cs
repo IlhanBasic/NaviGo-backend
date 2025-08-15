@@ -10,6 +10,5 @@ namespace NaviGoApi.Application.DTOs.User
 	public class UserActivationDto
 	{
 		public UserStatus? UserStatus { get; set; }
-		public UserRole? UserRole { get; set; }
 	}
 }

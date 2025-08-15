@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.CargoType;
 using NaviGoApi.Application.CQRS.Queries.CargoType;
@@ -19,6 +20,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpGet]
+		[Authorize]
 		public async Task<IActionResult> GetAll()
 		{
 			var result = await _mediator.Send(new GetAllCargoTypeQuery());
@@ -26,6 +28,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpGet("{id}")]
+		[Authorize]
 		public async Task<IActionResult> GetById(int id)
 		{
 			var result = await _mediator.Send(new GetCargoTypeByIdQuery(id));
@@ -35,6 +38,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpPost]
+		[Authorize]
 		public async Task<IActionResult> Create([FromBody] CargoTypeCreateDto dto)
 		{
 			await _mediator.Send(new AddCargoTypeCommand(dto));
@@ -42,6 +46,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpPut("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Update(int id, [FromBody] CargoTypeUpdateDto dto)
 		{
 			try
@@ -56,6 +61,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpDelete("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Delete(int id)
 		{
 			try

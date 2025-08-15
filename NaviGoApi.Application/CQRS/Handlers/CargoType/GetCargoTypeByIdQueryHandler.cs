@@ -1,8 +1,11 @@
 ﻿using AutoMapper;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using NaviGoApi.Application.CQRS.Queries.CargoType;
 using NaviGoApi.Application.DTOs.CargoType;
 using NaviGoApi.Domain.Interfaces;
+using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,15 +15,24 @@ namespace NaviGoApi.Application.CQRS.Handlers.CargoType
 	{
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IMapper _mapper;
-
-		public GetCargoTypeByIdQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
+		private readonly IHttpContextAccessor _httpContextAccessor;
+		public GetCargoTypeByIdQueryHandler(IUnitOfWork unitOfWork, IMapper mapper, IHttpContextAccessor httpContextAccessor)
 		{
 			_unitOfWork = unitOfWork;
 			_mapper = mapper;
+			_httpContextAccessor=httpContextAccessor;
 		}
 
 		public async Task<CargoTypeDto> Handle(GetCargoTypeByIdQuery request, CancellationToken cancellationToken)
 		{
+			var httpContext = _httpContextAccessor.HttpContext
+				?? throw new InvalidOperationException("HttpContext is not available.");
+
+			var userEmail = httpContext.User.FindFirst(ClaimTypes.Email)?.Value;
+			if (string.IsNullOrWhiteSpace(userEmail))
+				throw new ValidationException("User email not found in authentication token.");
+			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
+				?? throw new ValidationException($"User with email '{userEmail}' not found.");
 			var cargoType = await _unitOfWork.CargoTypes.GetByIdAsync(request.Id);
 			return _mapper.Map<CargoTypeDto>(cargoType);
 		}

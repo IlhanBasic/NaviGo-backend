@@ -49,21 +49,12 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			{
 				if (currentUser.UserRole != Domain.Entities.UserRole.CompanyAdmin)
 					throw new ValidationException("Only CompanyAdmin can change the UserRole.");
-
-				if (request.UserDto.UserRole == null)
-					throw new ValidationException("UserRole wasn't provided.");
-
-				if (request.UserDto.UserRole == Domain.Entities.UserRole.SuperAdmin)
-					throw new ValidationException("UserRole cannot be SuperAdmin.");
-
 				var company = await _unitOfWork.Companies.GetByIdAsync(currentUser.CompanyId.Value);
 				if (company == null)
 					throw new ValidationException("Your company could not be found.");
-
 				if (company.Id != targetUser.CompanyId)
 					throw new ValidationException("You cannot activate a user for a different company.");
-
-				targetUser.UserRole = request.UserDto.UserRole.Value;
+				targetUser.UserRole = Domain.Entities.UserRole.CompanyAdmin;
 			}
 
 			await _unitOfWork.SaveChangesAsync();
