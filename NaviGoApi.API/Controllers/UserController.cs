@@ -145,6 +145,14 @@ namespace NaviGoApi.API.Controllers
 			await _mediator.Send(new ActivateUserCommand(id, userActivationDto));
 			return NoContent();
 		}
+		[HttpPost("superadmin")]
+		public async Task<IActionResult> AddSuperAdmin([FromBody] UserSuperAdminCreateDto dto)
+		{
+			var command = new AddSuperAdminUserCommand(dto);
+			await _mediator.Send(command);
+			return Ok("SuperAdmin created successfully.");
+		}
+
 
 	}
 }

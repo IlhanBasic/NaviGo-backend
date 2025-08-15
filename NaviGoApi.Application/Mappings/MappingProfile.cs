@@ -29,6 +29,10 @@ namespace NaviGoApi.Application.MappingProfiles
 			CreateMap<UserCreateDto, User>();
 			CreateMap<User, UserDto>()
 				.ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => src.UserRole.ToString()));
+			CreateMap<UserSuperAdminCreateDto, User>()
+				.ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => UserRole.SuperAdmin))
+				.ForMember(dest => dest.PasswordHash, opt => opt.Ignore()); 
+
 			//Location mappings
 			CreateMap<Location, LocationDto>().ReverseMap();
 			CreateMap<Location, LocationCreateDto>().ReverseMap();

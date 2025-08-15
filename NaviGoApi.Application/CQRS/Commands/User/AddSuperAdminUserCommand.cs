@@ -1,4 +1,6 @@
-﻿using System;
+﻿using MediatR;
+using NaviGoApi.Application.DTOs.User;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +8,13 @@ using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.CQRS.Commands.User
 {
-	public class AddSuperAdminUserCommand
+	public class AddSuperAdminUserCommand:IRequest<Unit>
 	{
-	}
+		public UserSuperAdminCreateDto UserSuperAdmin {  get; set; }
+        public AddSuperAdminUserCommand(UserSuperAdminCreateDto dto)
+        {
+			UserSuperAdmin = dto;
+
+		}
+    }
 }

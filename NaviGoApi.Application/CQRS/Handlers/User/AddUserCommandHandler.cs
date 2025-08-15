@@ -35,6 +35,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 		}
 		public async Task<UserDto> Handle(AddUserCommand request, CancellationToken cancellationToken)
 		{
+			if (request.UserDto.UserRole == UserRole.SuperAdmin)
+				throw new ValidationException("This is not endpoint for creating SuperAdmin user");
 			var dto = request.UserDto;
 			var existsUser = await _unitOfWork.Users.GetByEmailAsync(dto.Email);
 			if (existsUser != null)
