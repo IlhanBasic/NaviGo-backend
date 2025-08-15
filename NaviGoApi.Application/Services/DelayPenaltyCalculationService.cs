@@ -46,17 +46,18 @@ namespace NaviGoApi.Application.Services
 						  ?? throw new ValidationException("Vehicle not found.");
 			var vehicleTypeId = vehicle.VehicleTypeId;
 
-			// Učitavanje cene po tipu vozila
-			var routePrices = await _unitOfWork.RoutePrices.GetAllAsync();
-			var routePrice = routePrices.FirstOrDefault(rp => rp.VehicleTypeId == vehicleTypeId)
-							 ?? throw new ValidationException($"No price defined for vehicle type ID {vehicleTypeId} on this route.");
+			// Učitavanje cene po tipu vozila i ruti
+			var routePrice = (await _unitOfWork.RoutePrices.GetAllAsync())
+							 .FirstOrDefault(rp => rp.RouteId == route.Id && rp.VehicleTypeId == vehicleTypeId)
+							 ?? throw new ValidationException($"No price defined for vehicle type ID {vehicleTypeId} on route ID {route.Id}.");
 
 			// Osnovna cena transporta
 			decimal transportPrice = (decimal)route.DistanceKm * routePrice.PricePerKm;
+			// Minimalna cena
+			transportPrice = Math.Max(transportPrice, routePrice.MinimumPrice);
 
-			// Učitavanje eventualnog popusta od špediter ponude
-			var forwarderOffer = (await _unitOfWork.ForwarderOffers.GetByRouteIdAsync(route.Id))
-								 .FirstOrDefault(f => f.ForwarderOfferStatus == ForwarderOfferStatus.Accepted);
+			// Učitavanje prihvaćene ponude špediter
+			var forwarderOffer = await _unitOfWork.ForwarderOffers.GetByIdAsync(contract.ForwarderOfferId);
 			var discountPercent = forwarderOffer?.DiscountRate ?? 0;
 			transportPrice = transportPrice * (1 - discountPercent / 100m);
 
@@ -100,7 +101,7 @@ namespace NaviGoApi.Application.Services
 				await _unitOfWork.DelayPenalties.AddAsync(delayPenalty);
 			}
 
-			// Ažuriranje plaćanja
+			// Ažuriranje plaćanja sa penalom i označavanje refund
 			payment.PenaltyAmount = penaltyAmount;
 			payment.IsRefunded = true;
 			payment.RefundDate = shipment.ActualArrival.Value;
