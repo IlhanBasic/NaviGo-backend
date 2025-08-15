@@ -38,6 +38,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpPost]
+		[Authorize]
 		public async Task<ActionResult<CompanyDto>> Create([FromBody] CompanyCreateDto dto)
 		{
 			var created = await _mediator.Send(new AddCompanyCommand(dto));
@@ -46,6 +47,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpPut("{id}")]
+		[Authorize]
 		public async Task<ActionResult<CompanyDto>> Update(int id, [FromBody] CompanyUpdateDto dto)
 		{
 			var updated = await _mediator.Send(new UpdateCompanyCommand(id, dto));
@@ -79,6 +81,7 @@ namespace NaviGoApi.API.Controllers
 
 
 		[HttpDelete("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Delete(int id)
 		{
 			try

@@ -37,6 +37,10 @@ namespace NaviGoApi.Application.CQRS.Handlers.Company
 				throw new ValidationException("User email not found in authentication token.");
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
 				?? throw new ValidationException($"User with email '{userEmail}' not found.");
+			if (user.UserStatus != UserStatus.Active)
+				throw new ValidationException("User is not activated.");
+			if (user.UserRole != UserRole.CompanyAdmin)
+				throw new ValidationException("User must be CompanyAdmin for update company.");
 			if (user.CompanyId == null)
 				throw new ValidationException("User is RegularUser, so he don't have premission to change company.");
 			var existing = await _unitOfWork.Companies.GetByIdAsync(request.Id)

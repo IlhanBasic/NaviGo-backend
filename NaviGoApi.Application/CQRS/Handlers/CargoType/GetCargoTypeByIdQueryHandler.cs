@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Http;
 using NaviGoApi.Application.CQRS.Queries.CargoType;
 using NaviGoApi.Application.DTOs.CargoType;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
@@ -33,6 +34,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.CargoType
 				throw new ValidationException("User email not found in authentication token.");
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
 				?? throw new ValidationException($"User with email '{userEmail}' not found.");
+			if (user.UserStatus != UserStatus.Active)
+				throw new ValidationException("Your account is not activated.");
 			var cargoType = await _unitOfWork.CargoTypes.GetByIdAsync(request.Id);
 			return _mapper.Map<CargoTypeDto>(cargoType);
 		}
