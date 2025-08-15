@@ -1,12 +1,15 @@
 ﻿using AutoMapper;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using NaviGoApi.Application.CQRS.Commands.Vehicle;
 using NaviGoApi.Application.DTOs.Vehicle;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,27 +19,28 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 	{
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IMapper _mapper;
-
-		public AddVehicleCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
+		private readonly IHttpContextAccessor _httpContextAccessor;
+		public AddVehicleCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, IHttpContextAccessor httpContextAccessor)
 		{
 			_unitOfWork = unitOfWork;
 			_mapper = mapper;
+			_httpContextAccessor = httpContextAccessor;
 		}
-
-		//public async Task<VehicleDto> Handle(AddVehicleCommand request, CancellationToken cancellationToken)
-		//{
-		//	var vehicleEntity = _mapper.Map<Domain.Entities.Vehicle>(request.VehicleCreateDto);
-		//	vehicleEntity.VehicleStatus = Domain.Entities.VehicleStatus.Free;
-		//	await _unitOfWork.Vehicles.AddAsync(vehicleEntity);
-		//	await _unitOfWork.SaveChangesAsync();
-
-		//	return _mapper.Map<VehicleDto>(vehicleEntity);
-		//}
 		public async Task<VehicleDto> Handle(AddVehicleCommand request, CancellationToken cancellationToken)
 		{
-			var dto = request.VehicleCreateDto;
+			var httpContext = _httpContextAccessor.HttpContext
+				?? throw new InvalidOperationException("HttpContext is not available.");
 
-			// Provera da li kompanija postoji
+			var userEmail = httpContext.User.FindFirst(ClaimTypes.Email)?.Value;
+			if (string.IsNullOrWhiteSpace(userEmail))
+				throw new ValidationException("User email not found in authentication token.");
+			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
+				?? throw new ValidationException($"User with email '{userEmail}' not found.");
+			if (user.UserStatus != UserStatus.Active)
+				throw new ValidationException("Your account is not activated.");
+			if (user.UserRole != UserRole.CompanyAdmin)
+				throw new ValidationException("You are not allowed to add vehicle.");
+			var dto = request.VehicleCreateDto;
 			var company = await _unitOfWork.Companies.GetByIdAsync(dto.CompanyId);
 			if (company == null)
 			{
@@ -44,16 +48,15 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 			}
 			if (company.CompanyStatus == Domain.Entities.CompanyStatus.Pending)
 				throw new ValidationException("Pending company cannot create vehicles.");
+			if (user.CompanyId != company.Id)
+				throw new ValidationException("You cannot add vehicle to wrong company.");
 			if (company.CompanyType != Domain.Entities.CompanyType.Carrier)
 				throw new ValidationException("Only Carrier companies can have registrated vehicles on this platform");
-			// Provera da li vehicle type postoji
 			var vehicleType = await _unitOfWork.VehicleTypes.GetByIdAsync(dto.VehicleTypeId);
 			if (vehicleType == null)
 			{
 				throw new ValidationException($"Vehicle type with ID {dto.VehicleTypeId} does not exist.");
 			}
-
-			// Provera da li current location postoji ako nije null
 			if (dto.CurrentLocationId.HasValue)
 			{
 				var location = await _unitOfWork.Locations.GetByIdAsync(dto.CurrentLocationId.Value);
@@ -62,8 +65,6 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 					throw new ValidationException($"Location with ID {dto.CurrentLocationId.Value} does not exist.");
 				}
 			}
-
-			// Provera duplikata registration number
 			var existingVehicleWithReg = await _unitOfWork.Vehicles.GetByRegistrationNumberAsync(dto.RegistrationNumber);
 			if (existingVehicleWithReg != null)
 			{

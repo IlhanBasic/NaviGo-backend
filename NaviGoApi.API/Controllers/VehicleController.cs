@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.Vehicle;
 using NaviGoApi.Application.CQRS.Queries.Vehicle;
@@ -21,6 +22,7 @@ namespace NaviGoApi.API.Controllers
 
 		// GET: api/vehicle
 		[HttpGet]
+		[Authorize]
 		public async Task<ActionResult<IEnumerable<VehicleDto>>> GetAll()
 		{
 			var result = await _mediator.Send(new GetAllVehiclesQuery());
@@ -29,6 +31,7 @@ namespace NaviGoApi.API.Controllers
 
 		// GET: api/vehicle/{id}
 		[HttpGet("{id}")]
+		[Authorize]
 		public async Task<ActionResult<VehicleDto>> GetById(int id)
 		{
 			var result = await _mediator.Send(new GetVehicleByIdQuery(id));
@@ -39,6 +42,7 @@ namespace NaviGoApi.API.Controllers
 
 		// POST: api/vehicle
 		[HttpPost]
+		[Authorize]
 		public async Task<ActionResult<VehicleDto>> Create([FromBody] VehicleCreateDto createDto)
 		{
 			var createdVehicle = await _mediator.Send(new AddVehicleCommand(createDto));
@@ -47,6 +51,7 @@ namespace NaviGoApi.API.Controllers
 
 		// PUT: api/vehicle/{id}
 		[HttpPut("{id}")]
+		[Authorize]
 		public async Task<ActionResult<VehicleDto>> Update(int id, [FromBody] VehicleUpdateDto updateDto)
 		{
 			var updatedVehicle = await _mediator.Send(new UpdateVehicleCommand(id, updateDto));
@@ -58,6 +63,7 @@ namespace NaviGoApi.API.Controllers
 
 		// DELETE: api/vehicle/{id}
 		[HttpDelete("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Delete(int id)
 		{
 			await _mediator.Send(new DeleteVehicleCommand(id));
