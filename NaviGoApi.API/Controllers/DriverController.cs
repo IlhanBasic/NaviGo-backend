@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.Driver;
 using NaviGoApi.Application.CQRS.Queries.Driver;
@@ -20,6 +21,7 @@ namespace NaviGoApi.API.Controllers
 
 		// GET: api/driver
 		[HttpGet]
+		[Authorize]
 		public async Task<IActionResult> GetAll()
 		{
 			var result = await _mediator.Send(new GetAllDriverQuery());
@@ -28,6 +30,7 @@ namespace NaviGoApi.API.Controllers
 
 		// GET: api/driver/5
 		[HttpGet("{id}")]
+		[Authorize]
 		public async Task<IActionResult> GetById(int id)
 		{
 			var result = await _mediator.Send(new GetDriverByIdQuery(id));
@@ -39,6 +42,7 @@ namespace NaviGoApi.API.Controllers
 
 		// POST: api/driver
 		[HttpPost]
+		[Authorize]
 		public async Task<IActionResult> Create([FromBody] DriverCreateDto dto)
 		{
 			await _mediator.Send(new AddDriverCommand(dto));
@@ -48,6 +52,7 @@ namespace NaviGoApi.API.Controllers
 
 		// PUT: api/driver/5
 		[HttpPut("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Update(int id, [FromBody] DriverUpdateDto dto)
 		{
 			try
@@ -63,6 +68,7 @@ namespace NaviGoApi.API.Controllers
 
 		// DELETE: api/driver/5
 		[HttpDelete("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Delete(int id)
 		{
 			try
