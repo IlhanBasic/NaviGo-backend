@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.Location;
 using NaviGoApi.Application.CQRS.Queries.Location;
@@ -21,6 +22,7 @@ namespace NaviGoApi.API.Controllers
 
 		// POST: api/location
 		[HttpPost]
+		[Authorize]
 		public async Task<IActionResult> Create([FromBody] LocationCreateDto dto)
 		{
 			await _mediator.Send(new AddLocationCommand(dto));
@@ -29,6 +31,7 @@ namespace NaviGoApi.API.Controllers
 
 		// GET: api/location
 		[HttpGet]
+		[Authorize]
 		public async Task<IActionResult> GetAll()
 		{
 			var result = await _mediator.Send(new GetAllLocationQuery());
@@ -37,6 +40,7 @@ namespace NaviGoApi.API.Controllers
 
 		// GET: api/location/{id}
 		[HttpGet("{id}")]
+		[Authorize]
 		public async Task<IActionResult> GetById(int id)
 		{
 			var result = await _mediator.Send(new GetLocationByIdQuery(id));
@@ -48,6 +52,7 @@ namespace NaviGoApi.API.Controllers
 
 		// PUT: api/location/{id}
 		[HttpPut("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Update(int id, [FromBody] LocationUpdateDto dto)
 		{
 			try
@@ -63,6 +68,7 @@ namespace NaviGoApi.API.Controllers
 
 		// DELETE: api/location/{id}
 		[HttpDelete("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Delete(int id)
 		{
 			try
