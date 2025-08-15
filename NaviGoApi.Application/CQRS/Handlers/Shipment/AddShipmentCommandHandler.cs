@@ -45,7 +45,10 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 			var vehicle = await _unitOfWork.Vehicles.GetByIdAsync(request.ShipmentDto.VehicleId);
 			if (vehicle == null)
 				throw new ValidationException($"Vehicle with ID {request.ShipmentDto.VehicleId} doesn't exist.");
-
+			if (vehicle.InsuranceExpiry < DateTime.UtcNow)
+				throw new ValidationException($"Vehicle with ID {request.ShipmentDto.VehicleId} have expired insurance.");
+			if (vehicle.VehicleStatus != Domain.Entities.VehicleStatus.Free)
+				throw new ValidationException($"Vehicle with ID {request.ShipmentDto.VehicleId} is occupied.");
 			bool vehicleOwnedByCompany = vehicle.CompanyId == company.Id;
 			if (!vehicleOwnedByCompany)
 				throw new ValidationException($"Company {company.CompanyName} doesn't own vehicle {vehicle.Brand}-{vehicle.Model}/{vehicle.ManufactureYear}.");
@@ -58,7 +61,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 				throw new ValidationException($"Driver with ID {request.ShipmentDto.DriverId} doesn't work in company {company.CompanyName}.");
 
 			var driver = companyDrivers.First(d => d.Id == request.ShipmentDto.DriverId);
-
+			if (driver.LicenseExpiry < DateTime.UtcNow)
+				throw new ValidationException($"Driver with ID {request.ShipmentDto.DriverId} have expired licence. So he cannot drive.");
 			var driverCategories = driver.LicenseCategories.Split(',', StringSplitOptions.RemoveEmptyEntries);
 			var vehicleCategories = vehicle.Categories.Split(',', StringSplitOptions.RemoveEmptyEntries);
 
@@ -69,7 +73,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 			var cargoType = await _unitOfWork.CargoTypes.GetByIdAsync(request.ShipmentDto.CargoTypeId);
 			if (cargoType == null)
 				throw new ValidationException($"Cargo Type with ID {request.ShipmentDto.CargoTypeId} doesn't exist.");
-
+			
 			var existingShipments = await _unitOfWork.Shipments.GetByContractIdAsync(contract.Id);
 			var totalWeight = existingShipments.Sum(s => s.WeightKg);
 

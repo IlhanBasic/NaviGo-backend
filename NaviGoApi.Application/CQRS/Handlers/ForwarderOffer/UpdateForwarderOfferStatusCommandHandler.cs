@@ -20,7 +20,8 @@ public class UpdateForwarderOfferStatusCommandHandler : IRequestHandler<UpdateFo
 	{
 		var offer = await _unitOfWork.ForwarderOffers.GetByIdAsync(request.ForwarderOfferDto.ForwarderOfferId)
 			?? throw new ValidationException("Forwarder offer not found.");
-
+		if (offer.ExpiresAt < DateTime.UtcNow && request.ForwarderOfferDto.NewStatus==ForwarderOfferStatus.Accepted)
+			throw new ValidationException("This forwarder offer cannot be accepted because it's expired.");
 		if (request.ForwarderOfferDto.NewStatus == ForwarderOfferStatus.Rejected && string.IsNullOrWhiteSpace(request.ForwarderOfferDto.RejectionReason))
 			throw new ValidationException("Rejection reason must be provided when rejecting an offer.");
 

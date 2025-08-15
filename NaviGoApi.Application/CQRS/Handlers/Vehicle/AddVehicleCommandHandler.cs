@@ -42,6 +42,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 			{
 				throw new ValidationException($"Company with ID {dto.CompanyId} does not exist.");
 			}
+			if (company.CompanyStatus == Domain.Entities.CompanyStatus.Pending)
+				throw new ValidationException("Pending company cannot create vehicles.");
 			if (company.CompanyType != Domain.Entities.CompanyType.Carrier)
 				throw new ValidationException("Only Carrier companies can have registrated vehicles on this platform");
 			// Provera da li vehicle type postoji

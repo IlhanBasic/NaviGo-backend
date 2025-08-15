@@ -100,6 +100,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.Route
 			var companyExists = await _unitOfWork.Companies.GetByIdAsync(request.RouteDto.CompanyId);
 			if (companyExists == null)
 				throw new ValidationException($"Company with Id {request.RouteDto.CompanyId} does not exist.");
+			if (companyExists.CompanyStatus == Domain.Entities.CompanyStatus.Pending)
+				throw new ValidationException("Pending company cannot create route.");
 			if (companyExists.CompanyType != Domain.Entities.CompanyType.Carrier)
 				throw new ValidationException($"This company doesn't have right to adding routes.");
 			var startLocation = await _unitOfWork.Locations.GetByIdAsync(request.RouteDto.StartLocationId);

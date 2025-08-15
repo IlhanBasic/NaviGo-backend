@@ -40,6 +40,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.PickupChange
 			var shipment = await _unitOfWork.Shipments.GetByIdAsync(request.PickupChangeDto.ShipmentId);
 			if (shipment == null)
 				throw new KeyNotFoundException("Shipment not found.");
+			if (shipment.Status == ShipmentStatus.Delivered || shipment.Status==ShipmentStatus.Cancelled)
+				throw new ValidationException("Shipment is finished so cannot change pickup.");
 			if ((request.PickupChangeDto.NewTime - DateTime.UtcNow).TotalDays > 7)
 				throw new ValidationException("Pickup change can be made at most 7 days in advance.");
 			var entity = _mapper.Map<Domain.Entities.PickupChange>(request.PickupChangeDto);

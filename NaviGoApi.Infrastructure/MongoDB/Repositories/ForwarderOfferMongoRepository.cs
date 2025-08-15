@@ -43,10 +43,13 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 
 		public async Task DeleteAsync(ForwarderOffer offer)
 		{
-			var result = await _offersCollection.DeleteOneAsync(o => o.Id == offer.Id);
+			var filter = Builders<ForwarderOffer>.Filter.Eq(o => o.Id, offer.Id);
+			var result = await _offersCollection.DeleteOneAsync(filter);
+
 			if (result.DeletedCount == 0)
 				throw new ValidationException($"ForwarderOffer with Id {offer.Id} not found for deletion.");
 		}
+
 
 		public async Task<IEnumerable<ForwarderOffer>> GetAllAsync()
 		{

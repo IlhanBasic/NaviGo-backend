@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using NaviGoApi.Application.CQRS.Commands.PickupChange;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.Threading;
@@ -46,6 +47,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.PickupChange
 			var shipment = await _unitOfWork.Shipments.GetByIdAsync(existingEntity.ShipmentId);
 			if (shipment == null)
 				throw new ValidationException("Associated shipment not found.");
+			if (shipment.Status == ShipmentStatus.Delivered || shipment.Status == ShipmentStatus.Cancelled)
+				throw new ValidationException("Shipment is finished so cannot change pickup.");
 			_mapper.Map(request.PickupChangeDto, existingEntity);
 			existingEntity.ChangeCount++;
 			if (existingEntity.ChangeCount > 2)

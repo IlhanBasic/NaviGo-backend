@@ -25,6 +25,14 @@ namespace NaviGoApi.Application.CQRS.Handlers.ForwarderOffer
 
 		public async Task<Unit> Handle(AddForwarderOfferCommand request, CancellationToken cancellationToken)
 		{
+			var acceptedOfferExists = await _unitOfWork.ForwarderOffers
+				.GetByRouteIdAsync(request.ForwarderOfferDto.RouteId);
+
+			if (acceptedOfferExists.Any(o => o.ForwarderOfferStatus == ForwarderOfferStatus.Accepted))
+			{
+				throw new ValidationException("A forwarder offer for this route has already been accepted.");
+			}
+
 			var forwarderExists = await _unitOfWork.Companies.GetByIdAsync(request.ForwarderOfferDto.ForwarderId);
 			if (forwarderExists == null)
 				throw new ValidationException("Forwarder does not exist.");

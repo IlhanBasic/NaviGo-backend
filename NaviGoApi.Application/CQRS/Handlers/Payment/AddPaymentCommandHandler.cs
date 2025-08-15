@@ -44,6 +44,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 
 			var contract = await _unitOfWork.Contracts.GetByIdAsync(request.PaymentDto.ContractId)
 				?? throw new ValidationException($"Contract with ID '{request.PaymentDto.ContractId}' not found.");
+			if (contract.ContractStatus == ContractStatus.Cancelled)
+				throw new ValidationException("Contract is cancelled and cannot be payed.");
 			if (contract.ClientId != user.Id)
 			{
 				var contractClient = await _unitOfWork.Users.GetByIdAsync(contract.ClientId)
