@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.VehicleType;
 using NaviGoApi.Application.CQRS.Queries.VehicleType;
@@ -19,6 +20,8 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpGet]
+		[Authorize]
+
 		public async Task<IActionResult> GetAll()
 		{
 			var result = await _mediator.Send(new GetAllVehicleTypeQuery());
@@ -26,6 +29,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpGet("{id}")]
+		[Authorize]
 		public async Task<IActionResult> GetById(int id)
 		{
 			var result = await _mediator.Send(new GetVehicleTypeByIdQuery(id));
@@ -36,6 +40,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpPost]
+		[Authorize]
 		public async Task<IActionResult> Create([FromBody] VehicleTypeCreateDto dto)
 		{
 			await _mediator.Send(new AddVehicleTypeCommand(dto));
@@ -43,6 +48,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpPut("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Update(int id, [FromBody] VehicleTypeUpdateDto dto)
 		{
 			// Pretpostavljam da command baca izuzetak ili handler interno proverava postojanje entiteta.
@@ -51,6 +57,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpDelete("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Delete(int id)
 		{
 			await _mediator.Send(new DeleteVehicleTypeCommand(id));
