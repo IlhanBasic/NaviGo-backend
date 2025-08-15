@@ -35,8 +35,11 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			if (user == null)
 				return null;
 
-			var refreshToken = user.RefreshTokens.SingleOrDefault(rt => rt.Token == request.Token);
+			//var refreshToken = user.RefreshTokens.SingleOrDefault(rt => rt.Token == request.Token);
 
+			//if (refreshToken == null || !refreshToken.IsActive)
+			//	return null;
+			var refreshToken = await _unitOfWork.Users.GetRefreshTokenAsync(request.Token);
 			if (refreshToken == null || !refreshToken.IsActive)
 				return null;
 
@@ -46,8 +49,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			refreshToken.Revoked = DateTime.UtcNow;
 			refreshToken.RevokedByIp = GetIpAddress(); 
 
-			var newRefreshToken = GenerateRefreshToken(GetIpAddress());
-			user.RefreshTokens.Add(newRefreshToken);
+			var newRefreshToken = GenerateRefreshToken(GetIpAddress(),user.Id);
+			//user.RefreshTokens.Add(newRefreshToken);
 			await _unitOfWork.Users.AddRefreshTokenAsync(newRefreshToken);
 			await _unitOfWork.SaveChangesAsync();
 
@@ -56,7 +59,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			return (newAccessToken, newRefreshToken.Token);
 		}
 
-		private RefreshToken GenerateRefreshToken(string ipAddress)
+		private RefreshToken GenerateRefreshToken(string ipAddress,int id)
 		{
 			var randomBytes = new byte[64];
 			using var rng = RandomNumberGenerator.Create();
@@ -67,7 +70,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 				Token = Convert.ToBase64String(randomBytes),
 				Expires = DateTime.UtcNow.AddDays(7),
 				Created = DateTime.UtcNow,
-				CreatedByIp = ipAddress
+				CreatedByIp = ipAddress,
+				UserId=id
 			};
 		}
 

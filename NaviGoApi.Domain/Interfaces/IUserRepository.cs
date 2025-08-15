@@ -21,7 +21,7 @@ namespace NaviGoApi.Domain.Interfaces
 		Task UpdateRefreshTokenAsync(RefreshToken token);
 		Task<User> FindByRefreshTokenAsync(string token);
 		Task<User?> GetByEmailVerificationTokenAsync(string token);
-
+		public Task RevokeRefreshTokenAsync(string token, string ipAddress);
 		IQueryable<User> Query();
 	}
 }

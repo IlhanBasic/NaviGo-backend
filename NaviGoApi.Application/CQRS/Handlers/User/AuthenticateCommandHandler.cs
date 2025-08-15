@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -43,8 +44,10 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 
 			//user.RefreshTokens.Add(refreshToken);
 			//await _unitOfWork.SaveChangesAsync();
-			var refreshToken = GenerateRefreshToken(GetIpAddress());
-			user.RefreshTokens.Add(refreshToken);
+			//var refreshToken = GenerateRefreshToken(GetIpAddress());
+
+			var refreshToken = GenerateRefreshToken(GetIpAddress(), user.Id);
+			//user.RefreshTokens.Add(refreshToken);
 			await _unitOfWork.Users.AddRefreshTokenAsync(refreshToken);
 			await _unitOfWork.SaveChangesAsync();
 			var accessToken = GenerateJwtToken(user);
@@ -60,7 +63,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			return Convert.ToBase64String(hashBytes);
 		}
 
-		private RefreshToken GenerateRefreshToken(string ipAddress)
+		private RefreshToken GenerateRefreshToken(string ipAddress,int id)
 		{
 			var randomBytes = new byte[64];
 			using var rng = RandomNumberGenerator.Create();
@@ -71,7 +74,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 				Token = Convert.ToBase64String(randomBytes),
 				Expires = DateTime.UtcNow.AddDays(7),
 				Created = DateTime.UtcNow,
-				CreatedByIp = ipAddress
+				CreatedByIp = ipAddress,
+				UserId = id
 			};
 		}
 

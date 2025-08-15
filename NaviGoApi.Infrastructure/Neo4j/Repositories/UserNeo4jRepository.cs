@@ -450,5 +450,26 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			throw new Exception($"Unsupported date type from Neo4j: {value.GetType()}");
 		}
 
+		public async Task RevokeRefreshTokenAsync(string token, string ipAddress)
+		{
+			var query = @"
+        MATCH (rt:RefreshToken { Token: $Token })
+        SET rt.Revoked = datetime(),
+            rt.RevokedByIp = $IpAddress
+        RETURN rt
+    ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { Token = token, IpAddress = ipAddress });
+				await result.ConsumeAsync(); // izvršava upit
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
 	}
 }

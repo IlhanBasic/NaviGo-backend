@@ -29,6 +29,20 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		{
 			token.Id = await GetNextIdAsync("RefreshTokens");
 			await _refreshTokensCollection.InsertOneAsync(token);
+
+			var filter = Builders<User>.Filter.Eq(u => u.Id, token.UserId);
+			var update = Builders<User>.Update.Push(u => u.RefreshTokens, token);
+			await _usersCollection.UpdateOneAsync(filter, update);
+		}
+
+		public async Task RevokeRefreshTokenAsync(string token, string ipAddress)
+		{
+			var filter = Builders<RefreshToken>.Filter.Eq(t => t.Token, token);
+			var update = Builders<RefreshToken>.Update
+				.Set(t => t.Revoked, DateTime.UtcNow)
+				.Set(t => t.RevokedByIp, ipAddress);
+
+			await _refreshTokensCollection.UpdateOneAsync(filter, update);
 		}
 
 		private async Task<int> GetNextIdAsync(string collectionName)

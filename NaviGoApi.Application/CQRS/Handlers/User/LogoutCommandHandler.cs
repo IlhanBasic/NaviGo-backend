@@ -23,6 +23,22 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			_httpContextAccessor = httpContextAccessor;
 		}
 
+		//public async Task<Unit> Handle(LogoutCommand request, CancellationToken cancellationToken)
+		//{
+		//	var httpContext = _httpContextAccessor.HttpContext
+		//		?? throw new InvalidOperationException("HttpContext is not available.");
+		//	var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+		//	var refreshToken = request.LogoutRequestDto.RefreshToken;
+		//	var tokenEntity = await _unitOfWork.Users.GetRefreshTokenAsync(refreshToken);
+		//	if (tokenEntity != null && tokenEntity.IsActive)
+		//	{
+		//		tokenEntity.Revoked = DateTime.UtcNow;
+		//		tokenEntity.RevokedByIp = ipAddress;
+
+		//		await _unitOfWork.SaveChangesAsync();
+		//	}
+		//	return Unit.Value;
+		//}
 		public async Task<Unit> Handle(LogoutCommand request, CancellationToken cancellationToken)
 		{
 			var httpContext = _httpContextAccessor.HttpContext
@@ -30,15 +46,15 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 			var refreshToken = request.LogoutRequestDto.RefreshToken;
 			var tokenEntity = await _unitOfWork.Users.GetRefreshTokenAsync(refreshToken);
+
 			if (tokenEntity != null && tokenEntity.IsActive)
 			{
-				tokenEntity.Revoked = DateTime.UtcNow;
-				tokenEntity.RevokedByIp = ipAddress;
-
-				await _unitOfWork.SaveChangesAsync();
+				await _unitOfWork.Users.RevokeRefreshTokenAsync(refreshToken, ipAddress);
 			}
+
 			return Unit.Value;
 		}
+
 	}
 
 }

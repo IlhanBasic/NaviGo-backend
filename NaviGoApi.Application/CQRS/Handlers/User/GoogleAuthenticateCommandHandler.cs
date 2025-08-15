@@ -1,5 +1,6 @@
 ﻿using Google.Apis.Auth;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using NaviGoApi.Application.CQRS.Commands.User;
@@ -20,10 +21,11 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 	{
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly string _jwtSecret;
-
-		public GoogleAuthenticateCommandHandler(IUnitOfWork unitOfWork, IConfiguration configuration)
+		private readonly IHttpContextAccessor _httpContextAccessor;
+		public GoogleAuthenticateCommandHandler(IUnitOfWork unitOfWork, IConfiguration configuration,IHttpContextAccessor httpContextAccessor)
 		{
 			_unitOfWork = unitOfWork;
+			_httpContextAccessor = httpContextAccessor;
 			_jwtSecret = configuration["JWT_SECRET"] ?? throw new Exception("JWT_SECRET nije pronađen u konfiguraciji.");
 		}
 
@@ -49,8 +51,9 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			}
 
 			// Nastavi dalje sa refresh tokenom i jwt tokenom kao i ranije
-			var refreshToken = GenerateRefreshToken("");
-			user.RefreshTokens.Add(refreshToken);
+			var refreshToken = GenerateRefreshToken(GetIpAddress(),user.Id);
+			//user.RefreshTokens.Add(refreshToken);
+			await _unitOfWork.Users.AddRefreshTokenAsync(refreshToken);
 			await _unitOfWork.SaveChangesAsync();
 
 			var accessToken = GenerateJwtToken(user);
@@ -58,7 +61,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			return (accessToken, refreshToken.Token);
 		}
 
-		private RefreshToken GenerateRefreshToken(string ipAddress)
+		private RefreshToken GenerateRefreshToken(string ipAddress,int id)
 		{
 			var randomBytes = new byte[64];
 			using var rng = RandomNumberGenerator.Create();
@@ -69,7 +72,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 				Token = Convert.ToBase64String(randomBytes),
 				Expires = DateTime.UtcNow.AddDays(7),
 				Created = DateTime.UtcNow,
-				CreatedByIp = ipAddress
+				CreatedByIp = ipAddress,
+				UserId=id
 			};
 		}
 
@@ -91,6 +95,13 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 				signingCredentials: creds);
 
 			return new JwtSecurityTokenHandler().WriteToken(token);
+		}
+		private string GetIpAddress()
+		{
+			var httpContext = _httpContextAccessor.HttpContext
+				?? throw new InvalidOperationException("HttpContext is not available.");
+
+			return httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 		}
 	}
 

@@ -60,8 +60,11 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 
 		public async Task<RefreshToken?> GetRefreshTokenAsync(string token)
 		{
-			return await _context.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == token);
+			return await _context.RefreshTokens
+	.FirstOrDefaultAsync(rt => rt.Token == token && rt.Revoked == null && rt.Expires > DateTime.UtcNow);
+
 		}
+
 		public async Task<User?> GetByEmailVerificationTokenAsync(string token)
 		{
 			return await _context.Users
@@ -88,5 +91,19 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		{
 			_context.RefreshTokens.Update(token);
 		}
+
+		public async Task RevokeRefreshTokenAsync(string token, string ipAddress)
+		{
+			var refreshToken = await _context.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == token);
+			if (refreshToken != null && refreshToken.IsActive)
+			{
+				refreshToken.Revoked = DateTime.UtcNow;
+				refreshToken.RevokedByIp = ipAddress;
+
+				await _context.SaveChangesAsync(); 
+			}
+		}
+
+
 	}
 }
