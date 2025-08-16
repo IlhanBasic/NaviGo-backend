@@ -10,7 +10,6 @@ namespace NaviGoApi.Application.DTOs.Route
 	{
 		public int StartLocationId { get; set; }
 		public int EndLocationId { get; set; }
-		public decimal BasePrice { get; set; }
 		public bool IsActive { get; set; }
 		public DateTime AvailableFrom { get; set; }
 		public DateTime AvailableTo { get; set; }

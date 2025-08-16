@@ -6,6 +6,7 @@ using NaviGoApi.Application.CQRS.Queries.Route;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System;
+using Microsoft.AspNetCore.Authorization;
 
 namespace NaviGoApi.API.Controllers
 {
@@ -22,6 +23,7 @@ namespace NaviGoApi.API.Controllers
 
 		// GET: api/Route
 		[HttpGet]
+		[Authorize]
 		public async Task<ActionResult<IEnumerable<RouteDto>>> GetAll()
 		{
 			var routes = await _mediator.Send(new GetAllRouteQuery());
@@ -30,6 +32,7 @@ namespace NaviGoApi.API.Controllers
 
 		// GET: api/Route/{id}
 		[HttpGet("{id}")]
+		[Authorize]
 		public async Task<ActionResult<RouteDto?>> GetById(int id)
 		{
 			var route = await _mediator.Send(new GetRouteByIdQuery(id));
@@ -40,6 +43,7 @@ namespace NaviGoApi.API.Controllers
 
 		// POST: api/Route
 		[HttpPost]
+		[Authorize]
 		public async Task<IActionResult> Create([FromBody] RouteCreateDto routeDto)
 		{
 			await _mediator.Send(new AddRouteCommand(routeDto));
@@ -48,6 +52,7 @@ namespace NaviGoApi.API.Controllers
 
 		// PUT: api/Route/{id}
 		[HttpPut("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Update(int id, [FromBody] RouteUpdateDto routeDto)
 		{
 			try
@@ -63,6 +68,7 @@ namespace NaviGoApi.API.Controllers
 
 		// DELETE: api/Route/{id}
 		[HttpDelete("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Delete(int id)
 		{
 			try

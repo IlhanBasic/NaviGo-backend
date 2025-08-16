@@ -22,9 +22,6 @@ namespace NaviGoApi.Application.Validators.Route
 				.GreaterThan(0).WithMessage("EndLocationId must be greater than 0.")
 				.NotEqual(x => x.StartLocationId).WithMessage("EndLocationId must be different from StartLocationId.");
 
-			RuleFor(x => x.BasePrice)
-				.GreaterThan(0).WithMessage("BasePrice must be greater than 0.");
-
 			RuleFor(x => x.AvailableFrom)
 				.LessThan(x => x.AvailableTo).WithMessage("AvailableFrom must be earlier than AvailableTo.");
 
