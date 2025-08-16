@@ -42,7 +42,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Route
 				throw new ValidationException("This company doesn't have right to delete routes. ");
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("Your account is not activated.");
-			if (user.UserRole == UserRole.RegularUser)
+			if (user.UserRole != UserRole.CompanyAdmin)
 				throw new ValidationException("You are not allowed to delete company.");
 			var route = await _unitOfWork.Routes.GetByIdAsync(request.Id);
 			if (route == null)

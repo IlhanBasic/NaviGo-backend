@@ -46,7 +46,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Route
 				?? throw new ValidationException($"User with email '{userEmail}' not found.");
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("Your account is not activated.");
-			if (user.UserRole == UserRole.RegularUser)
+			if (user.UserRole != UserRole.CompanyAdmin)
 				throw new ValidationException("You are not allowed to add route.");
 			var companyExists = await _unitOfWork.Companies.GetByIdAsync(request.RouteDto.CompanyId);
 			if (companyExists == null)

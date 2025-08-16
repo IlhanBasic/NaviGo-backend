@@ -23,6 +23,7 @@ namespace NaviGoApi.API.Controllers
 
 		// GET: api/RoutePrice
 		[HttpGet]
+		[Authorize]
 		public async Task<ActionResult<IEnumerable<RoutePriceDto>>> GetAll()
 		{
 			var result = await _mediator.Send(new GetAllRoutePriceQuery());
@@ -31,6 +32,7 @@ namespace NaviGoApi.API.Controllers
 
 		// GET: api/RoutePrice/{id}
 		[HttpGet("{id}")]
+		[Authorize]
 		public async Task<ActionResult<RoutePriceDto>> GetById(int id)
 		{
 			var result = await _mediator.Send(new GetRoutePriceByIdQuery(id));
@@ -42,6 +44,7 @@ namespace NaviGoApi.API.Controllers
 
 		// POST: api/RoutePrice
 		[HttpPost]
+		[Authorize]
 		public async Task<IActionResult> Create([FromBody] RoutePriceCreateDto dto)
 		{
 			await _mediator.Send(new AddRoutePriceCommand(dto));
@@ -66,6 +69,7 @@ namespace NaviGoApi.API.Controllers
 
 		// DELETE: api/RoutePrice/{id}
 		[HttpDelete("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Delete(int id)
 		{
 			try
