@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Neo4j.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
+using NaviGoApi.Common.DTOs;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
@@ -291,6 +292,57 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 
 				var node = result.Current["v"].As<INode>();
 				return NodeToEntity(node);
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
+		}
+
+		public async Task<IEnumerable<Vehicle>> GetAllAsync(VehicleSearchDto vehicleSearch)
+		{
+			// 1️⃣ Filtering
+			var filterClause = "";
+			var parameters = new Dictionary<string, object>();
+
+			if (!string.IsNullOrWhiteSpace(vehicleSearch.Brand))
+			{
+				filterClause = "WHERE toLower(v.brand) CONTAINS toLower($brand)";
+				parameters.Add("brand", vehicleSearch.Brand);
+			}
+
+			// 2️⃣ Sorting
+			var sortBy = string.IsNullOrWhiteSpace(vehicleSearch.SortBy) ? "v.id" : $"v.{vehicleSearch.SortBy}";
+			var sortDirection = vehicleSearch.SortDirection.ToLower() == "desc" ? "DESC" : "ASC";
+
+			// 3️⃣ Paging
+			int skip = (vehicleSearch.Page - 1) * vehicleSearch.PageSize;
+			int limit = vehicleSearch.PageSize;
+
+			var query = $@"
+        MATCH (v:Vehicle)
+        {filterClause}
+        RETURN v
+        ORDER BY {sortBy} {sortDirection}
+        SKIP $skip
+        LIMIT $limit";
+
+			parameters.Add("skip", skip);
+			parameters.Add("limit", limit);
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, parameters);
+				var list = new List<Vehicle>();
+
+				await result.ForEachAsync(record =>
+				{
+					var node = record["v"].As<INode>();
+					list.Add(NodeToEntity(node));
+				});
+
+				return list;
 			}
 			finally
 			{

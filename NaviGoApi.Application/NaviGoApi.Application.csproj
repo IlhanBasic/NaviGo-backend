@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\NaviGoApi.Common\NaviGoApi.Common.csproj" />
     <ProjectReference Include="..\NaviGoApi.Domain\NaviGoApi.Domain.csproj" />
   </ItemGroup>
 

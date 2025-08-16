@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
+using NaviGoApi.Common.DTOs;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System.Collections.Generic;
@@ -75,5 +76,32 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 				.Find(v => v.RegistrationNumber == registrationNumber)
 				.FirstOrDefaultAsync();
 		}
+
+		public async Task<IEnumerable<Vehicle>> GetAllAsync(VehicleSearchDto vehicleSearch)
+		{
+			var filter = Builders<Vehicle>.Filter.Empty;
+
+			if (!string.IsNullOrWhiteSpace(vehicleSearch.Brand))
+			{
+				filter &= Builders<Vehicle>.Filter.Regex(v => v.Brand, new BsonRegularExpression(vehicleSearch.Brand, "i"));
+			}
+			
+			var sortBuilder = Builders<Vehicle>.Sort;
+			var sort = vehicleSearch.SortDirection.ToLower() == "desc"
+				? sortBuilder.Descending(vehicleSearch.SortBy ?? "Id")
+				: sortBuilder.Ascending(vehicleSearch.SortBy ?? "Id");
+
+			int skip = (vehicleSearch.Page - 1) * vehicleSearch.PageSize;
+
+			var vehicles = await _vehiclesCollection
+				.Find(filter)
+				.Sort(sort)
+				.Skip(skip)
+				.Limit(vehicleSearch.PageSize)
+				.ToListAsync();
+
+			return vehicles;
+		}
+
 	}
 }

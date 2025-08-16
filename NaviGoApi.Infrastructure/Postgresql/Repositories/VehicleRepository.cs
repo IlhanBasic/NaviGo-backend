@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
 using System;
+using NaviGoApi.Common.DTOs;
 
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
@@ -34,6 +35,30 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			// Bez Include, vraća osnovne podatke o vozilima
 			return await _context.Vehicles.AsNoTracking().ToListAsync();
 		}
+
+		public async Task<IEnumerable<Vehicle>> GetAllAsync(VehicleSearchDto vehicleSearch)
+		{
+			IQueryable<Vehicle> query = _context.Vehicles.AsNoTracking();
+
+			if (!string.IsNullOrWhiteSpace(vehicleSearch.Brand))
+				query = query.Where(v => v.Brand.Contains(vehicleSearch.Brand));
+
+			if (!string.IsNullOrWhiteSpace(vehicleSearch.SortBy))
+			{
+				var sortProperty = typeof(Vehicle).GetProperty(vehicleSearch.SortBy);
+				if (sortProperty != null)
+				{
+					query = vehicleSearch.SortDirection.ToLower() == "desc"
+						? query.OrderByDescending(v => sortProperty.GetValue(v, null))
+						: query.OrderBy(v => sortProperty.GetValue(v, null));
+				}
+			}
+			int skip = (vehicleSearch.Page - 1) * vehicleSearch.PageSize;
+			query = query.Skip(skip).Take(vehicleSearch.PageSize);
+
+			return await query.ToListAsync();
+		}
+
 
 		public async Task<IEnumerable<Vehicle>> GetAvailableVehiclesAsync()
 		{

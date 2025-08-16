@@ -35,12 +35,16 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 			var userEmail = httpContext.User.FindFirst(ClaimTypes.Email)?.Value;
 			if (string.IsNullOrWhiteSpace(userEmail))
 				throw new ValidationException("User email not found in authentication token.");
+
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
 				?? throw new ValidationException($"User with email '{userEmail}' not found.");
+
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("Your account is not activated.");
-			var vehicles = await _unitOfWork.Vehicles.GetAllAsync();
+			var vehicles = await _unitOfWork.Vehicles.GetAllAsync(request.Search);
+
 			return _mapper.Map<IEnumerable<VehicleDto>>(vehicles);
 		}
+
 	}
 }

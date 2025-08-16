@@ -21,6 +21,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpGet]
+		[Authorize]
 		public async Task<IActionResult> GetAll()
 		{
 			var result = await _mediator.Send(new GetAllPaymentQuery());
@@ -28,6 +29,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpGet("{id}")]
+		[Authorize]
 		public async Task<IActionResult> GetById(int id)
 		{
 			var result = await _mediator.Send(new GetPaymentByIdQuery(id));
@@ -67,6 +69,7 @@ namespace NaviGoApi.API.Controllers
 
 
 		[HttpDelete("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Delete(int id)
 		{
 			try

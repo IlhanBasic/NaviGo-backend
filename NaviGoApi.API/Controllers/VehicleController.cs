@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.Vehicle;
 using NaviGoApi.Application.CQRS.Queries.Vehicle;
 using NaviGoApi.Application.DTOs.Vehicle;
+using NaviGoApi.Common.DTOs;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -23,9 +24,9 @@ namespace NaviGoApi.API.Controllers
 		// GET: api/vehicle
 		[HttpGet]
 		[Authorize]
-		public async Task<ActionResult<IEnumerable<VehicleDto>>> GetAll()
+		public async Task<ActionResult<IEnumerable<VehicleDto>>> GetAll([FromQuery] VehicleSearchDto searchDto)
 		{
-			var result = await _mediator.Send(new GetAllVehiclesQuery());
+			var result = await _mediator.Send(new GetAllVehiclesQuery(searchDto));
 			return Ok(result);
 		}
 

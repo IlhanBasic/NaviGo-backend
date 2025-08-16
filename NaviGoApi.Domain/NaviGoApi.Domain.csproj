@@ -5,10 +5,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.7" />
     <PackageReference Include="MongoDB.Bson" Version="3.4.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NaviGoApi.Common\NaviGoApi.Common.csproj" />
   </ItemGroup>
 
 </Project>
