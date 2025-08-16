@@ -29,10 +29,40 @@ public class DriverRepository : IDriverRepository
 		return await _context.Drivers.ToListAsync();
 	}
 
-	public Task<IEnumerable<Driver>> GetAllAsync(DriverSearchDto driverSearch)
+	public async Task<IEnumerable<Driver>> GetAllAsync(DriverSearchDto driverSearch)
 	{
-		throw new NotImplementedException();
+		var query = _context.Drivers.AsQueryable();
+
+		// Filteri
+		if (!string.IsNullOrWhiteSpace(driverSearch.FirstName))
+			query = query.Where(d => d.FirstName.Contains(driverSearch.FirstName));
+
+		if (!string.IsNullOrWhiteSpace(driverSearch.LastName))
+			query = query.Where(d => d.LastName.Contains(driverSearch.LastName));
+
+		// Sortiranje
+		query = driverSearch.SortBy?.ToLower() switch
+		{
+			"firstname" => driverSearch.SortDirection.ToLower() == "desc"
+				? query.OrderByDescending(d => d.FirstName)
+				: query.OrderBy(d => d.FirstName),
+
+			"lastname" => driverSearch.SortDirection.ToLower() == "desc"
+				? query.OrderByDescending(d => d.LastName)
+				: query.OrderBy(d => d.LastName),
+
+			_ => driverSearch.SortDirection.ToLower() == "desc"
+				? query.OrderByDescending(d => d.Id)
+				: query.OrderBy(d => d.Id),
+		};
+
+		// Paging
+		var skip = (driverSearch.Page - 1) * driverSearch.PageSize;
+		query = query.Skip(skip).Take(driverSearch.PageSize);
+
+		return await query.ToListAsync();
 	}
+
 
 	public async Task<IEnumerable<Driver>> GetAvailableDriversAsync()
 	{

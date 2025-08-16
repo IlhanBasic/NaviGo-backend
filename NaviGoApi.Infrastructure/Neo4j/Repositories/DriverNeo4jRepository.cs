@@ -185,9 +185,55 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			};
 		}
 
-		public Task<IEnumerable<Driver>> GetAllAsync(DriverSearchDto driverSearch)
+		public async Task<IEnumerable<Driver>> GetAllAsync(DriverSearchDto driverSearch)
 		{
-			throw new NotImplementedException();
+			var filters = new List<string>();
+			var parameters = new Dictionary<string, object>();
+
+			if (!string.IsNullOrWhiteSpace(driverSearch.FirstName))
+			{
+				filters.Add("toLower(d.FirstName) CONTAINS toLower($FirstName)");
+				parameters["FirstName"] = driverSearch.FirstName;
+			}
+
+			if (!string.IsNullOrWhiteSpace(driverSearch.LastName))
+			{
+				filters.Add("toLower(d.LastName) CONTAINS toLower($LastName)");
+				parameters["LastName"] = driverSearch.LastName;
+			}
+
+			string whereClause = filters.Count > 0 ? "WHERE " + string.Join(" AND ", filters) : "";
+
+			// Sortiranje
+			string sortField = driverSearch.SortBy?.ToLower() switch
+			{
+				"firstname" => "d.FirstName",
+				"lastname" => "d.LastName",
+				_ => "d.Id"
+			};
+
+			string sortDirection = driverSearch.SortDirection.ToLower() == "desc" ? "DESC" : "ASC";
+
+			int skip = (driverSearch.Page - 1) * driverSearch.PageSize;
+			int limit = driverSearch.PageSize;
+
+			string query = $@"
+        MATCH (d:Driver)
+        {whereClause}
+        RETURN d
+        ORDER BY {sortField} {sortDirection}
+        SKIP $skip
+        LIMIT $limit";
+
+			parameters["skip"] = skip;
+			parameters["limit"] = limit;
+
+			await using var session = _driver.AsyncSession();
+			var cursor = await session.RunAsync(query, parameters);
+
+			var records = await cursor.ToListAsync();
+			return records.Select(r => MapNodeToEntity(r["d"].As<INode>())).ToList();
 		}
+
 	}
 }

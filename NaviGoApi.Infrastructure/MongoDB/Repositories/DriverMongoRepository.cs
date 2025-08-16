@@ -85,9 +85,38 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return await _driversCollection.Find(predicate).AnyAsync();
 		}
 
-		public Task<IEnumerable<Driver>> GetAllAsync(DriverSearchDto driverSearch)
+		public async Task<IEnumerable<Driver>> GetAllAsync(DriverSearchDto driverSearch)
 		{
-			throw new NotImplementedException();
+			var filterBuilder = Builders<Driver>.Filter;
+			var filter = filterBuilder.Empty;
+
+			if (!string.IsNullOrWhiteSpace(driverSearch.FirstName))
+				filter &= filterBuilder.Regex(d => d.FirstName, new BsonRegularExpression(driverSearch.FirstName, "i"));
+
+			if (!string.IsNullOrWhiteSpace(driverSearch.LastName))
+				filter &= filterBuilder.Regex(d => d.LastName, new BsonRegularExpression(driverSearch.LastName, "i"));
+
+			// Sortiranje
+			var sortBuilder = Builders<Driver>.Sort;
+			var sort = driverSearch.SortBy?.ToLower() switch
+			{
+				"firstname" => driverSearch.SortDirection.ToLower() == "desc" ? sortBuilder.Descending(d => d.FirstName) : sortBuilder.Ascending(d => d.FirstName),
+				"lastname" => driverSearch.SortDirection.ToLower() == "desc" ? sortBuilder.Descending(d => d.LastName) : sortBuilder.Ascending(d => d.LastName),
+				_ => driverSearch.SortDirection.ToLower() == "desc" ? sortBuilder.Descending(d => d.Id) : sortBuilder.Ascending(d => d.Id)
+			};
+
+			int skip = (driverSearch.Page - 1) * driverSearch.PageSize;
+			int limit = driverSearch.PageSize;
+
+			var drivers = await _driversCollection
+				.Find(filter)
+				.Sort(sort)
+				.Skip(skip)
+				.Limit(limit)
+				.ToListAsync();
+
+			return drivers;
 		}
+
 	}
 }
