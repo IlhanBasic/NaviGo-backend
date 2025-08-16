@@ -89,9 +89,33 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			}
 		}
 
-		public Task<IEnumerable<VehicleMaintenance>> GetAllAsync(VehicleMaintenanceSearchDto vehicleMaintenanceSearch)
+		public async Task<IEnumerable<VehicleMaintenance>> GetAllAsync(VehicleMaintenanceSearchDto search)
 		{
-			throw new NotImplementedException();
+			var allowedSortFields = new Dictionary<string, string>
+	{
+		{ "Id", "Id" },
+		{ "ReportedAt", "ReportedAt" },
+		{ "ResolvedAt", "ResolvedAt" },
+		{ "Severity", "Severity" }
+	};
+
+			var sortField = allowedSortFields.ContainsKey(search.SortBy ?? "") ? allowedSortFields[search.SortBy!] : "Id";
+			var sortDefinition = search.SortDirection?.ToLower() == "desc"
+				? Builders<VehicleMaintenance>.Sort.Descending(sortField)
+				: Builders<VehicleMaintenance>.Sort.Ascending(sortField);
+
+			var skip = (search.Page - 1) * search.PageSize;
+			var list = await _vehicleMaintenancesCollection
+				.Find(_ => true)
+				.Sort(sortDefinition)
+				.Skip(skip)
+				.Limit(search.PageSize)
+				.ToListAsync();
+			foreach (var vm in list)
+				await LoadNavigationPropertiesAsync(vm);
+
+			return list;
 		}
+
 	}
 }

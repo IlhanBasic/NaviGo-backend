@@ -262,9 +262,89 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			}
 		}
 
-		public Task<IEnumerable<VehicleMaintenance>> GetAllAsync(VehicleMaintenanceSearchDto vehicleMaintenanceSearch)
+		public async Task<IEnumerable<VehicleMaintenance>> GetAllAsync(VehicleMaintenanceSearchDto search)
 		{
-			throw new NotImplementedException();
+			var allowedSortFields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+	{
+		{ "Id", "vm.Id" },
+		{ "ReportedAt", "vm.ReportedAt" },
+		{ "ResolvedAt", "vm.ResolvedAt" },
+		{ "Severity", "vm.Severity" }
+	};
+
+			var sortField = allowedSortFields.ContainsKey(search.SortBy ?? "") ? allowedSortFields[search.SortBy!] : "vm.Id";
+			var sortDirection = search.SortDirection?.ToLower() == "desc" ? "DESC" : "ASC";
+
+			var skip = (search.Page - 1) * search.PageSize;
+			var limit = search.PageSize;
+
+			var query = $@"
+        MATCH (vm:VehicleMaintenance)
+        OPTIONAL MATCH (vm)-[:FOR_VEHICLE]->(v:Vehicle)
+        OPTIONAL MATCH (vm)-[:REPORTED_BY]->(u:User)
+        RETURN vm, v, u
+        ORDER BY {sortField} {sortDirection}
+        SKIP $skip
+        LIMIT $limit
+    ";
+
+			var session = _driver.AsyncSession();
+			var list = new List<VehicleMaintenance>();
+			try
+			{
+				var result = await session.RunAsync(query, new { skip, limit });
+				await result.ForEachAsync(record =>
+				{
+					var vmNode = record["vm"].As<INode>();
+					var vehicleNode = record["v"]?.As<INode>();
+					var userNode = record["u"]?.As<INode>();
+
+					DateTime ConvertDate(object val)
+					{
+						if (val is ZonedDateTime zdt)
+							return zdt.ToDateTimeOffset().UtcDateTime;
+						if (val is DateTime dt)
+							return dt;
+						throw new InvalidCastException("Unknown date type");
+					}
+
+					var maintenance = new VehicleMaintenance
+					{
+						Id = vmNode["Id"].As<int>(),
+						VehicleId = vehicleNode?.Properties.ContainsKey("id") == true ? vehicleNode["id"].As<int>() : 0,
+						ReportedByUserId = userNode?.Properties.ContainsKey("id") == true ? userNode["id"].As<int>() : 0,
+						Description = vmNode["Description"].As<string>(),
+						ReportedAt = ConvertDate(vmNode["ReportedAt"]),
+						ResolvedAt = vmNode.Properties.ContainsKey("ResolvedAt") && vmNode["ResolvedAt"] != null
+							? ConvertDate(vmNode["ResolvedAt"])
+							: (DateTime?)null,
+						Severity = (Domain.Entities.Severity)vmNode["Severity"].As<int>(),
+						RepairCost = vmNode.Properties.ContainsKey("RepairCost") && vmNode["RepairCost"] != null
+							? vmNode["RepairCost"].As<decimal?>()
+							: null,
+						MaintenanceType = (MaintenanceType)vmNode["MaintenanceType"].As<int>(),
+						Vehicle = vehicleNode != null ? new Vehicle
+						{
+							Id = vehicleNode.Properties.ContainsKey("id") ? vehicleNode["id"].As<int>() : 0,
+							Brand = vehicleNode.Properties.ContainsKey("brand") ? vehicleNode["brand"].As<string>() : null,
+							Model = vehicleNode.Properties.ContainsKey("model") ? vehicleNode["model"].As<string>() : null
+						} : null,
+						ReportedByUser = userNode != null ? new User
+						{
+							Id = userNode.Properties.ContainsKey("id") ? userNode["id"].As<int>() : 0,
+							Email = userNode.Properties.ContainsKey("email") ? userNode["email"].As<string>() : null
+						} : null
+					};
+					list.Add(maintenance);
+				});
+
+				return list;
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
+
 	}
 }

@@ -40,10 +40,33 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.ToListAsync();
 		}
 
-		public Task<IEnumerable<VehicleMaintenance>> GetAllAsync(VehicleMaintenanceSearchDto vehicleMaintenanceSearch)
+		public async Task<IEnumerable<VehicleMaintenance>> GetAllAsync(VehicleMaintenanceSearchDto search)
 		{
-			throw new NotImplementedException();
+			var query = _context.VehicleMaintenances
+				.Include(vm => vm.Vehicle)
+				.Include(vm => vm.ReportedByUser)
+				.AsQueryable();
+			query = (search.SortBy?.ToLower()) switch
+			{
+				"reportedat" => search.SortDirection.ToLower() == "desc"
+					? query.OrderByDescending(vm => vm.ReportedAt)
+					: query.OrderBy(vm => vm.ReportedAt),
+				"resolvedat" => search.SortDirection.ToLower() == "desc"
+					? query.OrderByDescending(vm => vm.ResolvedAt)
+					: query.OrderBy(vm => vm.ResolvedAt),
+				"severity" => search.SortDirection.ToLower() == "desc"
+					? query.OrderByDescending(vm => vm.Severity)
+					: query.OrderBy(vm => vm.Severity),
+				_ => search.SortDirection.ToLower() == "desc"
+					? query.OrderByDescending(vm => vm.Id)
+					: query.OrderBy(vm => vm.Id)
+			};
+			int skip = (search.Page - 1) * search.PageSize;
+			query = query.Skip(skip).Take(search.PageSize);
+
+			return await query.ToListAsync();
 		}
+
 
 		public async Task<VehicleMaintenance?> GetByIdAsync(int id)
 		{
