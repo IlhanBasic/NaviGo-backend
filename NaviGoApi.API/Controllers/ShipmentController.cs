@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.Shipment;
 using NaviGoApi.Application.CQRS.Queries.Shipment;
 using NaviGoApi.Application.DTOs.Shipment;
+using NaviGoApi.Common.DTOs;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -23,9 +24,9 @@ namespace NaviGoApi.API.Controllers
 		// GET: api/Shipment
 		[HttpGet]
 		[Authorize]
-		public async Task<IActionResult> GetAll()
+		public async Task<IActionResult> GetAll([FromQuery] ShipmentSearchDto search)
 		{
-			var result = await _mediator.Send(new GetAllShipmentQuery());
+			var result = await _mediator.Send(new GetAllShipmentQuery(search));
 			return Ok(result);
 		}
 

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.VehicleMaintenance;
 using NaviGoApi.Application.CQRS.Queries.VehicleMaintenance;
 using NaviGoApi.Application.DTOs.VehicleMaintenance;
+using NaviGoApi.Common.DTOs;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -23,9 +24,9 @@ namespace NaviGoApi.API.Controllers
 		// GET: api/vehiclemaintenance
 		[HttpGet]
 		[Authorize]
-		public async Task<ActionResult<IEnumerable<VehicleMaintenanceDto>>> GetAll()
+		public async Task<ActionResult<IEnumerable<VehicleMaintenanceDto>>> GetAll([FromQuery] VehicleMaintenanceSearchDto search)
 		{
-			var result = await _mediator.Send(new GetAllVehicleMaintenanceQuery());
+			var result = await _mediator.Send(new GetAllVehicleMaintenanceQuery(search));
 			return Ok(result);
 		}
 

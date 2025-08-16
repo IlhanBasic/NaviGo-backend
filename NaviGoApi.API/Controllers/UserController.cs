@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.User;
 using NaviGoApi.Application.CQRS.Queries.User;
 using NaviGoApi.Application.DTOs.User;
+using NaviGoApi.Common.DTOs;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -42,9 +43,9 @@ namespace NaviGoApi.API.Controllers
 
 		// GET: api/user
 		[HttpGet]
-		public async Task<ActionResult<IEnumerable<UserDto>>> GetAllUsers()
+		public async Task<ActionResult<IEnumerable<UserDto>>> GetAllUsers([FromQuery] UserSearchDto search)
 		{
-			var query = new GetAllUserQuery();
+			var query = new GetAllUserQuery(search);
 			var users = await _mediator.Send(query);
 			return Ok(users);
 		}

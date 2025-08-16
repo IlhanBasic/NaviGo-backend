@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
 using Microsoft.AspNetCore.Authorization;
+using NaviGoApi.Common.DTOs;
 
 namespace NaviGoApi.API.Controllers
 {
@@ -23,9 +24,9 @@ namespace NaviGoApi.API.Controllers
 
 		[HttpGet]
 		[Authorize]
-		public async Task<IActionResult> GetAll()
+		public async Task<IActionResult> GetAll([FromQuery] ForwarderOfferSearchDto search)
 		{
-			var result = await _mediator.Send(new GetAllForwarderOfferQuery());
+			var result = await _mediator.Send(new GetAllForwarderOfferQuery(search));
 			return Ok(result);
 		}
 

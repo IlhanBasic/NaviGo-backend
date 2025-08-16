@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.Company;
 using NaviGoApi.Application.CQRS.Queries.Company;
 using NaviGoApi.Application.DTOs.Company;
+using NaviGoApi.Common.DTOs;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
@@ -22,9 +23,9 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpGet]
-		public async Task<ActionResult<IEnumerable<CompanyDto>>> GetAll()
+		public async Task<ActionResult<IEnumerable<CompanyDto>>> GetAll([FromQuery] CompanySearchDto search)
 		{
-			var companies = await _mediator.Send(new GetAllCompaniesQuery());
+			var companies = await _mediator.Send(new GetAllCompaniesQuery(search));
 			return Ok(companies);
 		}
 

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.Driver;
 using NaviGoApi.Application.CQRS.Queries.Driver;
 using NaviGoApi.Application.DTOs.Driver;
+using NaviGoApi.Common.DTOs;
 using System.Collections.Generic; // za KeyNotFoundException
 
 namespace NaviGoApi.API.Controllers
@@ -22,9 +23,9 @@ namespace NaviGoApi.API.Controllers
 		// GET: api/driver
 		[HttpGet]
 		[Authorize]
-		public async Task<IActionResult> GetAll()
+		public async Task<IActionResult> GetAll([FromQuery] DriverSearchDto search)
 		{
-			var result = await _mediator.Send(new GetAllDriverQuery());
+			var result = await _mediator.Send(new GetAllDriverQuery(search));
 			return Ok(result);
 		}
 

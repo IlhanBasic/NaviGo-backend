@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System;
 using Microsoft.AspNetCore.Authorization;
+using NaviGoApi.Common.DTOs;
 
 namespace NaviGoApi.API.Controllers
 {
@@ -24,9 +25,9 @@ namespace NaviGoApi.API.Controllers
 		// GET: api/Route
 		[HttpGet]
 		[Authorize]
-		public async Task<ActionResult<IEnumerable<RouteDto>>> GetAll()
+		public async Task<ActionResult<IEnumerable<RouteDto>>> GetAll([FromQuery] RouteSearchDto search)
 		{
-			var routes = await _mediator.Send(new GetAllRouteQuery());
+			var routes = await _mediator.Send(new GetAllRouteQuery(search));
 			return Ok(routes);
 		}
 

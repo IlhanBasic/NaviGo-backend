@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.Contract;
 using NaviGoApi.Application.CQRS.Queries.Contract;
 using NaviGoApi.Application.DTOs.Contract;
+using NaviGoApi.Common.DTOs;
 using System.Collections.Generic; // Za KeyNotFoundException
 
 namespace NaviGoApi.API.Controllers
@@ -22,9 +23,9 @@ namespace NaviGoApi.API.Controllers
 		// GET: api/contract
 		[HttpGet]
 		[Authorize]
-		public async Task<IActionResult> GetAll()
+		public async Task<IActionResult> GetAll([FromQuery] ContractSearchDto search)
 		{
-			var result = await _mediator.Send(new GetAllContractQuery());
+			var result = await _mediator.Send(new GetAllContractQuery(search));
 			return Ok(result);
 		}
 
