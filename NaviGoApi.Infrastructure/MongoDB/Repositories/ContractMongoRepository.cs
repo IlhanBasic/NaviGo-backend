@@ -143,9 +143,40 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 				.AnyAsync();
 		}
 
-		public Task<IEnumerable<Contract>> GetAllAsync(ContractSearchDto contractSearch)
+		public async Task<IEnumerable<Contract>> GetAllAsync(ContractSearchDto contractSearch)
 		{
-			throw new NotImplementedException();
+			var filter = Builders<Contract>.Filter.Empty;
+
+			if (!string.IsNullOrWhiteSpace(contractSearch.ContractNumber))
+			{
+				filter = Builders<Contract>.Filter.Regex(c => c.ContractNumber, new BsonRegularExpression(contractSearch.ContractNumber, "i"));
+			}
+
+			var sortDefinition = contractSearch.SortBy?.ToLower() switch
+			{
+				"contractnumber" => contractSearch.SortDirection.ToLower() == "desc"
+					? Builders<Contract>.Sort.Descending(c => c.ContractNumber)
+					: Builders<Contract>.Sort.Ascending(c => c.ContractNumber),
+
+				"contractdate" => contractSearch.SortDirection.ToLower() == "desc"
+					? Builders<Contract>.Sort.Descending(c => c.ContractDate)
+					: Builders<Contract>.Sort.Ascending(c => c.ContractDate),
+
+				_ => contractSearch.SortDirection.ToLower() == "desc"
+					? Builders<Contract>.Sort.Descending(c => c.Id)
+					: Builders<Contract>.Sort.Ascending(c => c.Id),
+			};
+
+			var skip = (contractSearch.Page - 1) * contractSearch.PageSize;
+			var contracts = await _contractsCollection
+				.Find(filter)
+				.Sort(sortDefinition)
+				.Skip(skip)
+				.Limit(contractSearch.PageSize)
+				.ToListAsync();
+
+			return await PopulateRelationsAsync(contracts);
 		}
+
 	}
 }

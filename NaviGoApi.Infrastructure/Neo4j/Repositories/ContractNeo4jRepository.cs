@@ -342,9 +342,47 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			};
 		}
 
-		public Task<IEnumerable<Contract>> GetAllAsync(ContractSearchDto contractSearch)
+		public async Task<IEnumerable<Contract>> GetAllAsync(ContractSearchDto contractSearch)
 		{
-			throw new NotImplementedException();
+			var query = @"
+        MATCH (c:Contract)
+        WHERE $contractNumber IS NULL OR c.ContractNumber CONTAINS $contractNumber
+        RETURN c
+        ORDER BY CASE $sortBy 
+                    WHEN 'ContractNumber' THEN c.ContractNumber
+                    WHEN 'ContractDate' THEN c.ContractDate
+                    ELSE c.Id
+                 END " + (contractSearch.SortDirection.ToLower() == "desc" ? "DESC" : "ASC") + @"
+        SKIP $skip
+        LIMIT $limit";
+
+			var skip = (contractSearch.Page - 1) * contractSearch.PageSize;
+			var limit = contractSearch.PageSize;
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new
+				{
+					contractNumber = string.IsNullOrWhiteSpace(contractSearch.ContractNumber) ? null : contractSearch.ContractNumber,
+					sortBy = contractSearch.SortBy,
+					skip,
+					limit
+				});
+
+				var list = new List<Contract>();
+				while (await result.FetchAsync())
+				{
+					list.Add(MapNodeToContract(result.Current["c"].As<INode>()));
+				}
+
+				return list;
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
+
 	}
 }
