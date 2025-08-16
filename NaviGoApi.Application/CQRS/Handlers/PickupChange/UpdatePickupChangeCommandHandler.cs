@@ -10,11 +10,12 @@ using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.CQRS.Handlers.PickupChange
 {
-	public class UpdatePickupChangeCommandHandler : IRequestHandler<UpdatePickupChangeCommand>
+	public class UpdatePickupChangeCommandHandler : IRequestHandler<UpdatePickupChangeCommand, Unit>
 	{
 		private readonly IMapper _mapper;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IHttpContextAccessor _httpContextAccessor;
+
 		public UpdatePickupChangeCommandHandler(IMapper mapper, IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor)
 		{
 			_mapper = mapper;
@@ -26,24 +27,17 @@ namespace NaviGoApi.Application.CQRS.Handlers.PickupChange
 		{
 			var existingEntity = await _unitOfWork.PickupChanges.GetByIdAsync(request.Id);
 			if (existingEntity == null)
-			{
-				throw new KeyNotFoundException($"PickupChange with Id {request.Id} not found.");
-			}
-
+				throw new ValidationException($"PickupChange with Id {request.Id} not found.");
 			if (_httpContextAccessor.HttpContext == null)
 				throw new ValidationException("HttpContext is null.");
-
 			var userEmail = _httpContextAccessor.HttpContext.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
 			if (string.IsNullOrEmpty(userEmail))
 				throw new ValidationException("User email not found in token.");
-
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail);
 			if (user == null)
 				throw new ValidationException("User not found.");
-
-			if (existingEntity.ClientId != user.Id)
+			if (user.UserRole != UserRole.RegularUser)
 				throw new ValidationException("User not authorized to update this pickup change.");
-
 			var shipment = await _unitOfWork.Shipments.GetByIdAsync(existingEntity.ShipmentId);
 			if (shipment == null)
 				throw new ValidationException("Associated shipment not found.");
@@ -51,20 +45,10 @@ namespace NaviGoApi.Application.CQRS.Handlers.PickupChange
 				throw new ValidationException("Shipment is finished so cannot change pickup.");
 			_mapper.Map(request.PickupChangeDto, existingEntity);
 			existingEntity.ChangeCount++;
-			if (existingEntity.ChangeCount > 2)
-			{
-				existingEntity.AdditionalFee = 50m; 
-			}
-			else
-			{
-				existingEntity.AdditionalFee = 0m;
-			}
-
+			existingEntity.AdditionalFee = existingEntity.ChangeCount > 2 ? 50m : 0m;
 			await _unitOfWork.PickupChanges.UpdateAsync(existingEntity);
 			await _unitOfWork.SaveChangesAsync();
-
 			return Unit.Value;
 		}
-
 	}
 }
