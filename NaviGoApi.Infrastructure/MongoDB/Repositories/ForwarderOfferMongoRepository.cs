@@ -118,9 +118,28 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return list;
 		}
 
-		public Task<IEnumerable<ForwarderOffer>> GetAllAsync(ForwarderOfferSearchDto forwarderOfferSearch)
+		public async Task<IEnumerable<ForwarderOffer>> GetAllAsync(ForwarderOfferSearchDto forwarderOfferSearch)
 		{
-			throw new NotImplementedException();
+			var offersList = await _offersCollection.Find(_ => true).ToListAsync();
+
+			offersList = (forwarderOfferSearch.SortBy?.ToLower(), forwarderOfferSearch.SortDirection.ToLower()) switch
+			{
+				("id", "asc") => offersList.OrderBy(o => o.Id).ToList(),
+				("id", "desc") => offersList.OrderByDescending(o => o.Id).ToList(),
+				("createdat", "asc") => offersList.OrderBy(o => o.CreatedAt).ToList(),
+				("createdat", "desc") => offersList.OrderByDescending(o => o.CreatedAt).ToList(),
+				("expiresat", "asc") => offersList.OrderBy(o => o.ExpiresAt).ToList(),
+				("expiresat", "desc") => offersList.OrderByDescending(o => o.ExpiresAt).ToList(),
+				("commissionrate", "asc") => offersList.OrderBy(o => o.CommissionRate).ToList(),
+				("commissionrate", "desc") => offersList.OrderByDescending(o => o.CommissionRate).ToList(),
+				_ => offersList.OrderBy(o => o.Id).ToList()
+			};
+
+			var skip = (forwarderOfferSearch.Page - 1) * forwarderOfferSearch.PageSize;
+			var paged = offersList.Skip(skip).Take(forwarderOfferSearch.PageSize).ToList();
+
+			return await PopulateRelationsAsync(paged);
 		}
+
 	}
 }

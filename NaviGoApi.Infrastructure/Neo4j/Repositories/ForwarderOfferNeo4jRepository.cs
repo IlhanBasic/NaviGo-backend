@@ -236,9 +236,33 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			};
 		}
 
-		public Task<IEnumerable<ForwarderOffer>> GetAllAsync(ForwarderOfferSearchDto forwarderOfferSearch)
+		public async Task<IEnumerable<ForwarderOffer>> GetAllAsync(ForwarderOfferSearchDto forwarderOfferSearch)
 		{
-			throw new NotImplementedException();
+			var sortBy = string.IsNullOrWhiteSpace(forwarderOfferSearch.SortBy) ? "Id" : forwarderOfferSearch.SortBy;
+			var sortDirection = forwarderOfferSearch.SortDirection?.ToLower() == "desc" ? "DESC" : "ASC";
+			var skip = (forwarderOfferSearch.Page - 1) * forwarderOfferSearch.PageSize;
+			var limit = forwarderOfferSearch.PageSize;
+
+			var query = $@"
+        MATCH (f:ForwarderOffer)
+        RETURN f
+        ORDER BY f.{sortBy} {sortDirection}
+        SKIP $skip
+        LIMIT $limit
+    ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { skip, limit });
+				var records = await result.ToListAsync();
+				return records.Select(r => MapForwarderOfferNode(r["f"].As<INode>())).ToList();
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
+
 	}
 }

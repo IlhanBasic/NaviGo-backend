@@ -48,10 +48,33 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.ToListAsync();
 		}
 
-		public Task<IEnumerable<ForwarderOffer>> GetAllAsync(ForwarderOfferSearchDto forwarderOfferSearch)
+		public async Task<IEnumerable<ForwarderOffer>> GetAllAsync(ForwarderOfferSearchDto forwarderOfferSearch)
 		{
-			throw new NotImplementedException();
+			var query = _context.ForwarderOffers
+				.Include(o => o.Route)
+				.Include(o => o.Forwarder)
+				.AsQueryable();
+			if (!string.IsNullOrWhiteSpace(forwarderOfferSearch.SortBy))
+			{
+				query = (forwarderOfferSearch.SortBy.ToLower(), forwarderOfferSearch.SortDirection.ToLower()) switch
+				{
+					("id", "asc") => query.OrderBy(o => o.Id),
+					("id", "desc") => query.OrderByDescending(o => o.Id),
+					("createdat", "asc") => query.OrderBy(o => o.CreatedAt),
+					("createdat", "desc") => query.OrderByDescending(o => o.CreatedAt),
+					("expiresat", "asc") => query.OrderBy(o => o.ExpiresAt),
+					("expiresat", "desc") => query.OrderByDescending(o => o.ExpiresAt),
+					("commissionrate", "asc") => query.OrderBy(o => o.CommissionRate),
+					("commissionrate", "desc") => query.OrderByDescending(o => o.CommissionRate),
+					_ => query.OrderBy(o => o.Id)
+				};
+			}
+			var skip = (forwarderOfferSearch.Page - 1) * forwarderOfferSearch.PageSize;
+			query = query.Skip(skip).Take(forwarderOfferSearch.PageSize);
+
+			return await query.ToListAsync();
 		}
+
 
 		public async Task<IEnumerable<ForwarderOffer>> GetByForwarderIdAsync(int forwarderId)
 		{
