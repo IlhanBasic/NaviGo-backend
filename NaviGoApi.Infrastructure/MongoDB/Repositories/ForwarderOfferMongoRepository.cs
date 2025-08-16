@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
+using NaviGoApi.Common.DTOs;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
@@ -115,6 +116,11 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			}
 
 			return list;
+		}
+
+		public Task<IEnumerable<ForwarderOffer>> GetAllAsync(ForwarderOfferSearchDto forwarderOfferSearch)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

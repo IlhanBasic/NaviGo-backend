@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
+using NaviGoApi.Common.DTOs;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System.Collections.Generic;
@@ -86,6 +87,11 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 				var usersCollection = _vehicleMaintenancesCollection.Database.GetCollection<User>("Users");
 				maintenance.ReportedByUser = await usersCollection.Find(u => u.Id == maintenance.ReportedByUserId).FirstOrDefaultAsync();
 			}
+		}
+
+		public Task<IEnumerable<VehicleMaintenance>> GetAllAsync(VehicleMaintenanceSearchDto vehicleMaintenanceSearch)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using NaviGoApi.Domain.Interfaces;
+using NaviGoApi.Common.DTOs;
 namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 {
 	public class UserRepository : IUserRepository
@@ -104,6 +105,9 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			}
 		}
 
-
+		public Task<IEnumerable<User>> GetAllAsync(UserSearchDto userSearch)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NaviGoApi.Common.DTOs;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using NaviGoApi.Infrastructure.Postgresql.Persistence;
@@ -45,6 +46,11 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.Include(o => o.Route)
 				.Include(o => o.Forwarder)
 				.ToListAsync();
+		}
+
+		public Task<IEnumerable<ForwarderOffer>> GetAllAsync(ForwarderOfferSearchDto forwarderOfferSearch)
+		{
+			throw new NotImplementedException();
 		}
 
 		public async Task<IEnumerable<ForwarderOffer>> GetByForwarderIdAsync(int forwarderId)

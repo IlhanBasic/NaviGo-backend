@@ -1,4 +1,5 @@
-﻿using NaviGoApi.Domain.Entities;
+﻿using NaviGoApi.Common.DTOs;
+using NaviGoApi.Domain.Entities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -8,6 +9,7 @@ namespace NaviGoApi.Domain.Interfaces
 	{
 		Task<Company?> GetByIdAsync(int id);
 		Task<IEnumerable<Company>> GetAllAsync();
+		Task<IEnumerable<Company>> GetAllAsync(CompanySearchDto companySearch);
 		Task AddAsync(Company company);
 		Task UpdateAsync(Company company);
 		Task DeleteAsync(Company company);

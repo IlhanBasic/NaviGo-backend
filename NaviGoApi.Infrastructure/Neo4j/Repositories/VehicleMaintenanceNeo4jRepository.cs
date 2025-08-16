@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Neo4j.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
+using NaviGoApi.Common.DTOs;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
@@ -259,6 +260,11 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			{
 				await session.CloseAsync();
 			}
+		}
+
+		public Task<IEnumerable<VehicleMaintenance>> GetAllAsync(VehicleMaintenanceSearchDto vehicleMaintenanceSearch)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

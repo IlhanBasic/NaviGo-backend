@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
+using NaviGoApi.Common.DTOs;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
@@ -92,6 +93,11 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		public async Task<bool> ExistsAsync(Expression<Func<Company, bool>> predicate)
 		{
 			return await _companiesCollection.Find(predicate).AnyAsync();
+		}
+
+		public Task<IEnumerable<Company>> GetAllAsync(CompanySearchDto companySearch)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NaviGoApi.Common.DTOs;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using NaviGoApi.Infrastructure.Postgresql.Persistence;
@@ -37,6 +38,11 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.Include(vm => vm.Vehicle)          
 				.Include(vm => vm.ReportedByUser)     
 				.ToListAsync();
+		}
+
+		public Task<IEnumerable<VehicleMaintenance>> GetAllAsync(VehicleMaintenanceSearchDto vehicleMaintenanceSearch)
+		{
+			throw new NotImplementedException();
 		}
 
 		public async Task<VehicleMaintenance?> GetByIdAsync(int id)

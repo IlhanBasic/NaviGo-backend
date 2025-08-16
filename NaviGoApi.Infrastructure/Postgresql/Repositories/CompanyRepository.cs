@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NaviGoApi.Common.DTOs;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using NaviGoApi.Infrastructure.Postgresql.Persistence; 
@@ -52,5 +53,9 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			return await _context.Companies.FirstOrDefaultAsync(c => c.PIB == pib);
 		}
 
+		public Task<IEnumerable<Company>> GetAllAsync(CompanySearchDto companySearch)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
+using NaviGoApi.Common.DTOs;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System.Collections.Generic;
@@ -57,6 +58,11 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		public async Task UpdateAsync(ShipmentDocument document)
 		{
 			await _shipmentDocumentsCollection.ReplaceOneAsync(doc => doc.Id == document.Id, document);
+		}
+
+		public Task<IEnumerable<ShipmentDocument>> GetAllAsync(ShipmentDocumentSearchDto shipmentDocumentSearch)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
+using NaviGoApi.Common.DTOs;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
@@ -82,6 +83,11 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		public async Task<bool> ExistsAsync(Expression<System.Func<Driver, bool>> predicate)
 		{
 			return await _driversCollection.Find(predicate).AnyAsync();
+		}
+
+		public Task<IEnumerable<Driver>> GetAllAsync(DriverSearchDto driverSearch)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

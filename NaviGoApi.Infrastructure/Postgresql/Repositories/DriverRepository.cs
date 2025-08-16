@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NaviGoApi.Common.DTOs;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using NaviGoApi.Infrastructure.Postgresql.Persistence;
@@ -26,6 +27,11 @@ public class DriverRepository : IDriverRepository
 	public async Task<IEnumerable<Driver>> GetAllAsync()
 	{
 		return await _context.Drivers.ToListAsync();
+	}
+
+	public Task<IEnumerable<Driver>> GetAllAsync(DriverSearchDto driverSearch)
+	{
+		throw new NotImplementedException();
 	}
 
 	public async Task<IEnumerable<Driver>> GetAvailableDriversAsync()

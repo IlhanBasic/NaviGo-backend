@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Routing;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using NaviGoApi.Common.DTOs;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System.Collections.Generic;
@@ -112,6 +113,11 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		public async Task UpdateAsync(Shipment shipment)
 		{
 			await _shipmentsCollection.ReplaceOneAsync(s => s.Id == shipment.Id, shipment);
+		}
+
+		public Task<IEnumerable<Shipment>> GetAllAsync(ShipmentSearchDto shipmentSearch)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

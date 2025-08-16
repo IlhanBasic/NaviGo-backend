@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
+using NaviGoApi.Common.DTOs;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
@@ -124,6 +125,11 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 						 && r.EndLocationId == endLocationId
 						 && r.Id != routeId)
 				.AnyAsync();
+		}
+
+		public Task<IEnumerable<Route>> GetAllAsync(RouteSearchDto routeSearch)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

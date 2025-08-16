@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
+using NaviGoApi.Common.DTOs;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
@@ -140,6 +141,11 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return await _contractsCollection
 				.Find(c => c.ContractNumber == contractNumber)
 				.AnyAsync();
+		}
+
+		public Task<IEnumerable<Contract>> GetAllAsync(ContractSearchDto contractSearch)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

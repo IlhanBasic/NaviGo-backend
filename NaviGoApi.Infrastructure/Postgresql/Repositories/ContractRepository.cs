@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NaviGoApi.Common.DTOs;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using NaviGoApi.Infrastructure.Postgresql.Persistence;
@@ -50,6 +51,11 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.Include(c => c.Route)
 					.ThenInclude(r => r.EndLocation)
 				.ToListAsync();
+		}
+
+		public Task<IEnumerable<Contract>> GetAllAsync(ContractSearchDto contractSearch)
+		{
+			throw new NotImplementedException();
 		}
 
 		public async Task<IEnumerable<Contract>> GetByClientIdAsync(int clientId)

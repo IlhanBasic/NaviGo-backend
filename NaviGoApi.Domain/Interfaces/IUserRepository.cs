@@ -1,4 +1,5 @@
-﻿using NaviGoApi.Domain.Entities;
+﻿using NaviGoApi.Common.DTOs;
+using NaviGoApi.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,7 @@ namespace NaviGoApi.Domain.Interfaces
 	public interface IUserRepository
 	{
 		Task<IEnumerable<User>> GetAllAsync();
+		Task<IEnumerable<User>> GetAllAsync(UserSearchDto userSearch);
 		Task<User?> GetByIdAsync(int id);
 		Task<User?> GetByPasswordResetTokenAsync(string token);
 		Task AddAsync(User user);

@@ -4,6 +4,7 @@ using Neo4j.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System.Linq;
+using NaviGoApi.Common.DTOs;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
@@ -283,6 +284,11 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				CreatedAt = node["CreatedAt"].As<ZonedDateTime>().ToDateTimeOffset().UtcDateTime,
 				ProofFileUrl = node.Properties.ContainsKey("ProofFileUrl") ? node["ProofFileUrl"].As<string?>() : null
 			};
+		}
+
+		public Task<IEnumerable<Company>> GetAllAsync(CompanySearchDto companySearch)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

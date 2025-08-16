@@ -1,4 +1,5 @@
-﻿using NaviGoApi.Domain.Entities;
+﻿using NaviGoApi.Common.DTOs;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using Neo4j.Driver;
 using System;
@@ -341,5 +342,9 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			};
 		}
 
+		public Task<IEnumerable<Contract>> GetAllAsync(ContractSearchDto contractSearch)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

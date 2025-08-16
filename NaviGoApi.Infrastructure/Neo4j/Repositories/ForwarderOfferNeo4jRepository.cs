@@ -1,4 +1,5 @@
 ﻿
+using NaviGoApi.Common.DTOs;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using Neo4j.Driver;
@@ -235,5 +236,9 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			};
 		}
 
+		public Task<IEnumerable<ForwarderOffer>> GetAllAsync(ForwarderOfferSearchDto forwarderOfferSearch)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

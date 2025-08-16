@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
+using NaviGoApi.Common.DTOs;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System.Collections.Generic;
@@ -141,6 +142,11 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 				var companiesCollection = _usersCollection.Database.GetCollection<Company>("Companies");
 				user.Company = await companiesCollection.Find(c => c.Id == user.CompanyId).FirstOrDefaultAsync();
 			}
+		}
+
+		public Task<IEnumerable<User>> GetAllAsync(UserSearchDto userSearch)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

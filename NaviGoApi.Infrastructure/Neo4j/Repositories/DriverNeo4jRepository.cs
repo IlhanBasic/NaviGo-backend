@@ -5,6 +5,7 @@ using Neo4j.Driver;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System.Linq;
+using NaviGoApi.Common.DTOs;
 
 namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 {
@@ -182,6 +183,11 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				HireDate = node.Properties["HireDate"].As<ZonedDateTime>().ToDateTimeOffset().LocalDateTime,
 				DriverStatus = (DriverStatus)node.Properties["DriverStatus"].As<int>()
 			};
+		}
+
+		public Task<IEnumerable<Driver>> GetAllAsync(DriverSearchDto driverSearch)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

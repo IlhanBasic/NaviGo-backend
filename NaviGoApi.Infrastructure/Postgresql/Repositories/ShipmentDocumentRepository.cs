@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NaviGoApi.Common.DTOs;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using NaviGoApi.Infrastructure.Postgresql.Persistence;
@@ -33,6 +34,11 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		public async Task<IEnumerable<ShipmentDocument>> GetAllAsync()
 		{
 			return await _context.ShipmentDocuments.AsNoTracking().ToListAsync();
+		}
+
+		public Task<IEnumerable<ShipmentDocument>> GetAllAsync(ShipmentDocumentSearchDto shipmentDocumentSearch)
+		{
+			throw new NotImplementedException();
 		}
 
 		public async Task<ShipmentDocument?> GetByIdAsync(int id)

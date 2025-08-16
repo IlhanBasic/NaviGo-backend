@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NaviGoApi.Common.DTOs;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using NaviGoApi.Infrastructure.Postgresql.Persistence;
@@ -99,6 +100,11 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 						  && x.Id != routeId);
 			return route == null;
 
+		}
+
+		public Task<IEnumerable<Route>> GetAllAsync(RouteSearchDto routeSearch)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }
