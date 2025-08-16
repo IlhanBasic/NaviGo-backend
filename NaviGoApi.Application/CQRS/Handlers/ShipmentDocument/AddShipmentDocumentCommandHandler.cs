@@ -2,11 +2,13 @@
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using NaviGoApi.Application.CQRS.Commands.ShipmentDocument;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -27,19 +29,25 @@ namespace NaviGoApi.Application.CQRS.Handlers.ShipmentDocument
 
 		public async Task<Unit> Handle(AddShipmentDocumentCommand request, CancellationToken cancellationToken)
 		{
-			if (_httpContextAccessor.HttpContext == null)
-				throw new ValidationException("HttpContext is null.");
-			var userEmail = _httpContextAccessor.HttpContext.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
-			if (string.IsNullOrEmpty(userEmail))
-				throw new ValidationException("User email not found in token.");
-			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail);
-			if (user == null)
-				throw new ValidationException("User not found.");
-			if(user.CompanyId == null)
+			var httpContext = _httpContextAccessor.HttpContext
+				?? throw new InvalidOperationException("HttpContext is not available.");
+
+			var userEmail = httpContext.User.FindFirst(ClaimTypes.Email)?.Value;
+			if (string.IsNullOrWhiteSpace(userEmail))
+				throw new ValidationException("User email not found in authentication token.");
+			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
+				?? throw new ValidationException($"User with email '{userEmail}' not found.");
+			if (user.UserStatus != UserStatus.Active)
+				throw new ValidationException("Your account is not activated.");
+			if (user.UserRole != UserRole.CompanyAdmin)
+				throw new ValidationException("You are not allowed to add shipment documents.");
+			if (user.CompanyId == null)
 				throw new ValidationException("User doesn't work in any company.");
 			var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value);
 			if (company == null)
 				throw new ValidationException("User is not associated with any company.");
+			if (company.CompanyType != CompanyType.Forwarder && company.CompanyType != CompanyType.Carrier)
+				throw new ValidationException("You must work in Forwarder or Carrier company if you want to add shipment document.");
 			var shipment = await _unitOfWork.Shipments.GetByIdAsync(request.ShipmentDocumentDto.ShipmentId);
 			if(shipment == null)
 				throw new ValidationException("Company isn't valid.");

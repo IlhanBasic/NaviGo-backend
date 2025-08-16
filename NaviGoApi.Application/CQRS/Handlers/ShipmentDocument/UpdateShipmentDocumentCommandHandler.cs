@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using NaviGoApi.Application.CQRS.Commands.ShipmentDocument;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -27,46 +28,38 @@ namespace NaviGoApi.Application.CQRS.Handlers.ShipmentDocument
 		{
 			if (_httpContextAccessor.HttpContext == null)
 				throw new ValidationException("HttpContext is null.");
-
 			var userEmail = _httpContextAccessor.HttpContext.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
 			if (string.IsNullOrEmpty(userEmail))
 				throw new ValidationException("User email not found in token.");
-
-			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail);
-			if (user == null)
-				throw new ValidationException("User not found.");
+			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
+				?? throw new ValidationException("User not found.");
+			if (user.UserStatus != UserStatus.Active)
+				throw new ValidationException("Your account is not activated.");
+			if (user.UserRole != UserRole.CompanyAdmin)
+				throw new ValidationException("Only Company Admins can update shipment documents.");
 			if (user.CompanyId == null)
-				throw new ValidationException();
-			var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value);
-			if (company == null)
 				throw new ValidationException("User is not associated with any company.");
-
-			var shipmentDocument = await _unitOfWork.ShipmentDocuments.GetByIdAsync(request.Id);
-			if (shipmentDocument == null)
-				throw new ValidationException($"Shipment Document with ID {request.Id} doesn't exist.");
-
-			var shipment = await _unitOfWork.Shipments.GetByIdAsync(shipmentDocument.ShipmentId);
-			if(shipment == null)
-				throw new ValidationException("Shipment isn't valid.");
-			var contract = await _unitOfWork.Contracts.GetByIdAsync(shipment.ContractId);
-			if(contract == null)
-				throw new ValidationException("Shipment isn't valid.");
-			var forwarder = await _unitOfWork.Companies.GetByIdAsync(contract.ForwarderId);
-			if(forwarder == null)
-				throw new ValidationException("Shipment isn't valid.");
-			var route = await _unitOfWork.Routes.GetByIdAsync(contract.RouteId);
-			if(route == null)
-				throw new ValidationException("Shipment isn't valid.");
-
-			if (company.Id != forwarder.Id &&
-				company.Id != route.CompanyId)
-				throw new ValidationException("User doesn't have permission to update shipment documents.");
-			shipmentDocument.UploadDate = DateTime.UtcNow;
-			shipmentDocument.Verified = true;
+			var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value)
+				?? throw new ValidationException("Company not found.");
+			var shipmentDocument = await _unitOfWork.ShipmentDocuments.GetByIdAsync(request.Id)
+				?? throw new ValidationException($"Shipment Document with ID {request.Id} doesn't exist.");
+			var shipment = await _unitOfWork.Shipments.GetByIdAsync(shipmentDocument.ShipmentId)
+				?? throw new ValidationException($"Shipment with ID {shipmentDocument.ShipmentId} not found.");
+			var contract = await _unitOfWork.Contracts.GetByIdAsync(shipment.ContractId)
+				?? throw new ValidationException($"Contract with ID {shipment.ContractId} not found.");
+			var forwarder = await _unitOfWork.Companies.GetByIdAsync(contract.ForwarderId)
+				?? throw new ValidationException($"Forwarder company with ID {contract.ForwarderId} not found.");
+			var route = await _unitOfWork.Routes.GetByIdAsync(contract.RouteId)
+				?? throw new ValidationException($"Route with ID {contract.RouteId} not found.");
+			if (company.Id != forwarder.Id && company.Id != route.CompanyId)
+				throw new ValidationException("You are not allowed to update documents for this shipment.");
 			_mapper.Map(request.ShipmentDocumentDto, shipmentDocument);
+			shipmentDocument.Verified = true;
+			shipmentDocument.VerifiedByUserId = user.Id;
 			await _unitOfWork.ShipmentDocuments.UpdateAsync(shipmentDocument);
 			await _unitOfWork.SaveChangesAsync();
 			return Unit.Value;
 		}
+
 	}
 }
