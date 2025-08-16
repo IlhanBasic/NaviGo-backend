@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.Shipment;
 using NaviGoApi.Application.CQRS.Queries.Shipment;
@@ -21,6 +22,7 @@ namespace NaviGoApi.API.Controllers
 
 		// GET: api/Shipment
 		[HttpGet]
+		[Authorize]
 		public async Task<IActionResult> GetAll()
 		{
 			var result = await _mediator.Send(new GetAllShipmentQuery());
@@ -29,6 +31,7 @@ namespace NaviGoApi.API.Controllers
 
 		// GET: api/Shipment/{id}
 		[HttpGet("{id}")]
+		[Authorize]
 		public async Task<IActionResult> GetById(int id)
 		{
 			var result = await _mediator.Send(new GetShipmentByIdQuery(id));
@@ -45,6 +48,7 @@ namespace NaviGoApi.API.Controllers
 
 		// POST: api/Shipment
 		[HttpPost]
+		[Authorize]
 		public async Task<IActionResult> Create([FromBody] ShipmentCreateDto dto)
 		{
 			await _mediator.Send(new AddShipmentCommand(dto));
@@ -56,6 +60,7 @@ namespace NaviGoApi.API.Controllers
 
 		// PUT: api/Shipment/{id}
 		[HttpPut("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Update(int id, [FromBody] ShipmentUpdateDto dto)
 		{
 			await _mediator.Send(new UpdateShipmentCommand(id, dto));
@@ -67,6 +72,7 @@ namespace NaviGoApi.API.Controllers
 
 		// DELETE: api/Shipment/{id}
 		[HttpDelete("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Delete(int id)
 		{
 			await _mediator.Send(new DeleteShipmentCommand(id));
