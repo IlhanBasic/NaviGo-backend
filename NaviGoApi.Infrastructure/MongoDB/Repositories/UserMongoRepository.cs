@@ -132,8 +132,6 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 		{
 			await _refreshTokensCollection.ReplaceOneAsync(rt => rt.Id == token.Id, token);
 		}
-
-		// Helper metoda za učitavanje navigacionih property-ja
 		private async Task LoadCompanyAsync(User? user)
 		{
 			if (user == null) return;
@@ -144,9 +142,49 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			}
 		}
 
-		public Task<IEnumerable<User>> GetAllAsync(UserSearchDto userSearch)
+		public async Task<IEnumerable<User>> GetAllAsync(UserSearchDto userSearch)
 		{
-			throw new NotImplementedException();
+			var filterBuilder = Builders<User>.Filter;
+			var filter = filterBuilder.Empty;
+
+			if (!string.IsNullOrWhiteSpace(userSearch.Email))
+				filter &= filterBuilder.Regex(u => u.Email, new BsonRegularExpression(userSearch.Email, "i"));
+
+			if (!string.IsNullOrWhiteSpace(userSearch.FirstName))
+				filter &= filterBuilder.Regex(u => u.FirstName, new BsonRegularExpression(userSearch.FirstName, "i"));
+
+			if (!string.IsNullOrWhiteSpace(userSearch.LastName))
+				filter &= filterBuilder.Regex(u => u.LastName, new BsonRegularExpression(userSearch.LastName, "i"));
+			var sortDefinition = userSearch.SortBy?.ToLower() switch
+			{
+				"email" => userSearch.SortDirection.ToLower() == "desc"
+					? Builders<User>.Sort.Descending(u => u.Email)
+					: Builders<User>.Sort.Ascending(u => u.Email),
+				"firstname" => userSearch.SortDirection.ToLower() == "desc"
+					? Builders<User>.Sort.Descending(u => u.FirstName)
+					: Builders<User>.Sort.Ascending(u => u.FirstName),
+				"lastname" => userSearch.SortDirection.ToLower() == "desc"
+					? Builders<User>.Sort.Descending(u => u.LastName)
+					: Builders<User>.Sort.Ascending(u => u.LastName),
+				_ => userSearch.SortDirection.ToLower() == "desc"
+					? Builders<User>.Sort.Descending(u => u.Id)
+					: Builders<User>.Sort.Ascending(u => u.Id)
+			};
+
+			var skip = (userSearch.Page - 1) * userSearch.PageSize;
+
+			var users = await _usersCollection
+				.Find(filter)
+				.Sort(sortDefinition)
+				.Skip(skip)
+				.Limit(userSearch.PageSize)
+				.ToListAsync();
+
+			foreach (var user in users)
+				await LoadCompanyAsync(user);
+
+			return users;
 		}
+
 	}
 }

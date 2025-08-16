@@ -105,9 +105,39 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			}
 		}
 
-		public Task<IEnumerable<User>> GetAllAsync(UserSearchDto userSearch)
+		public async Task<IEnumerable<User>> GetAllAsync(UserSearchDto userSearch)
 		{
-			throw new NotImplementedException();
+			var query = _context.Users.AsQueryable();
+
+			if (!string.IsNullOrEmpty(userSearch.Email))
+				query = query.Where(u => u.Email.Contains(userSearch.Email));
+			if (!string.IsNullOrEmpty(userSearch.FirstName))
+				query = query.Where(u => u.FirstName.Contains(userSearch.FirstName));
+			if (!string.IsNullOrEmpty(userSearch.LastName))
+				query = query.Where(u => u.LastName.Contains(userSearch.LastName));
+			query = (userSearch.SortBy?.ToLower(), userSearch.SortDirection?.ToLower()) switch
+			{
+				("email", "desc") => query.OrderByDescending(u => u.Email),
+				("email", _) => query.OrderBy(u => u.Email),
+				("firstname", "desc") => query.OrderByDescending(u => u.FirstName),
+				("firstname", _) => query.OrderBy(u => u.FirstName),
+				("lastname", "desc") => query.OrderByDescending(u => u.LastName),
+				("lastname", _) => query.OrderBy(u => u.LastName),
+				("id", "desc") => query.OrderByDescending(u => u.Id),
+				_ => query.OrderBy(u => u.Id),
+			};
+			var skip = (userSearch.Page - 1) * userSearch.PageSize;
+			query = query.Skip(skip).Take(userSearch.PageSize);
+
+			return await query
+				.Include(u => u.Company)
+				.Include(u => u.RefreshTokens)
+				.Include(u => u.VehicleMaintenancesReported)
+				.Include(u => u.ShipmentDocumentsVerified)
+				.Include(u => u.ShipmentStatusChanges)
+				.Include(u => u.UserLocations)
+				.ToListAsync();
 		}
+
 	}
 }

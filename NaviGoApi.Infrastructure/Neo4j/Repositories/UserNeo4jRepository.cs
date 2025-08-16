@@ -472,9 +472,84 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			}
 		}
 
-		public Task<IEnumerable<User>> GetAllAsync(UserSearchDto userSearch)
+		public async Task<IEnumerable<User>> GetAllAsync(UserSearchDto userSearch)
 		{
-			throw new NotImplementedException();
+			var allowedSortFields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+	{
+		{ "Id", "u.Id" },
+		{ "Email", "u.Email" },
+		{ "FirstName", "u.FirstName" },
+		{ "LastName", "u.LastName" },
+		{ "CreatedAt", "u.CreatedAt" },
+		{ "LastLogin", "u.LastLogin" }
+	};
+
+			var sortField = allowedSortFields.ContainsKey(userSearch.SortBy ?? "")
+				? allowedSortFields[userSearch.SortBy!]
+				: "u.Id";
+
+			var sortDirection = userSearch.SortDirection?.ToLower() == "desc" ? "DESC" : "ASC";
+
+			var skip = (userSearch.Page - 1) * userSearch.PageSize;
+			var limit = userSearch.PageSize;
+
+			// Kreiranje WHERE klauzule za filtere
+			var filters = new List<string>();
+			var parameters = new Dictionary<string, object>();
+
+			if (!string.IsNullOrWhiteSpace(userSearch.Email))
+			{
+				filters.Add("toLower(u.Email) CONTAINS toLower($Email)");
+				parameters["Email"] = userSearch.Email;
+			}
+
+			if (!string.IsNullOrWhiteSpace(userSearch.FirstName))
+			{
+				filters.Add("toLower(u.FirstName) CONTAINS toLower($FirstName)");
+				parameters["FirstName"] = userSearch.FirstName;
+			}
+
+			if (!string.IsNullOrWhiteSpace(userSearch.LastName))
+			{
+				filters.Add("toLower(u.LastName) CONTAINS toLower($LastName)");
+				parameters["LastName"] = userSearch.LastName;
+			}
+
+			var whereClause = filters.Count > 0 ? "WHERE " + string.Join(" AND ", filters) : "";
+
+			var query = $@"
+        MATCH (u:User)
+        OPTIONAL MATCH (u)-[:BELONGS_TO]->(c:Company)
+        {whereClause}
+        RETURN u, c
+        ORDER BY {sortField} {sortDirection}
+        SKIP $skip
+        LIMIT $limit
+    ";
+
+			parameters["skip"] = skip;
+			parameters["limit"] = limit;
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, parameters);
+				var records = await result.ToListAsync();
+
+				var users = records.Select(record =>
+				{
+					var uNode = record["u"].As<INode>();
+					var cNode = record.ContainsKey("c") ? record["c"].As<INode>() : null;
+					return MapUserNode(uNode, cNode);
+				}).ToList();
+
+				return users;
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
+
 	}
 }
