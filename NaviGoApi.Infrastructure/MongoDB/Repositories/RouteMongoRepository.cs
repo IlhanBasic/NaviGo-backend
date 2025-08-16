@@ -127,9 +127,26 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 				.AnyAsync();
 		}
 
-		public Task<IEnumerable<Route>> GetAllAsync(RouteSearchDto routeSearch)
+		public async Task<IEnumerable<Route>> GetAllAsync(RouteSearchDto routeSearch)
 		{
-			throw new NotImplementedException();
+			string sortBy = string.IsNullOrEmpty(routeSearch.SortBy) ? "Id" : routeSearch.SortBy;
+			int skip = (routeSearch.Page - 1) * routeSearch.PageSize;
+			int limit = routeSearch.PageSize;
+
+			// Defaultni sort: ascending
+			var sortDefinition = routeSearch.SortDirection?.ToLower() == "desc"
+				? Builders<Route>.Sort.Descending(sortBy)
+				: Builders<Route>.Sort.Ascending(sortBy);
+
+			var routes = await _routesCollection
+				.Find(_ => true)
+				.Sort(sortDefinition)
+				.Skip(skip)
+				.Limit(limit)
+				.ToListAsync();
+
+			return await LoadNavigationPropertiesAsync(routes);
 		}
+
 	}
 }

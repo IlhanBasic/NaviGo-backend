@@ -102,9 +102,35 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 
 		}
 
-		public Task<IEnumerable<Route>> GetAllAsync(RouteSearchDto routeSearch)
+		public async Task<IEnumerable<Route>> GetAllAsync(RouteSearchDto routeSearch)
 		{
-			throw new NotImplementedException();
+			var query = _context.Routes
+				.Include(r => r.Company)
+				.Include(r => r.StartLocation)
+				.Include(r => r.EndLocation)
+				.AsQueryable();
+
+			// Sortiranje po polju i smeru
+			query = routeSearch.SortBy?.ToLower() switch
+			{
+				"distancekm" => routeSearch.SortDirection.ToLower() == "desc"
+					? query.OrderByDescending(r => r.DistanceKm)
+					: query.OrderBy(r => r.DistanceKm),
+				"estimateddurationhours" => routeSearch.SortDirection.ToLower() == "desc"
+					? query.OrderByDescending(r => r.EstimatedDurationHours)
+					: query.OrderBy(r => r.EstimatedDurationHours),
+				"availablefrom" => routeSearch.SortDirection.ToLower() == "desc"
+					? query.OrderByDescending(r => r.AvailableFrom)
+					: query.OrderBy(r => r.AvailableFrom),
+				_ => routeSearch.SortDirection.ToLower() == "desc"
+					? query.OrderByDescending(r => r.Id)
+					: query.OrderBy(r => r.Id)
+			};
+
+			// Paging
+			int skip = (routeSearch.Page - 1) * routeSearch.PageSize;
+			return await query.Skip(skip).Take(routeSearch.PageSize).ToListAsync();
 		}
+
 	}
 }

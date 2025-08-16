@@ -321,9 +321,33 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			}
 		}
 
-		public Task<IEnumerable<Route>> GetAllAsync(RouteSearchDto routeSearch)
+		public async Task<IEnumerable<Route>> GetAllAsync(RouteSearchDto routeSearch)
 		{
-			throw new NotImplementedException();
+			string sortBy = string.IsNullOrEmpty(routeSearch.SortBy) ? "Id" : routeSearch.SortBy;
+			string sortDirection = routeSearch.SortDirection?.ToLower() == "desc" ? "DESC" : "ASC";
+			int skip = (routeSearch.Page - 1) * routeSearch.PageSize;
+			int limit = routeSearch.PageSize;
+
+			var query = $@"
+        MATCH (r:Route)
+        RETURN r
+        ORDER BY r.{sortBy} {sortDirection}
+        SKIP $Skip
+        LIMIT $Limit
+    ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var result = await session.RunAsync(query, new { Skip = skip, Limit = limit });
+				var records = await result.ToListAsync();
+				return records.Select(r => MapRouteNode(r["r"].As<INode>())).ToList();
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
+
 	}
 }
