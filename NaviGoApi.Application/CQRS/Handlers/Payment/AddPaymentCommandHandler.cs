@@ -6,12 +6,9 @@ using NaviGoApi.Application.Services;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.Contracts;
-using System.Linq;
 using System.Security.Claims;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.CQRS.Handlers.Payment
@@ -22,7 +19,12 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 		private readonly IMapper _mapper;
 		private readonly IPaymentCalculatorService _paymentCalculator;
 		private readonly IHttpContextAccessor _httpContextAccessor;
-		public AddPaymentCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, IPaymentCalculatorService paymentCalculator, IHttpContextAccessor httpContextAccessor)
+
+		public AddPaymentCommandHandler(
+			IUnitOfWork unitOfWork,
+			IMapper mapper,
+			IPaymentCalculatorService paymentCalculator,
+			IHttpContextAccessor httpContextAccessor)
 		{
 			_mapper = mapper;
 			_unitOfWork = unitOfWork;
@@ -42,10 +44,13 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
 				?? throw new ValidationException($"User with email '{userEmail}' not found.");
 
+			if (user.UserStatus != UserStatus.Active)
+				throw new ValidationException("User must be activated.");
 			var contract = await _unitOfWork.Contracts.GetByIdAsync(request.PaymentDto.ContractId)
 				?? throw new ValidationException($"Contract with ID '{request.PaymentDto.ContractId}' not found.");
-			if (contract.ContractStatus == ContractStatus.Cancelled)
-				throw new ValidationException("Contract is cancelled and cannot be payed.");
+
+			if (contract.ContractStatus == ContractStatus.Cancelled || contract.ContractStatus == ContractStatus.Completed)
+				throw new ValidationException("Contract is cancelled or completed and cannot be paid.");
 			if (contract.ClientId != user.Id)
 			{
 				var contractClient = await _unitOfWork.Users.GetByIdAsync(contract.ClientId)
@@ -60,9 +65,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 				if (company != null && company.CompanyType != CompanyType.Client)
 					throw new ValidationException("User must work in Client company to make payments.");
 			}
-
 			var amount = await _paymentCalculator.CalculatePaymentAmountAsync(request.PaymentDto.ContractId);
-
 			var entity = _mapper.Map<Domain.Entities.Payment>(request.PaymentDto);
 			entity.PaymentStatus = PaymentStatus.Pending;
 			entity.Amount = amount;
@@ -74,7 +77,5 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 
 			return Unit.Value;
 		}
-
 	}
-
 }
