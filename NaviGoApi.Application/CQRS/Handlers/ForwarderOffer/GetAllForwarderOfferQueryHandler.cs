@@ -42,7 +42,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.ForwarderOffer
 			if (user.UserStatus != Domain.Entities.UserStatus.Active)
 				throw new ValidationException("User must be activated.");
 
-			var entities = await _unitOfWork.ForwarderOffers.GetAllAsync();
+			var entities = await _unitOfWork.ForwarderOffers.GetAllAsync(request.Search);
 			return _mapper.Map<IEnumerable<ForwarderOfferDto>>(entities);
 		}
 	}

@@ -39,7 +39,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.VehicleMaintenance
 				throw new ValidationException("Your account is not activated.");
 			if (user.UserRole != UserRole.CompanyAdmin)
 				throw new ValidationException("Only users with CompanyAdmin role can report vehicle maintenance.");
-			var vehiclemaintenances = await _unitOfWork.VehicleMaintenances.GetAllAsync();
+			var vehiclemaintenances = await _unitOfWork.VehicleMaintenances.GetAllAsync(request.Search);
 			return _mapper.Map<IEnumerable<Domain.Entities.VehicleMaintenance>>(vehiclemaintenances);
 		}
 	}

@@ -39,7 +39,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 				?? throw new ValidationException($"User with email '{userEmail}' not found.");
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("Your account is not activated.");
-			var shipments = await _unitOfWork.Shipments.GetAllAsync();
+			var shipments = await _unitOfWork.Shipments.GetAllAsync(request.Search);
 			return _mapper.Map<IEnumerable<ShipmentDto?>>(shipments);
 		}
 	}

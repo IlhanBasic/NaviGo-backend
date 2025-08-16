@@ -48,7 +48,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.ShipmentDocument
 			if (user.UserRole != UserRole.CompanyAdmin)
 				throw new ValidationException("Only Company Admins can view shipment documents.");
 
-			var entities = await _unitOfWork.ShipmentDocuments.GetAllAsync();
+			var entities = await _unitOfWork.ShipmentDocuments.GetAllAsync(request.Search);
 
 			return _mapper.Map<IEnumerable<ShipmentDocumentDto>>(entities);
 		}

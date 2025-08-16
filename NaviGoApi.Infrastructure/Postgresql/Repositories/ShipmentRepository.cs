@@ -40,10 +40,34 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.ToListAsync();
 		}
 
-		public Task<IEnumerable<Shipment>> GetAllAsync(ShipmentSearchDto shipmentSearch)
+		public async Task<IEnumerable<Shipment>> GetAllAsync(ShipmentSearchDto shipmentSearch)
 		{
-			throw new NotImplementedException();
+			var query = _context.Shipments
+				.Include(s => s.Contract)
+				.Include(s => s.Vehicle)
+				.Include(s => s.Driver)
+				.Include(s => s.CargoType)
+				.AsNoTracking()
+				.AsQueryable();
+
+			query = (shipmentSearch.SortBy?.ToLower(), shipmentSearch.SortDirection.ToLower()) switch
+			{
+				("status", "asc") => query.OrderBy(s => s.Status),
+				("status", "desc") => query.OrderByDescending(s => s.Status),
+				("scheduleddeparture", "asc") => query.OrderBy(s => s.ScheduledDeparture),
+				("scheduleddeparture", "desc") => query.OrderByDescending(s => s.ScheduledDeparture),
+				("scheduledarrival", "asc") => query.OrderBy(s => s.ScheduledArrival),
+				("scheduledarrival", "desc") => query.OrderByDescending(s => s.ScheduledArrival),
+				("priority", "asc") => query.OrderBy(s => s.Priority),
+				("priority", "desc") => query.OrderByDescending(s => s.Priority),
+				_ => query.OrderBy(s => s.Id) 
+			};
+			int skip = (shipmentSearch.Page - 1) * shipmentSearch.PageSize;
+			query = query.Skip(skip).Take(shipmentSearch.PageSize);
+
+			return await query.ToListAsync();
 		}
+
 
 		public async Task<IEnumerable<Shipment>> GetByContractIdAsync(int contractId)
 		{

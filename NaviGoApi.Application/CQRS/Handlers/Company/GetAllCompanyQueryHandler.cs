@@ -24,7 +24,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Company
 
 		public async Task<IEnumerable<CompanyDto>> Handle(GetAllCompaniesQuery request, CancellationToken cancellationToken)
 		{
-			var list = await _unitOfWork.Companies.GetAllAsync();
+			var list = await _unitOfWork.Companies.GetAllAsync(request.Search);
 			return _mapper.Map<IEnumerable<CompanyDto>>(list);
 		}
 	}

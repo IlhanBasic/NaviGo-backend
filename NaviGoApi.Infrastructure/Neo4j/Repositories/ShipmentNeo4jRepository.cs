@@ -222,9 +222,37 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			};
 		}
 
-		public Task<IEnumerable<Shipment>> GetAllAsync(ShipmentSearchDto shipmentSearch)
+		public async Task<IEnumerable<Shipment>> GetAllAsync(ShipmentSearchDto search)
 		{
-			throw new NotImplementedException();
+			var query = @"MATCH (s:Shipment) RETURN s";
+			var session = _driver.AsyncSession();
+			var result = await session.RunAsync(query);
+
+			var list = new List<Shipment>();
+			while (await result.FetchAsync())
+			{
+				list.Add(MapNodeToShipment(result.Current["s"].As<INode>()));
+			}
+			await session.CloseAsync();
+
+			list = (search.SortBy?.ToLower(), search.SortDirection.ToLower()) switch
+			{
+				("id", "asc") => list.OrderBy(s => s.Id).ToList(),
+				("id", "desc") => list.OrderByDescending(s => s.Id).ToList(),
+				("scheduleddeparture", "asc") => list.OrderBy(s => s.ScheduledDeparture).ToList(),
+				("scheduleddeparture", "desc") => list.OrderByDescending(s => s.ScheduledDeparture).ToList(),
+				("priority", "asc") => list.OrderBy(s => s.Priority).ToList(),
+				("priority", "desc") => list.OrderByDescending(s => s.Priority).ToList(),
+				("status", "asc") => list.OrderBy(s => s.Status).ToList(),
+				("status", "desc") => list.OrderByDescending(s => s.Status).ToList(),
+				_ => list.OrderBy(s => s.Id).ToList()
+			};
+
+			int skip = (search.Page - 1) * search.PageSize;
+			list = list.Skip(skip).Take(search.PageSize).ToList();
+
+			return list;
 		}
+
 	}
 }

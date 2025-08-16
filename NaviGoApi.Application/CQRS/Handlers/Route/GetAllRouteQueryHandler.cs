@@ -39,7 +39,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Route
 				?? throw new ValidationException($"User with email '{userEmail}' not found.");
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("Your account is not activated.");
-			var routes = await _unitOfWork.Routes.GetAllAsync();
+			var routes = await _unitOfWork.Routes.GetAllAsync(request.Search);
 			return _mapper.Map<IEnumerable<RouteDto?>>(routes);
 		}
 	}

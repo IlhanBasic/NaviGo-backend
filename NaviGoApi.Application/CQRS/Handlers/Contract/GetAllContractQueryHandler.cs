@@ -45,7 +45,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 			if (user.UserRole != UserRole.CompanyAdmin && user.UserRole != UserRole.SuperAdmin)
 				throw new ValidationException("User is not authorized to view contracts.");
 
-			var contracts = await _unitOfWork.Contracts.GetAllAsync();
+			var contracts = await _unitOfWork.Contracts.GetAllAsync(request.Search);
 			if (user.UserRole == UserRole.CompanyAdmin)
 			{
 				contracts = contracts.Where(c => c.ForwarderId == user.CompanyId).ToList();

@@ -92,7 +92,6 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 
 				if (route != null)
 				{
-					// Učitavamo RoutePrices za taj Route
 					var routePricesCollection = _shipmentsCollection.Database.GetCollection<RoutePrice>("RoutePrices");
 					route.RoutePrices = await routePricesCollection.Find(rp => rp.RouteId == route.Id).ToListAsync();
 				}
@@ -115,9 +114,51 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			await _shipmentsCollection.ReplaceOneAsync(s => s.Id == shipment.Id, shipment);
 		}
 
-		public Task<IEnumerable<Shipment>> GetAllAsync(ShipmentSearchDto shipmentSearch)
+		public async Task<IEnumerable<Shipment>> GetAllAsync(ShipmentSearchDto shipmentSearch)
 		{
-			throw new NotImplementedException();
+			var filter = Builders<Shipment>.Filter.Empty; 
+
+			var sortDefinitionBuilder = Builders<Shipment>.Sort;
+			SortDefinition<Shipment> sort;
+
+			switch (shipmentSearch.SortBy?.ToLower())
+			{
+				case "id":
+					sort = shipmentSearch.SortDirection.ToLower() == "desc"
+						? sortDefinitionBuilder.Descending(s => s.Id)
+						: sortDefinitionBuilder.Ascending(s => s.Id);
+					break;
+				case "priority":
+					sort = shipmentSearch.SortDirection.ToLower() == "desc"
+						? sortDefinitionBuilder.Descending(s => s.Priority)
+						: sortDefinitionBuilder.Ascending(s => s.Priority);
+					break;
+				case "scheduleddeparture":
+					sort = shipmentSearch.SortDirection.ToLower() == "desc"
+						? sortDefinitionBuilder.Descending(s => s.ScheduledDeparture)
+						: sortDefinitionBuilder.Ascending(s => s.ScheduledDeparture);
+					break;
+				case "status":
+					sort = shipmentSearch.SortDirection.ToLower() == "desc"
+						? sortDefinitionBuilder.Descending(s => s.Status)
+						: sortDefinitionBuilder.Ascending(s => s.Status);
+					break;
+				default:
+					sort = sortDefinitionBuilder.Ascending(s => s.Id);
+					break;
+			}
+
+			var skip = (shipmentSearch.Page - 1) * shipmentSearch.PageSize;
+
+			var shipments = await _shipmentsCollection
+				.Find(filter)
+				.Sort(sort)
+				.Skip(skip)
+				.Limit(shipmentSearch.PageSize)
+				.ToListAsync();
+
+			return shipments;
 		}
+
 	}
 }

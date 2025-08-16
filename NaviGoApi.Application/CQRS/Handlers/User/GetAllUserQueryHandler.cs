@@ -31,7 +31,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 
 			public async Task<IEnumerable<UserDto>> Handle(GetAllUserQuery request, CancellationToken cancellationToken)
 			{
-				var users = await _userRepository.GetAllAsync();
+				var users = await _userRepository.GetAllAsync(request.Search);
 				var userDtos = _mapper.Map<IEnumerable<UserDto>>(users);
 				return userDtos;
 			}

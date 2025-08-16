@@ -41,7 +41,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Driver
 				throw new ValidationException("Your account is not activated.");
 			if (user.UserRole != UserRole.CompanyAdmin)
 				throw new ValidationException("You are not allowed to add vehicle.");
-			var drivers = await _unitOfWork.Drivers.GetAllAsync();
+			var drivers = await _unitOfWork.Drivers.GetAllAsync(request.Search);
 			return _mapper.Map<IEnumerable<DriverDto?>>(drivers);
 		}
 	}
