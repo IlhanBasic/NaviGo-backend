@@ -6,6 +6,7 @@ using NaviGoApi.Application.DTOs.ForwarderOffer;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
+using Microsoft.AspNetCore.Authorization;
 
 namespace NaviGoApi.API.Controllers
 {
@@ -21,6 +22,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpGet]
+		[Authorize]
 		public async Task<IActionResult> GetAll()
 		{
 			var result = await _mediator.Send(new GetAllForwarderOfferQuery());
@@ -28,6 +30,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpGet("{id}")]
+		[Authorize]
 		public async Task<IActionResult> GetById(int id)
 		{
 			var result = await _mediator.Send(new GetForwarderOfferByIdQuery(id));
@@ -38,6 +41,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpPost]
+		[Authorize]
 		public async Task<IActionResult> Create([FromBody] ForwarderOfferCreateDto dto)
 		{
 			await _mediator.Send(new AddForwarderOfferCommand(dto));
@@ -45,6 +49,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpPut("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Update(int id, [FromBody] ForwarderOfferUpdateDto dto)
 		{
 			try
@@ -59,6 +64,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpDelete("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Delete(int id)
 		{
 			try
@@ -72,6 +78,7 @@ namespace NaviGoApi.API.Controllers
 			}
 		}
 		[HttpPut("{id}/status")]
+		[Authorize]
 		public async Task<IActionResult> UpdateStatus(int id, [FromBody] ForwarderOfferStatusUpdateDto dto)
 		{
 			try

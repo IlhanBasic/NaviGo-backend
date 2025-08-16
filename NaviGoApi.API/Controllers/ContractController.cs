@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.Contract;
 using NaviGoApi.Application.CQRS.Queries.Contract;
@@ -20,6 +21,7 @@ namespace NaviGoApi.API.Controllers
 
 		// GET: api/contract
 		[HttpGet]
+		[Authorize]
 		public async Task<IActionResult> GetAll()
 		{
 			var result = await _mediator.Send(new GetAllContractQuery());
@@ -28,6 +30,7 @@ namespace NaviGoApi.API.Controllers
 
 		// GET: api/contract/{id}
 		[HttpGet("{id:int}")]
+		[Authorize]
 		public async Task<IActionResult> GetById(int id)
 		{
 			var result = await _mediator.Send(new GetContractByIdQuery(id));
@@ -38,6 +41,7 @@ namespace NaviGoApi.API.Controllers
 
 		// POST: api/contract
 		[HttpPost]
+		[Authorize]
 		public async Task<IActionResult> Create([FromBody] ContractCreateDto dto)
 		{
 			await _mediator.Send(new AddContractCommand(dto));
@@ -46,6 +50,7 @@ namespace NaviGoApi.API.Controllers
 
 		// PUT: api/contract/{id}
 		[HttpPut("{id:int}")]
+		[Authorize]
 		public async Task<IActionResult> Update(int id, [FromBody] ContractUpdateDto dto)
 		{
 			try
@@ -61,6 +66,7 @@ namespace NaviGoApi.API.Controllers
 
 		// DELETE: api/contract/{id}
 		[HttpDelete("{id:int}")]
+		[Authorize]
 		public async Task<IActionResult> Delete(int id)
 		{
 			try

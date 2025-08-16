@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NaviGoApi.Application.CQRS.Commands.DelayPenalty;
 using NaviGoApi.Application.CQRS.Queries.DelayPenalty;
@@ -19,6 +20,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpGet]
+		[Authorize]
 		public async Task<IActionResult> GetAll()
 		{
 			var penalties = await _mediator.Send(new GetAllDelayPenaltiesQuery());
@@ -26,6 +28,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpGet("{id}")]
+		[Authorize]
 		public async Task<IActionResult> GetById(int id)
 		{
 			var penalty = await _mediator.Send(new GetDelayPenaltyByIdQuery(id));
@@ -36,6 +39,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpPost]
+		[Authorize]
 		public async Task<IActionResult> Create([FromBody] DelayPenaltyCreateDto dto)
 		{
 			if (!ModelState.IsValid)
@@ -46,6 +50,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpPut("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Update(int id, [FromBody] DelayPenaltyUpdateDto dto)
 		{
 			if (!ModelState.IsValid)
@@ -56,6 +61,7 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpDelete("{id}")]
+		[Authorize]
 		public async Task<IActionResult> Delete(int id)
 		{
 			await _mediator.Send(new DeleteDelayPenaltyCommand(id));

@@ -1,13 +1,12 @@
 ﻿using AutoMapper;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using NaviGoApi.Application.CQRS.Commands.ForwarderOffer;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.CQRS.Handlers.ForwarderOffer
@@ -16,34 +15,40 @@ namespace NaviGoApi.Application.CQRS.Handlers.ForwarderOffer
 	{
 		private readonly IMapper _mapper;
 		private readonly IUnitOfWork _unitOfWork;
+		private readonly IHttpContextAccessor _httpContextAccessor;
 
-		public UpdateForwarderOfferCommandHandler(IMapper mapper, IUnitOfWork unitOfWork)
+		public UpdateForwarderOfferCommandHandler(IMapper mapper, IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor)
 		{
 			_mapper = mapper;
 			_unitOfWork = unitOfWork;
+			_httpContextAccessor = httpContextAccessor;
 		}
 
-		//public async Task<Unit> Handle(UpdateForwarderOfferCommand request, CancellationToken cancellationToken)
-		//{
-		//	var entity = await _unitOfWork.ForwarderOffers.GetByIdAsync(request.Id);
-		//	if (entity == null)
-		//		throw new KeyNotFoundException($"ForwarderOffer with id {request.Id} not found.");
-
-		//	// Map update DTO to entity
-		//	_mapper.Map(request.ForwarderOfferDto, entity);
-
-		//	await _unitOfWork.ForwarderOffers.UpdateAsync(entity);
-		//	await _unitOfWork.SaveChangesAsync();
-
-		//	return Unit.Value;
-		//}
 		public async Task<Unit> Handle(UpdateForwarderOfferCommand request, CancellationToken cancellationToken)
 		{
+			if (_httpContextAccessor.HttpContext == null)
+				throw new ValidationException("HttpContext is null.");
+
+			var userEmail = _httpContextAccessor.HttpContext.User
+				.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+
+			if (string.IsNullOrEmpty(userEmail))
+				throw new ValidationException("User email not found in token.");
+
+			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
+				?? throw new ValidationException("User not found.");
+
+			if (user.UserStatus != UserStatus.Active)
+				throw new ValidationException("User must be activated.");
+			if (user.UserRole != UserRole.CompanyAdmin)
+				throw new ValidationException("Only CompanyAdmin can update a forwarder offer.");
+
 			var entity = await _unitOfWork.ForwarderOffers.GetByIdAsync(request.Id);
 			if (entity == null)
 				throw new ValidationException($"ForwarderOffer with id {request.Id} not found.");
 
-			// Biznis provere
+			if (user.CompanyId != entity.ForwarderId)
+				throw new ValidationException("User cannot update offers from other companies.");
 			if (entity.ExpiresAt <= DateTime.UtcNow)
 				throw new ValidationException("Cannot update an expired offer.");
 
@@ -59,8 +64,6 @@ namespace NaviGoApi.Application.CQRS.Handlers.ForwarderOffer
 			if (request.ForwarderOfferDto.ExpiresAt.HasValue &&
 				request.ForwarderOfferDto.ExpiresAt <= DateTime.UtcNow)
 				throw new ValidationException("ExpiresAt must be a future date.");
-
-			// Map update DTO to entity
 			_mapper.Map(request.ForwarderOfferDto, entity);
 
 			await _unitOfWork.ForwarderOffers.UpdateAsync(entity);
