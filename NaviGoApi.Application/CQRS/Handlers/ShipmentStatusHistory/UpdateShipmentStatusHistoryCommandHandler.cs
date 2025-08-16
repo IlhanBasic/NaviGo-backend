@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Http;
 using NaviGoApi.Application.CQRS.Commands.ShipmentStatusHistory;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,9 +39,16 @@ namespace NaviGoApi.Application.CQRS.Handlers.ShipmentStatusHistory
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
 				?? throw new ValidationException("User not found.");
 
-			var company = await _unitOfWork.Companies.GetByIdAsync(user.Id);
+			if (user.UserStatus != UserStatus.Active || user.UserRole != UserRole.CompanyAdmin)
+				throw new ValidationException("Only active Company Admins can update shipment status.");
+
+			if (user.CompanyId == null)
+				throw new ValidationException("User is not associated with any company.");
+
+			var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value);
 			if (company == null)
 				throw new ValidationException("User is not associated with any company.");
+
 			var existing = await _unitOfWork.ShipmentStatusHistories.GetByIdAsync(request.Id)
 				?? throw new KeyNotFoundException($"ShipmentStatusHistory with Id {request.Id} not found.");
 
@@ -47,15 +56,15 @@ namespace NaviGoApi.Application.CQRS.Handlers.ShipmentStatusHistory
 				?? throw new ValidationException("Shipment not found.");
 
 			var contract = await _unitOfWork.Contracts.GetByIdAsync(shipment.ContractId)
-				?? throw new ValidationException("Contract isn't valid."); ;
+				?? throw new ValidationException("Contract isn't valid.");
+
 			var forwarder = await _unitOfWork.Companies.GetByIdAsync(contract.ForwarderId)
-				?? throw new ValidationException("Forwarder isn't valid."); ;
+				?? throw new ValidationException("Forwarder isn't valid.");
+
 			var route = await _unitOfWork.Routes.GetByIdAsync(contract.RouteId)
 				?? throw new ValidationException("Route isn't valid.");
-			if (company.Id != forwarder.Id &&
-				company.Id != route.CompanyId)
+			if (company.Id != forwarder.Id && company.Id != route.CompanyId)
 				throw new ValidationException("User is not authorized to change shipment status.");
-			// Validacija statusa (ako se menja)
 			if (request.ShipmentStatusHistoryDto.ShipmentStatus != existing.ShipmentStatus)
 			{
 				var lastStatus = await _unitOfWork.ShipmentStatusHistories
@@ -69,19 +78,17 @@ namespace NaviGoApi.Application.CQRS.Handlers.ShipmentStatusHistory
 
 				existing.ShipmentStatus = request.ShipmentStatusHistoryDto.ShipmentStatus;
 			}
-
-			// Notes može slobodno da se menja
 			existing.Notes = request.ShipmentStatusHistoryDto.Notes;
-
-			// Osveži vreme i korisnika izmene
 			existing.ChangedAt = DateTime.UtcNow;
 			existing.ChangedByUserId = user.Id;
 
 			await _unitOfWork.ShipmentStatusHistories.UpdateAsync(existing);
+			shipment.Status = existing.ShipmentStatus;
+			await _unitOfWork.Shipments.UpdateAsync(shipment);
+
 			await _unitOfWork.SaveChangesAsync();
 
 			return Unit.Value;
 		}
-
 	}
 }
