@@ -60,9 +60,35 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			await _shipmentDocumentsCollection.ReplaceOneAsync(doc => doc.Id == document.Id, document);
 		}
 
-		public Task<IEnumerable<ShipmentDocument>> GetAllAsync(ShipmentDocumentSearchDto shipmentDocumentSearch)
+		public async Task<IEnumerable<ShipmentDocument>> GetAllAsync(ShipmentDocumentSearchDto search)
 		{
-			throw new NotImplementedException();
+			var sortBuilder = Builders<ShipmentDocument>.Sort;
+
+			// Odabir polja za sortiranje
+			var sort = search.SortBy?.ToLower() switch
+			{
+				"uploaddate" => search.SortDirection.ToLower() == "desc"
+					? sortBuilder.Descending(d => d.UploadDate)
+					: sortBuilder.Ascending(d => d.UploadDate),
+				"verified" => search.SortDirection.ToLower() == "desc"
+					? sortBuilder.Descending(d => d.Verified)
+					: sortBuilder.Ascending(d => d.Verified),
+				_ => search.SortDirection.ToLower() == "desc"
+					? sortBuilder.Descending(d => d.Id)
+					: sortBuilder.Ascending(d => d.Id)
+			};
+
+			int skip = (search.Page - 1) * search.PageSize;
+
+			var documents = await _shipmentDocumentsCollection
+				.Find(_ => true)
+				.Sort(sort)
+				.Skip(skip)
+				.Limit(search.PageSize)
+				.ToListAsync();
+
+			return documents;
 		}
+
 	}
 }

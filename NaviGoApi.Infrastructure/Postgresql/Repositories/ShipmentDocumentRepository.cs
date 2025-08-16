@@ -36,10 +36,23 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			return await _context.ShipmentDocuments.AsNoTracking().ToListAsync();
 		}
 
-		public Task<IEnumerable<ShipmentDocument>> GetAllAsync(ShipmentDocumentSearchDto shipmentDocumentSearch)
+		public async Task<IEnumerable<ShipmentDocument>> GetAllAsync(ShipmentDocumentSearchDto shipmentDocumentSearch)
 		{
-			throw new NotImplementedException();
+			string sortBy = string.IsNullOrEmpty(shipmentDocumentSearch.SortBy) ? "Id" : shipmentDocumentSearch.SortBy;
+			bool descending = shipmentDocumentSearch.SortDirection?.ToLower() == "desc";
+			int skip = (shipmentDocumentSearch.Page - 1) * shipmentDocumentSearch.PageSize;
+			int take = shipmentDocumentSearch.PageSize;
+
+			var query = _context.ShipmentDocuments.AsQueryable();
+
+			query = descending
+				? query.OrderByDescending(e => EF.Property<object>(e, sortBy))
+				: query.OrderBy(e => EF.Property<object>(e, sortBy));
+			query = query.Skip(skip).Take(take);
+
+			return await query.AsNoTracking().ToListAsync();
 		}
+
 
 		public async Task<ShipmentDocument?> GetByIdAsync(int id)
 		{

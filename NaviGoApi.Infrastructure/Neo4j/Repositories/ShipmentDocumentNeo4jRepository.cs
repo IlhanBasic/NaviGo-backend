@@ -191,9 +191,48 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			};
 		}
 
-		public Task<IEnumerable<ShipmentDocument>> GetAllAsync(ShipmentDocumentSearchDto shipmentDocumentSearch)
+		public async Task<IEnumerable<ShipmentDocument>> GetAllAsync(ShipmentDocumentSearchDto search)
 		{
-			throw new NotImplementedException();
+			string sortBy = search.SortBy?.ToLower() switch
+			{
+				"uploaddate" => "d.uploadDate",
+				"verified" => "d.verified",
+				_ => "d.id"
+			};
+
+			string sortDirection = search.SortDirection?.ToLower() == "desc" ? "DESC" : "ASC";
+
+			int skip = (search.Page - 1) * search.PageSize;
+			int limit = search.PageSize;
+
+			var query = $@"
+        MATCH (d:ShipmentDocument)
+        RETURN d
+        ORDER BY {sortBy} {sortDirection}
+        SKIP $skip
+        LIMIT $limit
+    ";
+
+			var session = _driver.AsyncSession();
+			try
+			{
+				var cursor = await session.RunAsync(query, new { skip, limit });
+				var records = await cursor.ToListAsync();
+
+				var result = new List<ShipmentDocument>();
+				foreach (var record in records)
+				{
+					var node = record["d"].As<INode>();
+					result.Add(MapNodeToShipmentDocument(node));
+				}
+
+				return result;
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
+
 	}
 }
