@@ -46,11 +46,18 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 			var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value)
 				?? throw new ValidationException("Company not found.");
 
-			if (company.CompanyType == CompanyType.Client)
+			if (company.CompanyStatus != CompanyStatus.Approved)
+				throw new ValidationException("Company must be approved to perform this action.");
+
+			if (company.CompanyType != CompanyType.Forwarder && company.CompanyType != CompanyType.Carrier)
 				throw new ValidationException("Only Forwarder or Carrier companies can update payments.");
+
+			if (user.UserRole != UserRole.CompanyUser && user.UserRole != UserRole.CompanyAdmin)
+				throw new ValidationException("You must be a company user or company admin to update payments.");
 
 			var payment = await _unitOfWork.Payments.GetByIdAsync(request.Id)
 				?? throw new ValidationException($"Payment with Id {request.Id} not found.");
+
 			payment.PaymentStatus = request.PaymentDto.PaymentStatus;
 
 			await _unitOfWork.Payments.UpdateAsync(payment);
@@ -59,4 +66,5 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 			return Unit.Value;
 		}
 	}
+
 }

@@ -46,26 +46,40 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("User must be activated.");
+
 			var contract = await _unitOfWork.Contracts.GetByIdAsync(request.PaymentDto.ContractId)
 				?? throw new ValidationException($"Contract with ID '{request.PaymentDto.ContractId}' not found.");
 
-			if (contract.ContractStatus == ContractStatus.Cancelled || contract.ContractStatus == ContractStatus.Completed)
+			if (contract.ContractStatus is ContractStatus.Cancelled or ContractStatus.Completed)
 				throw new ValidationException("Contract is cancelled or completed and cannot be paid.");
-			if (contract.ClientId != user.Id)
+
+			if (user.CompanyId == null)
 			{
+				if (user.UserRole != UserRole.RegularUser)
+					throw new ValidationException("Only RegularUser without a company can pay.");
+
+				if (contract.ClientId != user.Id)
+					throw new ValidationException("You are not authorized to pay for this contract.");
+			}
+			else
+			{
+				var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value)
+					?? throw new ValidationException("User company doesn't exist.");
+
+				if (company.CompanyStatus != CompanyStatus.Approved)
+					throw new ValidationException("Company must be approved by SuperAdmin.");
+
+				if (company.CompanyType != CompanyType.Client)
+					throw new ValidationException("Only Client companies can make payments.");
+
 				var contractClient = await _unitOfWork.Users.GetByIdAsync(contract.ClientId)
 					?? throw new ValidationException($"Client with ID '{contract.ClientId}' not found.");
 
-				if (user.CompanyId == null || contractClient.CompanyId == null || user.CompanyId != contractClient.CompanyId)
+				if (contractClient.CompanyId != company.Id)
 					throw new ValidationException("You are not authorized to pay for this contract.");
 			}
-			if (user.CompanyId != null)
-			{
-				var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value);
-				if (company != null && company.CompanyType != CompanyType.Client)
-					throw new ValidationException("User must work in Client company to make payments.");
-			}
 			var amount = await _paymentCalculator.CalculatePaymentAmountAsync(request.PaymentDto.ContractId);
+
 			var entity = _mapper.Map<Domain.Entities.Payment>(request.PaymentDto);
 			entity.PaymentStatus = PaymentStatus.Pending;
 			entity.Amount = amount;
@@ -77,5 +91,6 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 
 			return Unit.Value;
 		}
+
 	}
 }
