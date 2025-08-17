@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Http;
 using NaviGoApi.Application.CQRS.Commands.User;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -28,14 +29,16 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 		{
 			var httpContext = _httpContextAccessor.HttpContext
 				?? throw new InvalidOperationException("HttpContext is not available.");
-
 			var userEmail = httpContext.User.FindFirst(ClaimTypes.Email)?.Value;
 			if (string.IsNullOrWhiteSpace(userEmail))
 				throw new ValidationException("User email not found in authentication token.");
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail);
 			if (user == null)
+				throw new ValidationException($"User with email '{userEmail}' not found.");
+			if (user == null)
 				return false;
-
+			if (user.UserStatus != UserStatus.Active)
+				throw new ValidationException("Your account is not activated.");
 			if (!VerifyPassword(request.CurrentPassword, user.PasswordHash))
 				return false;
 

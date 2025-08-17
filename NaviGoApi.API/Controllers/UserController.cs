@@ -32,6 +32,7 @@ namespace NaviGoApi.API.Controllers
 
 		// GET: api/user/{id}
 		[HttpGet("{id}")]
+		[Authorize]
 		public async Task<ActionResult<UserDto>> GetUserById(int id)
 		{
 			var query = new GetUserByIdQuery(id);
@@ -43,6 +44,7 @@ namespace NaviGoApi.API.Controllers
 
 		// GET: api/user
 		[HttpGet]
+		[Authorize]
 		public async Task<ActionResult<IEnumerable<UserDto>>> GetAllUsers([FromQuery] UserSearchDto search)
 		{
 			var query = new GetAllUserQuery(search);
@@ -52,6 +54,7 @@ namespace NaviGoApi.API.Controllers
 
 		// DELETE: api/user/{id}
 		[HttpDelete("{id}")]
+		[Authorize]
 		public async Task<ActionResult> DeleteUser(int id)
 		{
 			var command = new DeleteUserCommand(id);
@@ -147,6 +150,7 @@ namespace NaviGoApi.API.Controllers
 			return NoContent();
 		}
 		[HttpPost("superadmin")]
+		[Authorize]
 		public async Task<IActionResult> AddSuperAdmin([FromBody] UserSuperAdminCreateDto dto)
 		{
 			var command = new AddSuperAdminUserCommand(dto);
