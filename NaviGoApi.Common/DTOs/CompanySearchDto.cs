@@ -9,6 +9,7 @@ namespace NaviGoApi.Common.DTOs
 	public class CompanySearchDto
 	{
 		public string? Pib { get; set; }
+		public int? CompanyType { get; set; }
 		public string? CompanyName { get; set; }
 		public string? SortBy { get; set; } = "Id";
 		public string SortDirection { get; set; } = "asc";

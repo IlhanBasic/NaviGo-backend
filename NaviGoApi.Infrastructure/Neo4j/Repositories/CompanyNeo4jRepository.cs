@@ -286,6 +286,67 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			};
 		}
 
+		//public async Task<IEnumerable<Company>> GetAllAsync(CompanySearchDto companySearch)
+		//{
+		//	var session = _driver.AsyncSession();
+		//	try
+		//	{
+		//		var filters = new List<string>();
+		//		var parameters = new Dictionary<string, object>();
+
+		//		if (!string.IsNullOrWhiteSpace(companySearch.Pib))
+		//		{
+		//			filters.Add("c.PIB CONTAINS $PIB");
+		//			parameters["PIB"] = companySearch.Pib;
+		//		}
+
+		//		if (!string.IsNullOrWhiteSpace(companySearch.CompanyName))
+		//		{
+		//			filters.Add("c.CompanyName CONTAINS $CompanyName");
+		//			parameters["CompanyName"] = companySearch.CompanyName;
+		//		}
+
+		//		var whereClause = filters.Count > 0 ? "WHERE " + string.Join(" AND ", filters) : "";
+
+		//		var sortBy = companySearch.SortBy?.ToLower() switch
+		//		{
+		//			"companyname" => "c.CompanyName",
+		//			"pib" => "c.PIB",
+		//			"createdat" => "c.CreatedAt",
+		//			_ => "c.Id"
+		//		};
+
+		//		var sortDirection = companySearch.SortDirection?.ToLower() == "desc" ? "DESC" : "ASC";
+
+		//		var skip = (companySearch.Page - 1) * companySearch.PageSize;
+		//		var limit = companySearch.PageSize;
+
+		//		var query = $@"
+		//          MATCH (c:Company)
+		//          {whereClause}
+		//          RETURN c
+		//          ORDER BY {sortBy} {sortDirection}
+		//          SKIP $Skip LIMIT $Limit
+		//      ";
+
+		//		parameters["Skip"] = skip;
+		//		parameters["Limit"] = limit;
+
+		//		var result = await session.RunAsync(query, parameters);
+		//		var list = new List<Company>();
+
+		//		await result.ForEachAsync(record =>
+		//		{
+		//			list.Add(MapCompanyNode(record["c"].As<INode>()));
+		//		});
+
+		//		return list;
+		//	}
+		//	finally
+		//	{
+		//		await session.CloseAsync();
+		//	}
+		//}
 		public async Task<IEnumerable<Company>> GetAllAsync(CompanySearchDto companySearch)
 		{
 			var session = _driver.AsyncSession();
@@ -304,6 +365,12 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				{
 					filters.Add("c.CompanyName CONTAINS $CompanyName");
 					parameters["CompanyName"] = companySearch.CompanyName;
+				}
+
+				if (companySearch.CompanyType.HasValue)
+				{
+					filters.Add("c.CompanyType = $CompanyType");
+					parameters["CompanyType"] = companySearch.CompanyType.Value;
 				}
 
 				var whereClause = filters.Count > 0 ? "WHERE " + string.Join(" AND ", filters) : "";
