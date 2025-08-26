@@ -1,9 +1,11 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using NaviGoApi.Application.CQRS.Commands.User;
 using NaviGoApi.Application.CQRS.Queries.User;
 using NaviGoApi.Application.DTOs.User;
+using NaviGoApi.Application.Settings;
 using NaviGoApi.Common.DTOs;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -15,10 +17,11 @@ namespace NaviGoApi.API.Controllers
 	public class UserController : ControllerBase
 	{
 		private readonly IMediator _mediator;
-
-		public UserController(IMediator mediator)
+		private readonly string _apiBaseUrl;
+		public UserController(IMediator mediator, IOptions<ApiSettings> apiSettings)
 		{
 			_mediator = mediator;
+			_apiBaseUrl = apiSettings.Value.FrontendUrl;
 		}
 
 		// POST: api/user
@@ -68,53 +71,90 @@ namespace NaviGoApi.API.Controllers
 		{
 			var command = new VerifyEmailCommand(token);
 			var result = await _mediator.Send(command);
-			if (!result)
-				return BadRequest("Email Verification Failed: Invalid or expired token.");
+
 			if (!result)
 			{
-				var errorHtml = @"
-            <html>
-            <head>
-                <title>Email Verification Failed</title>
-                <style>
-                    body { font-family: Arial, sans-serif; background-color: #f8d7da; color: #721c24; text-align: center; padding: 50px; }
-                    .container { background-color: #f5c6cb; border-radius: 10px; padding: 20px; max-width: 500px; margin: auto; }
-                    a { color: #721c24; text-decoration: none; font-weight: bold; }
-                    a:hover { text-decoration: underline; }
-                </style>
-            </head>
-            <body>
-                <div class='container'>
-                    <h1>Email Verification Failed</h1>
-                    <p>Invalid or expired verification token.</p>
-                    <p><a href='/login'>Go to Login</a></p>
-                </div>
-            </body>
-            </html>";
-				return Content(errorHtml, "text/html");
-			}
-
-			var successHtml = @"
+				var errorHtml = $@"
         <html>
         <head>
-            <title>Email Verified</title>
+            <title>Email Verification Failed</title>
             <style>
-                body { font-family: Arial, sans-serif; background-color: #d4edda; color: #155724; text-align: center; padding: 50px; }
-                .container { background-color: #c3e6cb; border-radius: 10px; padding: 20px; max-width: 500px; margin: auto; }
-                a { color: #155724; text-decoration: none; font-weight: bold; }
-                a:hover { text-decoration: underline; }
+                body {{
+                    font-family: Arial, sans-serif;
+                    background-color: #f8d7da;
+                    color: #721c24;
+                    text-align: center;
+                    padding: 50px;
+                }}
+                .container {{
+                    background-color: #f5c6cb;
+                    border-radius: 10px;
+                    padding: 20px;
+                    max-width: 500px;
+                    margin: auto;
+                }}
+                a {{
+                    color: #721c24;
+                    text-decoration: none;
+                    font-weight: bold;
+                }}
+                a:hover {{
+                    text-decoration: underline;
+                }}
             </style>
         </head>
         <body>
             <div class='container'>
-                <h1>Success!</h1>
-                <p>Your email has been verified successfully.</p>
-                <p><a href='/login'>Proceed to Login</a></p>
+                <h1>Email Verification Failed</h1>
+                <p>Invalid or expired verification token.</p>
+                <p><a href='{_apiBaseUrl}/login'>Go to Login</a></p>
             </div>
         </body>
         </html>";
+				return Content(errorHtml, "text/html");
+			}
+
+			var successHtml = $@"
+    <html>
+    <head>
+        <title>Email Verified</title>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                background-color: #d4edda;
+                color: #155724;
+                text-align: center;
+                padding: 50px;
+            }}
+            .container {{
+                background-color: #c3e6cb;
+                border-radius: 10px;
+                padding: 20px;
+                max-width: 500px;
+                margin: auto;
+            }}
+            a {{
+                color: #155724;
+                text-decoration: none;
+                font-weight: bold;
+            }}
+            a:hover {{
+                text-decoration: underline;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class='container'>
+            <h1>Success!</h1>
+            <p>Your email has been verified successfully.</p>
+            <p><a href='{_apiBaseUrl}/login'>Proceed to Login</a></p>
+        </div>
+    </body>
+    </html>";
+
 			return Content(successHtml, "text/html");
 		}
+
 		[HttpPost("forgot-password")]
 		public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto request)
 		{

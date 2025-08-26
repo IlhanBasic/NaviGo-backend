@@ -84,10 +84,11 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 
 			var claims = new[]
 			{
-			new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-			new Claim("role", user.UserRole.ToString()),
-			new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-		};
+				new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+				new Claim("email", user.Email), 
+				new Claim("role", user.UserRole.ToString()),
+				new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+			};
 
 			var token = new JwtSecurityToken(
 				claims: claims,

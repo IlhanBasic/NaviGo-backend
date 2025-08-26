@@ -39,7 +39,6 @@ namespace NaviGoApi.API.Controllers
 		}
 
 		[HttpPost]
-		[Authorize]
 		public async Task<ActionResult<CompanyDto>> Create([FromBody] CompanyCreateDto dto)
 		{
 			var created = await _mediator.Send(new AddCompanyCommand(dto));

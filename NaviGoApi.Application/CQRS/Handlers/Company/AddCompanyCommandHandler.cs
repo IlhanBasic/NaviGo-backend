@@ -29,23 +29,6 @@ namespace NaviGoApi.Application.CQRS.Handlers.Company
 
 		public async Task<CompanyDto> Handle(AddCompanyCommand request, CancellationToken cancellationToken)
 		{
-			var httpContext = _httpContextAccessor.HttpContext
-				?? throw new InvalidOperationException("HttpContext is not available.");
-
-			var userEmail = httpContext.User.FindFirst(ClaimTypes.Email)?.Value;
-			if (string.IsNullOrWhiteSpace(userEmail))
-				throw new ValidationException("User email not found in authentication token.");
-			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
-				?? throw new ValidationException($"User with email '{userEmail}' not found.");
-			if (user.UserStatus != UserStatus.Active)
-				throw new ValidationException("Your account is not activated.");
-			if (user.UserRole != UserRole.CompanyAdmin)
-				throw new ValidationException("You are not allowed to add company.");
-			var dto = request.CompanyDto;
-			if (dto.CompanyType != CompanyType.Forwarder && dto.MaxCommissionRate.HasValue)
-			{
-				throw new ValidationException("Only Forwarder companies can have MaxCommissionRate set.");
-			}
 			var exists = await _unitOfWork.Companies.GetByPibAsync(request.CompanyDto.PIB);
 			if (exists != null)
 				throw new ValidationException($"Company with PIB: ${request.CompanyDto.PIB} already exists.");
