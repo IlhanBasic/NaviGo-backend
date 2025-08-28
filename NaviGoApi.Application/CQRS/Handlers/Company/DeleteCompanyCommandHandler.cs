@@ -35,16 +35,21 @@ namespace NaviGoApi.Application.CQRS.Handlers.Company
 				?? throw new ValidationException($"User with email '{userEmail}' not found.");
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("Your account is not activated.");
-			if (user.UserRole != UserRole.CompanyAdmin || user.UserRole != UserRole.SuperAdmin)
+			if (user.UserRole != UserRole.CompanyAdmin && user.UserRole != UserRole.SuperAdmin)
 				throw new ValidationException("You are not allowed to delete company.");
+
 			var existing = await _unitOfWork.Companies.GetByIdAsync(request.Id);
 			if (existing != null)
 			{
-				//if (existing.Id != user.CompanyId)
-					//throw new ValidationException("You cannot delete wrong company.");
+				if (user.UserRole == UserRole.CompanyAdmin && existing.Id != user.CompanyId)
+				{
+					throw new ValidationException("You cannot delete another company.");
+				}
+
 				await _unitOfWork.Companies.DeleteAsync(existing);
 				await _unitOfWork.SaveChangesAsync();
 			}
+
 
 			return Unit.Value;
 		}
