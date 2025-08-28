@@ -36,7 +36,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Company
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("Your account is not activated.");
 			if (user.UserRole != UserRole.CompanyAdmin)
-				throw new ValidationException("You are not allowed to add company.");
+				throw new ValidationException("You are not allowed to delete company.");
 			var existing = await _unitOfWork.Companies.GetByIdAsync(request.Id);
 			if (existing != null)
 			{
