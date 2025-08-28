@@ -12,14 +12,12 @@ namespace NaviGoApi.Application.DTOs.Contract
 		public int Id { get; set; }
 
 		public int ClientId { get; set; }
-		public string ClientEmail { get; set; }
 		public string ClientFullName { get; set; }
 
 		public int ForwarderId { get; set; }
 		public string ForwarderCompanyName { get; set; }
 
 		public int RouteId { get; set; }
-		public string RouteName { get; set; }
 
 		public string ContractNumber { get; set; }
 		public DateTime ContractDate { get; set; }

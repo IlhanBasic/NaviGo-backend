@@ -46,12 +46,39 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 			//	throw new ValidationException("User is not authorized to view contracts.");
 
 			var contracts = await _unitOfWork.Contracts.GetAllAsync(request.Search);
-			if (user.UserRole == UserRole.CompanyAdmin)
-			{
-				contracts = contracts.Where(c => c.ForwarderId == user.CompanyId).ToList();
-			}
+			//if (user.UserRole == UserRole.CompanyAdmin)
+			//{
+			//	contracts = contracts.Where(c => c.ForwarderId == user.CompanyId).ToList();
+			//}
 
-			return _mapper.Map<IEnumerable<ContractDto>>(contracts);
+			//return _mapper.Map<IEnumerable<ContractDto>>(contracts);
+			var contractDtos = new List<ContractDto>();
+
+			foreach (var contract in contracts)
+			{
+				// Učitaj Client i Forwarder ručno
+				var client = await _unitOfWork.Users.GetByIdAsync(contract.ClientId);
+				var forwarder = await _unitOfWork.Companies.GetByIdAsync(contract.ForwarderId);
+
+				contractDtos.Add(new ContractDto
+				{
+					Id = contract.Id,
+					ClientId = contract.ClientId,
+					ClientFullName = client != null ? $"{client.FirstName} {client.LastName}" : "",
+					ForwarderId = contract.ForwarderId,
+					ForwarderCompanyName = forwarder?.CompanyName ?? "",
+					RouteId = contract.RouteId,
+					ContractNumber = contract.ContractNumber,
+					ContractDate = contract.ContractDate,
+					Terms = contract.Terms,
+					ContractStatus = contract.ContractStatus.ToString(),
+					PenaltyRatePerHour = contract.PenaltyRatePerHour,
+					MaxPenaltyPercent = contract.MaxPenaltyPercent,
+					ValidUntil = contract.SignedDate?.AddDays(30) ?? DateTime.UtcNow, // primer logike
+					SignedDate = contract.SignedDate
+				});
+			}
+			return contractDtos;
 		}
 	}
 }

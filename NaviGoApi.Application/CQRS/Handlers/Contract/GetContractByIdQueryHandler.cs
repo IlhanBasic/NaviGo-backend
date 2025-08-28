@@ -41,16 +41,39 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("User must be activated.");
-			//if (user.UserRole != UserRole.CompanyAdmin && user.UserRole != UserRole.SuperAdmin)
-			//	throw new ValidationException("User is not authorized to view this contract.");
 
 			var contract = await _unitOfWork.Contracts.GetByIdAsync(request.Id);
 			if (contract == null)
 				return null;
-			if (user.UserRole == UserRole.CompanyAdmin && contract.ForwarderId != user.CompanyId)
-				throw new ValidationException("User is not authorized to view this contract.");
 
-			return _mapper.Map<ContractDto>(contract);
+			//if (user.UserRole == UserRole.CompanyAdmin && contract.ForwarderId != user.CompanyId)
+			//	throw new ValidationException("User is not authorized to view this contract.");
+
+			// Ručno učitaj Client i Forwarder
+			var client = await _unitOfWork.Users.GetByIdAsync(contract.ClientId);
+			var forwarder = await _unitOfWork.Companies.GetByIdAsync(contract.ForwarderId);
+
+			// Ručno mapiraj u DTO
+			var contractDto = new ContractDto
+			{
+				Id = contract.Id,
+				ClientId = contract.ClientId,
+				ClientFullName = client != null ? $"{client.FirstName} {client.LastName}" : "",
+				ForwarderId = contract.ForwarderId,
+				ForwarderCompanyName = forwarder?.CompanyName ?? "",
+				RouteId = contract.RouteId,
+				ContractNumber = contract.ContractNumber,
+				ContractDate = contract.ContractDate,
+				Terms = contract.Terms,
+				ContractStatus = contract.ContractStatus.ToString(),
+				PenaltyRatePerHour = contract.PenaltyRatePerHour,
+				MaxPenaltyPercent = contract.MaxPenaltyPercent,
+				ValidUntil = contract.SignedDate?.AddDays(30) ?? DateTime.UtcNow, // primer logike
+				SignedDate = contract.SignedDate
+			};
+
+			return contractDto;
 		}
+
 	}
 }

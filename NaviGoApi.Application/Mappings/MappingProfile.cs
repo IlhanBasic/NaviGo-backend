@@ -95,10 +95,8 @@ namespace NaviGoApi.Application.MappingProfiles
 			CreateMap<ContractUpdateDto, Contract>()
 				.ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 			CreateMap<Contract, ContractDto>()
-				.ForMember(dest => dest.ClientEmail, opt => opt.MapFrom(src => src.Client != null ? src.Client.Email : null))
 				.ForMember(dest => dest.ClientFullName, opt => opt.MapFrom(src => src.Client != null ? $"{src.Client.FirstName} {src.Client.LastName}" : null))
 				.ForMember(dest => dest.ForwarderCompanyName, opt => opt.MapFrom(src => src.Forwarder != null ? src.Forwarder.CompanyName : null))
-				.ForMember(dest => dest.RouteName, opt => opt.MapFrom(src => src.Route != null ? $"{src.Route.StartLocation.FullAddress} - {src.Route.EndLocation.FullAddress}" : null))
 				.ForMember(dest => dest.ContractStatus, opt => opt.MapFrom(src => src.ContractStatus.ToString()));
 			// Payment mappings
 			CreateMap<PaymentCreateDto, Payment>()
