@@ -41,11 +41,15 @@ namespace NaviGoApi.Application.CQRS.Handlers.Company
 			var existing = await _unitOfWork.Companies.GetByIdAsync(request.Id);
 			if (existing != null)
 			{
-				if (existing.Id != user.CompanyId)
-					throw new ValidationException("You cannot delete wrong company.");
+				if (user.UserRole == UserRole.CompanyAdmin && existing.Id != user.CompanyId)
+				{
+					throw new ValidationException("You cannot delete another company.");
+				}
+
 				await _unitOfWork.Companies.DeleteAsync(existing);
 				await _unitOfWork.SaveChangesAsync();
 			}
+
 
 			return Unit.Value;
 		}
