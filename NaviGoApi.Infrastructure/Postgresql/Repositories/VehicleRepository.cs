@@ -40,19 +40,31 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		{
 			IQueryable<Vehicle> query = _context.Vehicles.AsNoTracking();
 
+			// Filtriranje po brendu
 			if (!string.IsNullOrWhiteSpace(vehicleSearch.Brand))
 				query = query.Where(v => v.Brand.Contains(vehicleSearch.Brand));
 
+			// Dinamičko sortiranje bez reflection-a
 			if (!string.IsNullOrWhiteSpace(vehicleSearch.SortBy))
 			{
-				var sortProperty = typeof(Vehicle).GetProperty(vehicleSearch.SortBy);
-				if (sortProperty != null)
+				bool descending = vehicleSearch.SortDirection?.ToLower() == "desc";
+
+				query = vehicleSearch.SortBy.ToLower() switch
 				{
-					query = vehicleSearch.SortDirection.ToLower() == "desc"
-						? query.OrderByDescending(v => sortProperty.GetValue(v, null))
-						: query.OrderBy(v => sortProperty.GetValue(v, null));
-				}
+					"brand" => descending ? query.OrderByDescending(v => v.Brand) : query.OrderBy(v => v.Brand),
+					"model" => descending ? query.OrderByDescending(v => v.Model) : query.OrderBy(v => v.Model),
+					"year" => descending ? query.OrderByDescending(v => v.ManufactureYear) : query.OrderBy(v => v.ManufactureYear),
+					"id" => descending ? query.OrderByDescending(v => v.Id) : query.OrderBy(v => v.Id),
+					"registrationnumber" => descending ? query.OrderByDescending(v => v.RegistrationNumber) : query.OrderBy(v => v.RegistrationNumber),
+					_ => query.OrderBy(v => v.Id) // fallback ako polje nije poznato
+				};
 			}
+			else
+			{
+				query = query.OrderBy(v => v.Id); // default sortiranje
+			}
+
+			// Paginacija
 			int skip = (vehicleSearch.Page - 1) * vehicleSearch.PageSize;
 			query = query.Skip(skip).Take(vehicleSearch.PageSize);
 
