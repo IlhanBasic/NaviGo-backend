@@ -42,8 +42,33 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 			var shipment = await _unitOfWork.Shipments.GetByIdAsync(request.Id);
 			if (shipment == null)
 				return null;
-			
-			return _mapper.Map<ShipmentDto>(shipment);
+
+			//return _mapper.Map<ShipmentDto>(shipment);
+			var driver = await _unitOfWork.Drivers.GetByIdAsync(shipment.DriverId);
+			var cargoType = await _unitOfWork.CargoTypes.GetByIdAsync(shipment.CargoTypeId);
+			var contract = await _unitOfWork.Contracts.GetByIdAsync(shipment.ContractId);
+			var vehicle = await _unitOfWork.Vehicles.GetByIdAsync(shipment.VehicleId);
+			var shipmentDto = new ShipmentDto
+			{
+				ActualArrival = shipment.ActualArrival,
+				ActualDeparture = shipment.ActualDeparture,
+				ScheduledArrival = shipment.ScheduledArrival,
+				ScheduledDeparture = shipment.ScheduledDeparture,
+				CargoTypeId = shipment.CargoTypeId,
+				ContractId = shipment.ContractId,
+				Description = shipment.Description,
+				DriverId = shipment.DriverId,
+				Priority = shipment.Priority,
+				WeightKg = shipment.WeightKg,
+				Status = shipment.Status.ToString(),
+				Id = shipment.Id,
+				CargoTypeName = cargoType.TypeName,
+				ContractName = contract.ContractNumber,
+				DriverName = $"{driver.FirstName} {driver.LastName}",
+				VehicleName = $"{vehicle.Brand}-{vehicle.Model} ({vehicle.ManufactureYear})",
+				VehicleId = shipment.VehicleId
+			};
+			return shipmentDto;
 		}
 	}
 }

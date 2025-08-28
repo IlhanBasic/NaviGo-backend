@@ -40,7 +40,36 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("Your account is not activated.");
 			var shipments = await _unitOfWork.Shipments.GetAllAsync(request.Search);
-			return _mapper.Map<IEnumerable<ShipmentDto?>>(shipments);
+			var shipmentsDto = new List<ShipmentDto>();
+			//return _mapper.Map<IEnumerable<ShipmentDto?>>(shipments);
+			foreach(var s in shipments)
+			{
+				var driver = await _unitOfWork.Drivers.GetByIdAsync(s.DriverId);
+				var cargoType = await _unitOfWork.CargoTypes.GetByIdAsync(s.CargoTypeId);
+				var contract = await _unitOfWork.Contracts.GetByIdAsync(s.ContractId);
+				var vehicle = await _unitOfWork.Vehicles.GetByIdAsync(s.VehicleId);
+				shipmentsDto.Add(new ShipmentDto
+				{
+					ActualArrival = s.ActualArrival,
+					ActualDeparture = s.ActualDeparture,
+					ScheduledArrival= s.ScheduledArrival,
+					ScheduledDeparture= s.ScheduledDeparture,
+					CargoTypeId = s.CargoTypeId,
+					ContractId = s.ContractId,
+					Description = s.Description,
+					DriverId = s.DriverId,
+					Priority = s.Priority,
+					WeightKg = s.WeightKg,
+					Status = s.Status.ToString(),
+					Id = s.Id,
+					CargoTypeName=cargoType.TypeName,
+					ContractName=contract.ContractNumber,
+					DriverName = $"{driver.FirstName} {driver.LastName}",
+					VehicleName=$"{vehicle.Brand}-{vehicle.Model} ({vehicle.ManufactureYear})",
+					VehicleId=s.VehicleId
+				});
+			}
+			return shipmentsDto;
 		}
 	}
 }

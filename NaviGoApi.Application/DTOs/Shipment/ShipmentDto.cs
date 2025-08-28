@@ -10,9 +10,13 @@ namespace NaviGoApi.Application.DTOs.Shipment
 	{
 		public int Id { get; set; }
 		public int ContractId { get; set; }
+		public string ContractName {  get; set; } = string.Empty;
 		public int VehicleId { get; set; }
+		public string VehicleName { get; set; } = string.Empty;
 		public int DriverId { get; set; }
+		public string DriverName { get; set; }=string.Empty;
 		public int CargoTypeId { get; set; }
+		public string CargoTypeName { get; set; } = string.Empty;
 		public double WeightKg { get; set; }
 		public int Priority { get; set; }
 		public string? Description { get; set; }
