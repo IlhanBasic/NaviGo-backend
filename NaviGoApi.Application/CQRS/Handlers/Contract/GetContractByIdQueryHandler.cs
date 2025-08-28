@@ -41,8 +41,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("User must be activated.");
-			if (user.UserRole != UserRole.CompanyAdmin && user.UserRole != UserRole.SuperAdmin)
-				throw new ValidationException("User is not authorized to view this contract.");
+			//if (user.UserRole != UserRole.CompanyAdmin && user.UserRole != UserRole.SuperAdmin)
+			//	throw new ValidationException("User is not authorized to view this contract.");
 
 			var contract = await _unitOfWork.Contracts.GetByIdAsync(request.Id);
 			if (contract == null)

@@ -98,6 +98,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 		new Claim("firstName", user.FirstName ?? ""),
 		new Claim("lastName", user.LastName ?? ""),
 		new Claim("companyType", companyType),
+		new Claim("id", user.Id.ToString()),
 		new Claim("role", user.UserRole.ToString()),
 		new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
 	};
