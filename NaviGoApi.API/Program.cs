@@ -221,8 +221,8 @@ app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseMiddleware<GeoLocationValidationMiddleware>();
-app.UseMiddleware<SessionLockMiddleware>();
+//app.UseMiddleware<GeoLocationValidationMiddleware>();
+//app.UseMiddleware<SessionLockMiddleware>();
 app.MapControllers();
 
 app.Run();

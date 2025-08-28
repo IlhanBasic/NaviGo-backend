@@ -54,7 +54,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			await _unitOfWork.Users.AddRefreshTokenAsync(newRefreshToken);
 			await _unitOfWork.SaveChangesAsync();
 
-			var newAccessToken = GenerateJwtToken(user);
+			var newAccessToken = await GenerateJwtToken(user);
 
 			return (newAccessToken, newRefreshToken.Token);
 		}
@@ -75,17 +75,28 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			};
 		}
 
-		private string GenerateJwtToken(global::NaviGoApi.Domain.Entities.User user)
+		private async Task<string> GenerateJwtToken(global::NaviGoApi.Domain.Entities.User user)
 		{
 			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSecret));
 			var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+			string companyType = "";
+			if (user.CompanyId.HasValue)
+			{
+				var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value);
+				companyType = company?.CompanyType.ToString() ?? "";
+			}
+
 			var claims = new[]
 			{
-				new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-				new Claim("role", user.UserRole.ToString()),
-				new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-			};
+		new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+		new Claim("email", user.Email),
+		new Claim("firstName", user.FirstName ?? ""),
+		new Claim("lastName", user.LastName ?? ""),
+		new Claim("companyType", companyType),
+		new Claim("role", user.UserRole.ToString()),
+		new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+	};
 
 			var token = new JwtSecurityToken(
 				claims: claims,
@@ -94,6 +105,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 
 			return new JwtSecurityTokenHandler().WriteToken(token);
 		}
+
 		private string GetIpAddress()
 		{
 			var httpContext = _httpContextAccessor.HttpContext
