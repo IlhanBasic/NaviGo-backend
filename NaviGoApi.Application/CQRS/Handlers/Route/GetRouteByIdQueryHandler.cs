@@ -42,8 +42,28 @@ namespace NaviGoApi.Application.CQRS.Handlers.Route
 			var route = await _unitOfWork.Routes.GetByIdAsync(request.Id);
 			if (route == null)
 				return null;
-
-			return _mapper.Map<RouteDto>(route);
+			var company = await _unitOfWork.Companies.GetByIdAsync(route.CompanyId);
+			var start = await _unitOfWork.Locations.GetByIdAsync(route.StartLocationId);
+			var end = await _unitOfWork.Locations.GetByIdAsync(route.EndLocationId);
+			var routeDto = new RouteDto
+			{
+				Id = route.Id,
+				AvailableFrom = route.AvailableFrom,
+				AvailableTo = route.AvailableTo,
+				CreatedAt = route.CreatedAt,
+				IsActive = route.IsActive,
+				CompanyId = route.CompanyId,
+				DistanceKm = route.DistanceKm,
+				EndLocationId = route.EndLocationId,
+				EstimatedDurationHours = route.EstimatedDurationHours,
+				GeometryEncoded = route.GeometryEncoded,
+				StartLocationId = route.StartLocationId,
+				StartLocationName = start != null ? $"{start.FullAddress}, {start.City}, {start.Country}" : "",
+				EndLocationName = end != null ? $"{end.FullAddress}, {end.City}, {end.Country}" : "",
+				CompanyName = company != null ? $"{company.CompanyName}" : ""
+			};
+			//return _mapper.Map<RouteDto>(route);
+			return routeDto;
 		}
 	}
 }
