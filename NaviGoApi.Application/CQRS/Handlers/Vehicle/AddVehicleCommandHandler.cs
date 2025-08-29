@@ -70,11 +70,20 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 			{
 				throw new ValidationException($"Registration number '{dto.RegistrationNumber}' is already assigned to another vehicle.");
 			}
-			if (dto.LastInspectionDate.HasValue && dto.LastInspectionDate.Value.Year < dto.ManufactureYear)
-				throw new ValidationException("Inspection Date cannot be before Manufacture Year.");
+			if (dto.LastInspectionDate.HasValue)
+			{
+				var manufactureDate = new DateTime(dto.ManufactureYear, 1, 1);
+				if (dto.LastInspectionDate.Value < manufactureDate)
+					throw new ValidationException("Inspection Date cannot be before Manufacture Year.");
+			}
+
 			var vehicleEntity = _mapper.Map<Domain.Entities.Vehicle>(dto);
 			vehicleEntity.VehicleStatus = Domain.Entities.VehicleStatus.Free;
+			if (vehicleEntity.LastInspectionDate.HasValue)
+				vehicleEntity.LastInspectionDate = DateTime.SpecifyKind(vehicleEntity.LastInspectionDate.Value, DateTimeKind.Utc);
 
+			if (vehicleEntity.InsuranceExpiry.HasValue)
+				vehicleEntity.InsuranceExpiry = DateTime.SpecifyKind(vehicleEntity.InsuranceExpiry.Value, DateTimeKind.Utc);
 			await _unitOfWork.Vehicles.AddAsync(vehicleEntity);
 			await _unitOfWork.SaveChangesAsync();
 

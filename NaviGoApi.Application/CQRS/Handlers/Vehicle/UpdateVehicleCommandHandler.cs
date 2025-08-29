@@ -50,7 +50,11 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 				throw new ValidationException("User cannot update vehicle for wrong company.");
 
 			_mapper.Map(request.VehicleUpdateDto, existingVehicle);
+			if (existingVehicle.LastInspectionDate.HasValue)
+				existingVehicle.LastInspectionDate = DateTime.SpecifyKind(existingVehicle.LastInspectionDate.Value, DateTimeKind.Utc);
 
+			if (existingVehicle.InsuranceExpiry.HasValue)
+				existingVehicle.InsuranceExpiry = DateTime.SpecifyKind(existingVehicle.InsuranceExpiry.Value, DateTimeKind.Utc);
 			await _unitOfWork.Vehicles.UpdateAsync(existingVehicle);
 			await _unitOfWork.SaveChangesAsync();
 
