@@ -12,6 +12,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace NaviGoApi.Application.CQRS.Handlers.Driver
 {
@@ -42,7 +43,24 @@ namespace NaviGoApi.Application.CQRS.Handlers.Driver
 			if (user.UserRole != UserRole.CompanyAdmin)
 				throw new ValidationException("You are not allowed to add vehicle.");
 			var driver = await _unitOfWork.Drivers.GetByIdAsync(request.Id);
-			return driver == null ? null : _mapper.Map<DriverDto>(driver);
+			if (driver == null) return null;
+			var company = await _unitOfWork.Companies.GetByIdAsync(driver.CompanyId);
+			var driverdto = new DriverDto
+			{
+				Id = driver.Id,
+				CompanyId = driver.CompanyId,
+				FirstName = driver.FirstName,
+				LastName = driver.LastName,
+				HireDate = driver.HireDate,
+				LicenseCategories = driver.LicenseCategories,
+				LicenseExpiry = driver.LicenseExpiry,
+				PhoneNumber = driver.PhoneNumber,
+				LicenseNumber = driver.LicenseNumber,
+				DriverStatus = driver.DriverStatus.ToString(),
+				CompanyName = company != null ? company.CompanyName : ""
+			};
+			//return driver == null ? null : _mapper.Map<DriverDto>(driver);
+			return driverdto;
 		}
 	}
 }

@@ -12,6 +12,7 @@ namespace NaviGoApi.Application.DTOs.Driver
 		public int Id { get; set; }
 
 		public int CompanyId { get; set; }
+		public string CompanyName { get; set; } = string.Empty;
 
 		public string FirstName { get; set; }
 
@@ -28,8 +29,5 @@ namespace NaviGoApi.Application.DTOs.Driver
 		public DateTime HireDate { get; set; }
 
 		public string DriverStatus { get; set; }
-
-		// You can also add Company info if needed, e.g.
-		// public CompanyDto Company { get; set; }
 	}
 }

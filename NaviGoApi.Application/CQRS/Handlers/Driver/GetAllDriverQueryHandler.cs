@@ -42,7 +42,27 @@ namespace NaviGoApi.Application.CQRS.Handlers.Driver
 			if (user.UserRole != UserRole.CompanyAdmin)
 				throw new ValidationException("You are not allowed to add vehicle.");
 			var drivers = await _unitOfWork.Drivers.GetAllAsync(request.Search);
-			return _mapper.Map<IEnumerable<DriverDto?>>(drivers);
+			var driversdto = new List<DriverDto>();
+			foreach (var driver in drivers)
+			{
+				var company = await _unitOfWork.Companies.GetByIdAsync(driver.CompanyId);
+				driversdto.Add(new DriverDto
+				{
+					Id = driver.Id,
+					CompanyId = driver.CompanyId,
+					FirstName = driver.FirstName,
+					LastName= driver.LastName,
+					HireDate = driver.HireDate,
+					LicenseCategories = driver.LicenseCategories,
+					LicenseExpiry= driver.LicenseExpiry,
+					PhoneNumber = driver.PhoneNumber,
+					LicenseNumber = driver.LicenseNumber,
+					DriverStatus = driver.DriverStatus.ToString(),
+					CompanyName = company!= null ? company.CompanyName : ""
+				});
+			}
+			//return _mapper.Map<IEnumerable<DriverDto?>>(drivers);
+			return driversdto;
 		}
 	}
 }
