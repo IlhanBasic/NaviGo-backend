@@ -86,6 +86,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.ForwarderOffer
 				throw new ValidationException("Sum of commission and discount cannot exceed 100%.");
 
 			entity.ForwarderOfferStatus = ForwarderOfferStatus.Pending;
+			entity.ExpiresAt= DateTime.SpecifyKind(entity.ExpiresAt, DateTimeKind.Utc);
 
 			await _unitOfWork.ForwarderOffers.AddAsync(entity);
 			await _unitOfWork.SaveChangesAsync();

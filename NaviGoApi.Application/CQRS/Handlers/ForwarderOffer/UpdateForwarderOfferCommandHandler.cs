@@ -65,7 +65,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.ForwarderOffer
 				request.ForwarderOfferDto.ExpiresAt <= DateTime.UtcNow)
 				throw new ValidationException("ExpiresAt must be a future date.");
 			_mapper.Map(request.ForwarderOfferDto, entity);
-
+			entity.ExpiresAt = DateTime.SpecifyKind(entity.ExpiresAt, DateTimeKind.Utc);
 			await _unitOfWork.ForwarderOffers.UpdateAsync(entity);
 			await _unitOfWork.SaveChangesAsync();
 
