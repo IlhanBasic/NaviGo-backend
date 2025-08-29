@@ -41,7 +41,18 @@ namespace NaviGoApi.Application.CQRS.Handlers.RoutePrice
 				throw new ValidationException("Your account is not activated.");
 			var entity = await _unitOfWork.RoutePrices.GetByIdAsync(request.Id);
 			if (entity == null) return null;
-			return _mapper.Map<RoutePriceDto>(entity);
+			var vehicleType = await _unitOfWork.VehicleTypes.GetByIdAsync(entity.VehicleTypeId);
+			var routePricedto = new RoutePriceDto
+			{
+				Id = entity.Id,
+				MinimumPrice = entity.MinimumPrice,
+				PricePerKm = entity.PricePerKm,
+				RouteId = entity.RouteId,
+				VehicleTypeId = entity.VehicleTypeId,
+				VehicleTypeName = vehicleType != null ? vehicleType.TypeName : ""
+			};
+			//return _mapper.Map<RoutePriceDto>(entity);
+			return routePricedto;
 		}
 	}
 
