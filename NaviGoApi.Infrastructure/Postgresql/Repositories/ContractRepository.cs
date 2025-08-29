@@ -125,7 +125,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 					.ThenInclude(r => r.StartLocation)
 				.Include(c => c.Route)
 					.ThenInclude(r => r.EndLocation)
-				.AsNoTracking()
 				.FirstOrDefaultAsync(c => c.Id == id);
 		}
 
