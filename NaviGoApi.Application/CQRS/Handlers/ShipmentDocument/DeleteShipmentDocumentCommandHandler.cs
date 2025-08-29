@@ -49,13 +49,16 @@ namespace NaviGoApi.Application.CQRS.Handlers.ShipmentDocument
 			if (shipment == null)
 				throw new ValidationException($"Shipment with ID {shipmentDocument.ShipmentId} not found.");
 
-			var contract = await _unitOfWork.Routes.GetByIdAsync(shipment.ContractId);
+			var contract = await _unitOfWork.Contracts.GetByIdAsync(shipment.ContractId);
 			if (contract == null)
 				throw new ValidationException($"Contract with ID {shipment.ContractId} not found.");
+			var route = await _unitOfWork.Routes.GetByIdAsync(contract.RouteId);
+			if (route == null)
+				throw new ValidationException($"Route with ID {contract.RouteId} not found.");
 
-			var company = await _unitOfWork.Companies.GetByIdAsync(contract.CompanyId);
+			var company = await _unitOfWork.Companies.GetByIdAsync(route.CompanyId);
 			if (company == null)
-				throw new ValidationException($"Company with ID {contract.CompanyId} not found.");
+				throw new ValidationException($"Company with ID {route.CompanyId} not found.");
 
 			if (company.CompanyType != CompanyType.Carrier && company.CompanyType != CompanyType.Forwarder)
 				throw new ValidationException("Only Carrier or Forwarder companies can own shipment documents.");
