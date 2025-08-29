@@ -44,9 +44,11 @@ namespace NaviGoApi.Application.CQRS.Handlers.RoutePrice
 			var routeExists = await _unitOfWork.Routes.GetByIdAsync(request.RoutePriceDto.RouteId);
 			if(routeExists == null)
 				throw new ValidationException($"Route with ID {request.RoutePriceDto.RouteId} does not exist.");
-			var company = await _unitOfWork.Companies.GetByIdAsync(routeExists.CompanyId);
+			var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value);
 			if (company == null)
 				throw new ValidationException($"Company with ID {routeExists.CompanyId} doesn't exists");
+			if (user.CompanyId != routeExists.CompanyId)
+				throw new ValidationException("Company ID from user didn't match Company ID from route");
 			if (company.CompanyType != CompanyType.Carrier)
 				throw new ValidationException("Company must be Carrier for adding route price.");
 			if (company.Id != user.CompanyId.Value)

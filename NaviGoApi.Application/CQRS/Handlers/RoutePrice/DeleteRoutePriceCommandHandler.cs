@@ -46,13 +46,13 @@ namespace NaviGoApi.Application.CQRS.Handlers.RoutePrice
 			var route = await _unitOfWork.Routes.GetByIdAsync(routePrice.RouteId);
 			if (route == null)
 				throw new ValidationException($"Route with ID {request.Id} doesn't exists.");
-			var company = await _unitOfWork.Companies.GetByIdAsync(route.CompanyId);
+			var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value);
 			if (company == null)
 				throw new ValidationException($"Company with ID {route.CompanyId} doesn't exists.");
+			if (user.CompanyId != route.CompanyId)
+				throw new ValidationException("You cannot delete route price for wrong company");
 			if (company.CompanyType != CompanyType.Carrier)
 				throw new ValidationException("Company must be Carrier for removing route price.");
-			if (route.CompanyId != user.CompanyId.Value)
-				throw new ValidationException("You cannot delete route price for wrong company.");
 			await _unitOfWork.RoutePrices.DeleteAsync(request.Id);
 			await _unitOfWork.SaveChangesAsync();
 			return Unit.Value;
