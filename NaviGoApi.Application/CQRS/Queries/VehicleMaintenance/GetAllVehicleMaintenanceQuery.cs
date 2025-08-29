@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.CQRS.Queries.VehicleMaintenance
 {
-	public class GetAllVehicleMaintenanceQuery : IRequest<IEnumerable<Domain.Entities.VehicleMaintenance>>
+	public class GetAllVehicleMaintenanceQuery : IRequest<IEnumerable<VehicleMaintenanceDto>>
 	{
         public VehicleMaintenanceSearchDto Search { get; set; }
         public GetAllVehicleMaintenanceQuery(VehicleMaintenanceSearchDto search)

@@ -10,6 +10,7 @@ namespace NaviGoApi.Application.DTOs.VehicleMaintenance
 	{
 		public int Id { get; set; }
 		public int VehicleId { get; set; }
+		public string VehicleName { get; set; } = string.Empty;
 		public int ReportedByUserId { get; set; }
 		public string Description { get; set; } = null!;
 		public DateTime ReportedAt { get; set; }
@@ -17,7 +18,7 @@ namespace NaviGoApi.Application.DTOs.VehicleMaintenance
 		public string Severity { get; set; } = null!;
 		public string MaintenanceType { get; set; } = null!;
 		public decimal? RepairCost { get; set; }
-		public string? ReportedByUserEmail { get; set; }
+		public string ReportedByUserEmail { get; set; } = string.Empty;
 	}
 
 }

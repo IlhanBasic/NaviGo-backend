@@ -41,7 +41,25 @@ namespace NaviGoApi.Application.CQRS.Handlers.VehicleMaintenance
 			if (user.UserRole != UserRole.CompanyAdmin)
 				throw new ValidationException("Only users with CompanyAdmin role can report vehicle maintenance.");
 			var vehiclemaintenance = await _unitOfWork.VehicleMaintenances.GetByIdAsync(request.Id);
-			return _mapper.Map<VehicleMaintenanceDto>(vehiclemaintenance);
+			if (vehiclemaintenance == null) return null;
+			var vehicle = await _unitOfWork.Vehicles.GetByIdAsync(vehiclemaintenance.VehicleId);
+			var userReport = await _unitOfWork.Users.GetByIdAsync(vehiclemaintenance.ReportedByUserId);
+			var vehicleMaintenancedto = new VehicleMaintenanceDto
+			{
+				Id = vehiclemaintenance.Id,
+				ReportedAt = vehiclemaintenance.ReportedAt,
+				ResolvedAt = vehiclemaintenance.ResolvedAt,
+				Description = vehiclemaintenance.Description,
+				MaintenanceType = vehiclemaintenance.MaintenanceType.ToString(),
+				RepairCost = vehiclemaintenance.RepairCost,
+				ReportedByUserId = vehiclemaintenance.ReportedByUserId,
+				Severity = vehiclemaintenance.Severity.ToString(),
+				VehicleId = vehiclemaintenance.VehicleId,
+				VehicleName = vehicle != null ? $"{vehicle.Brand} - {vehicle.Model} ({vehicle.ManufactureYear})" : "",
+				ReportedByUserEmail = userReport != null ? userReport.Email : ""
+			};
+			//return _mapper.Map<VehicleMaintenanceDto>(vehiclemaintenance);
+			return vehicleMaintenancedto;
 		}
 	}
 }
