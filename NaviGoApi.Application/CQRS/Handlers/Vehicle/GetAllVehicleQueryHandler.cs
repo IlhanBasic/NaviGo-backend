@@ -42,8 +42,37 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("Your account is not activated.");
 			var vehicles = await _unitOfWork.Vehicles.GetAllAsync(request.Search);
-
-			return _mapper.Map<IEnumerable<VehicleDto>>(vehicles);
+			var vehiclesdto = new List<VehicleDto>();	
+			foreach (var v in vehicles)
+			{
+				var company = await _unitOfWork.Companies.GetByIdAsync(v.CompanyId);
+				var current = await _unitOfWork.Locations.GetByIdAsync(v.CurrentLocationId.Value);
+				var type = await _unitOfWork.VehicleTypes.GetByIdAsync(v.VehicleTypeId);
+				vehiclesdto.Add(new VehicleDto
+				{
+					Id = v.Id,
+					CreatedAt = v.CreatedAt,
+					Brand=v.Brand,
+					ManufactureYear=v.ManufactureYear,
+					Model = v.Model,
+					CapacityKg=v.CapacityKg,
+					Categories=v.Categories,
+					CompanyId=v.CompanyId,
+					CurrentLocationId=v.CurrentLocationId.Value,
+					EngineCapacityCc=v.EngineCapacityCc,
+					InsuranceExpiry=v.InsuranceExpiry,
+					LastInspectionDate=v.LastInspectionDate,
+					RegistrationNumber=v.RegistrationNumber,
+					VehiclePicture=v.VehiclePicture,
+					VehicleStatus=v.VehicleStatus.ToString(),
+					VehicleTypeId = v.VehicleTypeId,
+					CompanyName=company != null ? company.CompanyName : "",
+					CurrentLocationName = current != null ? $"{current.FullAddress}, {current.City}, {current.Country}":"",
+					VehicleTypeName = type != null ? type.TypeName : ""
+				});
+			}
+			//return _mapper.Map<IEnumerable<VehicleDto>>(vehicles);
+			return vehiclesdto;
 		}
 
 	}

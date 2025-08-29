@@ -44,7 +44,33 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 			{
 				throw new KeyNotFoundException($"Vehicle with Id {request.VehicleId} not found.");
 			}
-			return _mapper.Map<VehicleDto>(vehicle);
+			var company = await _unitOfWork.Companies.GetByIdAsync(vehicle.CompanyId);
+			var current = await _unitOfWork.Locations.GetByIdAsync(vehicle.CurrentLocationId.Value);
+			var type = await _unitOfWork.VehicleTypes.GetByIdAsync(vehicle.VehicleTypeId);
+			var vehicledto = new VehicleDto
+			{
+				Id = vehicle.Id,
+				CreatedAt = vehicle.CreatedAt,
+				Brand = vehicle.Brand,
+				ManufactureYear = vehicle.ManufactureYear,
+				Model = vehicle.Model,
+				CapacityKg = vehicle.CapacityKg,
+				Categories = vehicle.Categories,
+				CompanyId = vehicle.CompanyId,
+				CurrentLocationId = vehicle.CurrentLocationId.Value,
+				EngineCapacityCc = vehicle.EngineCapacityCc,
+				InsuranceExpiry = vehicle.InsuranceExpiry,
+				LastInspectionDate = vehicle.LastInspectionDate,
+				RegistrationNumber = vehicle.RegistrationNumber,
+				VehiclePicture = vehicle.VehiclePicture,
+				VehicleStatus = vehicle.VehicleStatus.ToString(),
+				VehicleTypeId = vehicle.VehicleTypeId,
+				CompanyName = company != null ? company.CompanyName : "",
+				CurrentLocationName = current != null ? $"{current.FullAddress}, {current.City}, {current.Country}" : "",
+				VehicleTypeName = type != null ? type.TypeName : ""
+			};
+			//return _mapper.Map<VehicleDto>(vehicle);
+			return vehicledto;
 		}
 	}
 }
