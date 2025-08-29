@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using NaviGoApi.Application.CQRS.Commands.Route;
 using NaviGoApi.Domain.Entities;
@@ -127,6 +128,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.Route
 
 			// Mapiraj ostala polja osim onih koje smo već ručno ažurirali
 			_mapper.Map(request.RouteDto, existingRoute);
+			existingRoute.AvailableFrom = DateTime.SpecifyKind(existingRoute.AvailableFrom, DateTimeKind.Utc);
+			existingRoute.AvailableTo = DateTime.SpecifyKind(existingRoute.AvailableTo, DateTimeKind.Utc);
 
 			await _unitOfWork.Routes.UpdateAsync(existingRoute);
 			await _unitOfWork.SaveChangesAsync();

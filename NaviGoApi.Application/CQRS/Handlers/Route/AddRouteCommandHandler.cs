@@ -111,7 +111,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.Route
 			route.EstimatedDurationHours = durationSeconds / 3600.0;
 			route.GeometryEncoded = geometryEncoded;
 			route.CreatedAt = DateTime.UtcNow;
-
+			route.AvailableFrom = DateTime.SpecifyKind(route.AvailableFrom, DateTimeKind.Utc);
+			route.AvailableTo = DateTime.SpecifyKind(route.AvailableTo, DateTimeKind.Utc);
 			await _unitOfWork.Routes.AddAsync(route);
 			await _unitOfWork.SaveChangesAsync();
 

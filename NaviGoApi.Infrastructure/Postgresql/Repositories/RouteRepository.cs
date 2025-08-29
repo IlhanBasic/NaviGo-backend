@@ -98,7 +98,7 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 						  && x.StartLocationId == startLocationId
 						  && x.EndLocationId == endLocationId
 						  && x.Id != routeId);
-			return route == null;
+			return route != null;
 
 		}
 
