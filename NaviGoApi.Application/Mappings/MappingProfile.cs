@@ -112,7 +112,6 @@ namespace NaviGoApi.Application.MappingProfiles
 				.ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null)); 
 			CreateMap<ForwarderOffer, ForwarderOfferDto>()
 				.ForMember(dest => dest.ForwarderOfferStatus, opt => opt.MapFrom(src => src.ForwarderOfferStatus.ToString()))
-				.ForMember(dest => dest.RouteName, opt => opt.MapFrom(src => src.Route != null ? $"{src.Route.StartLocation.FullAddress} - {src.Route.EndLocation.FullAddress}" : null))
 				.ForMember(dest => dest.ForwarderCompanyName, opt => opt.MapFrom(src => src.Forwarder != null ? src.Forwarder.CompanyName : null));
 			// Shipment mappings
 			CreateMap<Shipment, ShipmentDto>()

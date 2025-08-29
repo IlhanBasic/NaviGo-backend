@@ -43,8 +43,22 @@ namespace NaviGoApi.Application.CQRS.Handlers.ForwarderOffer
 
 			var entity = await _unitOfWork.ForwarderOffers.GetByIdAsync(request.Id);
 			if (entity == null) return null;
-
-			return _mapper.Map<ForwarderOfferDto>(entity);
+			var company = await _unitOfWork.Companies.GetByIdAsync(entity.ForwarderId);
+			var forwarderOfferdto = new ForwarderOfferDto
+			{
+				Id = entity.Id,
+				CreatedAt = DateTime.UtcNow,
+				ExpiresAt = DateTime.UtcNow,
+				CommissionRate = entity.CommissionRate,
+				DiscountRate = entity.DiscountRate,
+				ForwarderId = entity.Id,
+				ForwarderOfferStatus = entity.ForwarderOfferStatus.ToString(),
+				RejectionReason = entity.RejectionReason,
+				RouteId = entity.RouteId,
+				ForwarderCompanyName = company != null ? company.CompanyName : ""
+			};
+			//return _mapper.Map<ForwarderOfferDto>(entity);
+			return forwarderOfferdto;
 		}
 	}
 }

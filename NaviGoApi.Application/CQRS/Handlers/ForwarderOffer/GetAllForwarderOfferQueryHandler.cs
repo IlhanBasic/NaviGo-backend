@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
+using NaviGoApi.Domain.Entities;
 
 namespace NaviGoApi.Application.CQRS.Handlers.ForwarderOffer
 {
@@ -43,7 +44,26 @@ namespace NaviGoApi.Application.CQRS.Handlers.ForwarderOffer
 				throw new ValidationException("User must be activated.");
 
 			var entities = await _unitOfWork.ForwarderOffers.GetAllAsync(request.Search);
-			return _mapper.Map<IEnumerable<ForwarderOfferDto>>(entities);
+			var forwarderOffersdto = new List<ForwarderOfferDto>();
+			foreach (var entity in  entities)
+			{
+				var company = await _unitOfWork.Companies.GetByIdAsync(entity.ForwarderId);
+				forwarderOffersdto.Add(new ForwarderOfferDto
+				{
+					Id = entity.Id,
+					CreatedAt = DateTime.UtcNow,
+					ExpiresAt = DateTime.UtcNow,
+					CommissionRate = entity.CommissionRate,
+					DiscountRate = entity.DiscountRate,
+					ForwarderId = entity.Id,
+					ForwarderOfferStatus = entity.ForwarderOfferStatus.ToString(),
+					RejectionReason = entity.RejectionReason,
+					RouteId = entity.RouteId,
+					ForwarderCompanyName = company != null ? company.CompanyName:""
+				});
+			}
+			//return _mapper.Map<IEnumerable<ForwarderOfferDto>>(entities);
+			return forwarderOffersdto;
 		}
 	}
 }
