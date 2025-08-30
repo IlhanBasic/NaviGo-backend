@@ -90,7 +90,11 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 
 			existing.ScheduledArrival = DateTime.SpecifyKind(existing.ScheduledArrival, DateTimeKind.Utc);
 			existing.ScheduledDeparture = DateTime.SpecifyKind(existing.ScheduledDeparture, DateTimeKind.Utc);
+			if (existing.ActualArrival.HasValue)
+				existing.ActualArrival = DateTime.SpecifyKind(existing.ActualArrival.Value, DateTimeKind.Utc);
 
+			if (existing.ActualDeparture.HasValue)
+				existing.ActualDeparture = DateTime.SpecifyKind(existing.ActualDeparture.Value, DateTimeKind.Utc);
 			await _unitOfWork.Shipments.UpdateAsync(existing);
 			await _unitOfWork.SaveChangesAsync();
 

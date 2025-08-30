@@ -53,6 +53,9 @@ namespace NaviGoApi.Application.CQRS.Handlers.PickupChange
 			entity.OldTime = shipment.ScheduledDeparture;
 			entity.ChangeCount = 0;
 			entity.AdditionalFee = 0;
+			entity.OldTime = DateTime.SpecifyKind(entity.OldTime, DateTimeKind.Utc);
+			entity.NewTime = DateTime.SpecifyKind(entity.NewTime, DateTimeKind.Utc);
+
 			await _unitOfWork.PickupChanges.AddAsync(entity);
 			await _unitOfWork.SaveChangesAsync();
 

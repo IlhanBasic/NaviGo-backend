@@ -46,6 +46,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.PickupChange
 			_mapper.Map(request.PickupChangeDto, existingEntity);
 			existingEntity.ChangeCount++;
 			existingEntity.AdditionalFee = existingEntity.ChangeCount > 2 ? 50m : 0m;
+			existingEntity.OldTime = DateTime.SpecifyKind(existingEntity.OldTime, DateTimeKind.Utc);
+			existingEntity.NewTime = DateTime.SpecifyKind(existingEntity.NewTime, DateTimeKind.Utc);
 			await _unitOfWork.PickupChanges.UpdateAsync(existingEntity);
 			await _unitOfWork.SaveChangesAsync();
 			return Unit.Value;
