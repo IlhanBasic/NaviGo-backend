@@ -68,6 +68,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.ShipmentStatusHistory
 			await _unitOfWork.ShipmentStatusHistories.AddAsync(entity);
 			shipment.Status = entity.ShipmentStatus;
 			await _unitOfWork.Shipments.UpdateAsync(shipment);
+			await _unitOfWork.SaveChangesAsync();
 			return Unit.Value;
 		}
 
