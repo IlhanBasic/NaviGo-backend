@@ -95,7 +95,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 
 			var shipment = _mapper.Map<Domain.Entities.Shipment>(request.ShipmentDto);
 			shipment.Status = Domain.Entities.ShipmentStatus.Scheduled;
-
+			shipment.ScheduledArrival = DateTime.SpecifyKind(shipment.ScheduledArrival, DateTimeKind.Utc);
+			shipment.ScheduledDeparture = DateTime.SpecifyKind(shipment.ScheduledDeparture, DateTimeKind.Utc);
 			await _unitOfWork.Shipments.AddAsync(shipment);
 			await _unitOfWork.SaveChangesAsync();
 
