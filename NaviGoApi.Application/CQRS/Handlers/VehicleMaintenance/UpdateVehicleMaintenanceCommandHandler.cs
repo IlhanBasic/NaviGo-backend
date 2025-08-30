@@ -51,6 +51,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.VehicleMaintenance
 			if (company.Id != user.CompanyId)
 				throw new ValidationException("User must belong to the same company as the vehicle.");
 			_mapper.Map(request.Dto, vehiclemaintenance);
+			if (vehiclemaintenance.ResolvedAt.HasValue)
+				vehiclemaintenance.ResolvedAt = DateTime.SpecifyKind(vehiclemaintenance.ResolvedAt.Value, DateTimeKind.Utc);
 			await _unitOfWork.VehicleMaintenances.UpdateAsync(vehiclemaintenance);
 			await _unitOfWork.SaveChangesAsync();
 
