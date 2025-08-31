@@ -41,35 +41,24 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 
 			var dto = request.ContractDto;
 
-			var client = await _unitOfWork.Users.GetByIdAsync(dto.ClientId)
-				?? throw new ValidationException($"Client with ID {dto.ClientId} not found.");
-
-			bool clientIsCompany = client.CompanyId != null;
-
-			// --- Provera prava kreiranja ---
-			if (clientIsCompany)
-			{
-				// Pravna lica: samo CompanyAdmin iz iste kompanije može kreirati
-				var company = await _unitOfWork.Companies.GetByIdAsync(client.CompanyId.Value)
-					?? throw new ValidationException($"Company with ID {client.CompanyId.Value} doesn't exist.");
-
-				if (company.CompanyType != CompanyType.Client)
-					throw new ValidationException("Company must be a Client type.");
-
-				if (currentUser.UserRole != UserRole.CompanyAdmin || currentUser.CompanyId != client.CompanyId)
-					throw new ValidationException("You are not authorized to create a contract for this company client.");
-			}
-			else
-			{
-				// Fizička lica: mora biti RegularUser
-				if (currentUser.UserRole != UserRole.RegularUser)
-					throw new ValidationException("Only RegularUsers (individual clients) can create contracts for themselves.");
-			}
+			// --- Provera prava kreiranja ugovora ---
+			if (currentUser.UserRole != UserRole.CompanyAdmin)
+				throw new ValidationException("Only CompanyAdmin users can create contracts.");
 
 			var forwarder = await _unitOfWork.Companies.GetByIdAsync(dto.ForwarderId)
 				?? throw new ValidationException($"Forwarder with ID {dto.ForwarderId} not found.");
 
-			if (clientIsCompany && client.CompanyId == forwarder.Id)
+			if (forwarder.CompanyType != CompanyType.Forwarder)
+				throw new ValidationException("Selected company must be a Forwarder.");
+
+			if (currentUser.CompanyId != forwarder.Id)
+				throw new ValidationException("You can only create contracts for your own forwarder company.");
+
+			var client = await _unitOfWork.Users.GetByIdAsync(dto.ClientId)
+				?? throw new ValidationException($"Client with ID {dto.ClientId} not found.");
+
+			// Provera da klijent nije ista kompanija kao forwarder
+			if (client.CompanyId != null && client.CompanyId == forwarder.Id)
 				throw new ValidationException("Client and forwarder cannot be the same company.");
 
 			var route = await _unitOfWork.Routes.GetByIdAsync(dto.RouteId)
@@ -96,10 +85,11 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 			if (forwarderOffer == null || forwarderOffer.RouteId != route.Id || forwarderOffer.ForwarderId != forwarder.Id)
 				throw new ValidationException("Invalid ForwarderOffer for this route or forwarder.");
 
+			// --- Kreiranje ugovora ---
 			var contractEntity = _mapper.Map<Domain.Entities.Contract>(dto);
 			contractEntity.ContractStatus = ContractStatus.Pending;
-			contractEntity.SignedDate = DateTime.UtcNow;
 			contractEntity.ContractDate = DateTime.UtcNow;
+			contractEntity.SignedDate = DateTime.UtcNow;
 
 			await _unitOfWork.Contracts.AddAsync(contractEntity);
 			await _unitOfWork.SaveChangesAsync();
