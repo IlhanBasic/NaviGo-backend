@@ -189,5 +189,10 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			});
 			return task.ContinueWith(async t => await session.CloseAsync());
 		}
+
+		public Task<IEnumerable<RoutePrice>> GetByRouteIdAsync(int routeId)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

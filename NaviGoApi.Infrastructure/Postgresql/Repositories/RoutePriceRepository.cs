@@ -56,6 +56,14 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.FirstOrDefaultAsync(rp => rp.Id == id);
 		}
 
+		public async Task<IEnumerable<RoutePrice>> GetByRouteIdAsync(int routeId)
+		{
+			return await _context.RoutesPrices
+				.Where(rp => rp.RouteId == routeId)
+				.Include(rp => rp.VehicleType)
+				.ToListAsync();
+		}
+
 		public Task UpdateAsync(RoutePrice price)
 		{
 			_context.RoutesPrices.Update(price);

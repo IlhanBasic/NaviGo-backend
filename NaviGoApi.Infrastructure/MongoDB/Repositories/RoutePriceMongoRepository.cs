@@ -99,5 +99,10 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 				.Find(rp => rp.RouteId == routeId && rp.VehicleTypeId == vehicleTypeId)
 				.FirstOrDefaultAsync();
 		}
+
+		public Task<IEnumerable<RoutePrice>> GetByRouteIdAsync(int routeId)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

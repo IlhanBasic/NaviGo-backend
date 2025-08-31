@@ -12,6 +12,7 @@ namespace NaviGoApi.Domain.Interfaces
 	{
 		Task<IEnumerable<RoutePrice>> GetAllAsync();
 		Task<RoutePrice?> GetByIdAsync(int id);
+		Task<IEnumerable<RoutePrice>> GetByRouteIdAsync(int routeId);
 		Task AddAsync(RoutePrice price);
 		Task UpdateAsync(RoutePrice price);
 		Task DeleteAsync(int id);
