@@ -26,6 +26,11 @@ namespace NaviGoApi.Application.Validators.VehicleMaintenance
 			RuleFor(x => x.RepairCost)
 				.GreaterThanOrEqualTo(0).When(x => x.RepairCost.HasValue)
 				.WithMessage("Repair cost must be a positive number.");
+			RuleFor(x => x.ResolvedAt)
+				.LessThanOrEqualTo(DateTime.UtcNow)
+				.When(x => x.ResolvedAt.HasValue)
+				.WithMessage("ResolvedAt cannot be in the future.");
+
 		}
 	}
 }

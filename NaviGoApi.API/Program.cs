@@ -206,7 +206,7 @@ builder.Services.AddSwaggerGen(options =>
 var app = builder.Build();
 
 //Middlewares
-//app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 
 // Configure the HTTP request pipeline.

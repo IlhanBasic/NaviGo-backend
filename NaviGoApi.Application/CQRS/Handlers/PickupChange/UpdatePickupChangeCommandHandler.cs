@@ -36,8 +36,17 @@ namespace NaviGoApi.Application.CQRS.Handlers.PickupChange
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail);
 			if (user == null)
 				throw new ValidationException("User not found.");
-			if (user.UserRole != UserRole.RegularUser)
+			if((user.CompanyId == null && user.UserRole != UserRole.RegularUser) ||
+				(user.CompanyId != null && user.UserRole!=UserRole.CompanyAdmin))
 				throw new ValidationException("User not authorized to update this pickup change.");
+			if (user.CompanyId != null)
+			{
+			var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value);
+				if (company == null)
+					throw new ValidationException($"Company with ID {user.CompanyId.Value} doesn't exists.");
+			if (company.CompanyType != CompanyType.Carrier )
+				throw new ValidationException("User not authorized to update this pickup change.");
+			}
 			var shipment = await _unitOfWork.Shipments.GetByIdAsync(existingEntity.ShipmentId);
 			if (shipment == null)
 				throw new ValidationException("Associated shipment not found.");

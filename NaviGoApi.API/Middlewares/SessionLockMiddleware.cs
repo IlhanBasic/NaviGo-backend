@@ -25,7 +25,8 @@ public class SessionLockMiddleware
 			if (!string.IsNullOrWhiteSpace(email))
 			{
 				var user = await unitOfWork.Users.GetByEmailAsync(email);
-				if (user != null)
+				if (user != null && user.UserStatus != UserStatus.Inactive)
+
 				{
 					var recentLocations = await unitOfWork.UserLocations
 						.GetRecentLocationsAsync(user.Id, _interval);

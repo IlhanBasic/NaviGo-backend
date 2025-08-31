@@ -25,6 +25,17 @@ namespace NaviGoApi.Application.Validators.Shipment
 				.GreaterThanOrEqualTo(x => x.ActualDeparture ?? DateTime.MinValue)
 				.When(x => x.ActualArrival.HasValue)
 				.WithMessage("Actual arrival must be after or equal to actual departure.");
+
+			// 🔹 Obe vrednosti moraju biti <= DateTime.Now
+			RuleFor(x => x.ActualDeparture)
+				.LessThanOrEqualTo(DateTime.Now)
+				.When(x => x.ActualDeparture.HasValue)
+				.WithMessage("Actual departure cannot be in the future.");
+
+			RuleFor(x => x.ActualArrival)
+				.LessThanOrEqualTo(DateTime.Now)
+				.When(x => x.ActualArrival.HasValue)
+				.WithMessage("Actual arrival cannot be in the future.");
 		}
 	}
 }
