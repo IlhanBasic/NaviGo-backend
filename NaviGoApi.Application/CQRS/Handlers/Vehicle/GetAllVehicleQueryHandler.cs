@@ -41,38 +41,75 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("Your account is not activated.");
-			var vehicles = await _unitOfWork.Vehicles.GetAllAsync(request.Search);
-			var vehiclesdto = new List<VehicleDto>();	
-			foreach (var v in vehicles)
+
+			if (!user.CompanyId.HasValue)
+				throw new ValidationException("User is not assigned to a company.");
+
+			var userCompany = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value);
+			if (userCompany == null)
+				throw new ValidationException("Your company doesn't exist.");
+
+			if (userCompany.CompanyType != CompanyType.Carrier)
+				throw new ValidationException("Only Carrier companies can have vehicles.");
+
+			// 1️⃣ Dohvati sva vozila korisnikovog Carrier-a
+			var companyVehicles = (await _unitOfWork.Vehicles.GetByCompanyIdAsync(userCompany.Id))
+								  .ToList();
+
+			if (!companyVehicles.Any())
+				return new List<VehicleDto>();
+
+			// 2️⃣ Dohvati sve lokacije i tipove vozila **koji su prisutni u ovoj listi**
+			var locationIds = companyVehicles
+							  .Where(v => v.CurrentLocationId.HasValue)
+							  .Select(v => v.CurrentLocationId!.Value)
+							  .Distinct()
+							  .ToList();
+
+			var allLocations = (await _unitOfWork.Locations.GetAllAsync())
+							   .Where(l => locationIds.Contains(l.Id))
+							   .ToDictionary(l => l.Id, l => l);
+
+			var vehicleTypeIds = companyVehicles.Select(v => v.VehicleTypeId).Distinct().ToList();
+			var allVehicleTypes = (await _unitOfWork.VehicleTypes.GetAllAsync())
+								  .Where(t => vehicleTypeIds.Contains(t.Id))
+								  .ToDictionary(t => t.Id, t => t);
+
+			// 3️⃣ Mapiranje DTO koristeći pre-loadovane dictionaries
+			var vehiclesDto = companyVehicles.Select(v =>
 			{
-				var company = await _unitOfWork.Companies.GetByIdAsync(v.CompanyId);
-				var current = await _unitOfWork.Locations.GetByIdAsync(v.CurrentLocationId.Value);
-				var type = await _unitOfWork.VehicleTypes.GetByIdAsync(v.VehicleTypeId);
-				vehiclesdto.Add(new VehicleDto
+				var location = v.CurrentLocationId.HasValue && allLocations.ContainsKey(v.CurrentLocationId.Value)
+							   ? allLocations[v.CurrentLocationId.Value]
+							   : null;
+				var type = allVehicleTypes.ContainsKey(v.VehicleTypeId) ? allVehicleTypes[v.VehicleTypeId] : null;
+
+				return new VehicleDto
 				{
 					Id = v.Id,
 					CreatedAt = v.CreatedAt,
-					Brand=v.Brand,
-					ManufactureYear=v.ManufactureYear,
+					Brand = v.Brand,
+					ManufactureYear = v.ManufactureYear,
 					Model = v.Model,
-					CapacityKg=v.CapacityKg,
-					Categories=v.Categories,
-					CompanyId=v.CompanyId,
-					CurrentLocationId=v.CurrentLocationId.Value,
-					EngineCapacityCc=v.EngineCapacityCc,
-					InsuranceExpiry=v.InsuranceExpiry,
-					LastInspectionDate=v.LastInspectionDate,
-					RegistrationNumber=v.RegistrationNumber,
-					VehiclePicture=v.VehiclePicture,
-					VehicleStatus=v.VehicleStatus.ToString(),
+					CapacityKg = v.CapacityKg,
+					Categories = v.Categories,
+					CompanyId = v.CompanyId,
+					CurrentLocationId = v.CurrentLocationId ?? 0,
+					EngineCapacityCc = v.EngineCapacityCc,
+					InsuranceExpiry = v.InsuranceExpiry,
+					LastInspectionDate = v.LastInspectionDate,
+					RegistrationNumber = v.RegistrationNumber,
+					VehiclePicture = v.VehiclePicture,
+					VehicleStatus = v.VehicleStatus.ToString(),
 					VehicleTypeId = v.VehicleTypeId,
-					CompanyName=company != null ? company.CompanyName : "",
-					CurrentLocationName = current != null ? $"{current.FullAddress}, {current.City}, {current.Country}":"",
+					CompanyName = userCompany.CompanyName,
+					CurrentLocationName = location != null
+										  ? $"{location.FullAddress}, {location.City}, {location.Country}"
+										  : "",
 					VehicleTypeName = type != null ? type.TypeName : ""
-				});
-			}
-			//return _mapper.Map<IEnumerable<VehicleDto>>(vehicles);
-			return vehiclesdto;
+				};
+			}).ToList();
+
+			return vehiclesDto;
 		}
 
 	}

@@ -43,8 +43,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 					?? throw new ValidationException($"User with email '{userEmail}' not found.");
 				if (currentUser.UserStatus != UserStatus.Active)
 					throw new ValidationException("Your account is not activated.");
-				//if (currentUser.UserRole != UserRole.SuperAdmin)
-				//	throw new ValidationException("Only SuperAdmin have right to view all users.");
+				if (currentUser.UserRole != UserRole.SuperAdmin)
+					throw new ValidationException("Only SuperAdmin have right to view all users.");
 				var users = await _unitOfWork.Users.GetAllAsync();
 				var userDtos = _mapper.Map<IEnumerable<UserDto>>(users);
 				return userDtos;
