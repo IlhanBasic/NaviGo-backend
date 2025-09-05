@@ -35,34 +35,50 @@ namespace NaviGoApi.Application.CQRS.Handlers.Driver
 			var userEmail = httpContext.User.FindFirst(ClaimTypes.Email)?.Value;
 			if (string.IsNullOrWhiteSpace(userEmail))
 				throw new ValidationException("User email not found in authentication token.");
+
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
 				?? throw new ValidationException($"User with email '{userEmail}' not found.");
+
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("Your account is not activated.");
+
 			if (user.UserRole != UserRole.CompanyAdmin)
-				throw new ValidationException("You are not allowed to add vehicle.");
-			var drivers = await _unitOfWork.Drivers.GetAllAsync(request.Search);
-			var driversdto = new List<DriverDto>();
-			foreach (var driver in drivers)
+				throw new ValidationException("Only CompanyAdmin can view drivers.");
+
+			if (!user.CompanyId.HasValue)
+				throw new ValidationException("User is not assigned to a company.");
+
+			var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value);
+			if (company == null)
+				throw new ValidationException("User's company does not exist.");
+
+			if (company.CompanyType != CompanyType.Carrier)
+				throw new ValidationException("Only Carrier companies can have drivers.");
+
+			var companyDrivers = (await _unitOfWork.Drivers.GetByCompanyIdAsync(company.Id))
+					 .ToList();
+
+
+			if (!companyDrivers.Any())
+				return new List<DriverDto>();
+
+			var driversDto = companyDrivers.Select(d => new DriverDto
 			{
-				var company = await _unitOfWork.Companies.GetByIdAsync(driver.CompanyId);
-				driversdto.Add(new DriverDto
-				{
-					Id = driver.Id,
-					CompanyId = driver.CompanyId,
-					FirstName = driver.FirstName,
-					LastName= driver.LastName,
-					HireDate = driver.HireDate,
-					LicenseCategories = driver.LicenseCategories,
-					LicenseExpiry= driver.LicenseExpiry,
-					PhoneNumber = driver.PhoneNumber,
-					LicenseNumber = driver.LicenseNumber,
-					DriverStatus = driver.DriverStatus.ToString(),
-					CompanyName = company!= null ? company.CompanyName : ""
-				});
-			}
-			//return _mapper.Map<IEnumerable<DriverDto?>>(drivers);
-			return driversdto;
+				Id = d.Id,
+				CompanyId = d.CompanyId,
+				FirstName = d.FirstName,
+				LastName = d.LastName,
+				HireDate = d.HireDate,
+				LicenseCategories = d.LicenseCategories,
+				LicenseExpiry = d.LicenseExpiry,
+				PhoneNumber = d.PhoneNumber,
+				LicenseNumber = d.LicenseNumber,
+				DriverStatus = d.DriverStatus.ToString(),
+				CompanyName = company.CompanyName
+			}).ToList();
+
+			return driversDto;
 		}
+
 	}
 }

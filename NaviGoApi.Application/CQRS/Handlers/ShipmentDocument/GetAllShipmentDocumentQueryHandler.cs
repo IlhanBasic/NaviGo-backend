@@ -33,24 +33,54 @@ namespace NaviGoApi.Application.CQRS.Handlers.ShipmentDocument
 		public async Task<IEnumerable<ShipmentDocumentDto?>> Handle(GetAllShipmentDocumentQuery request, CancellationToken cancellationToken)
 		{
 			var httpContext = _httpContextAccessor.HttpContext
-				?? throw new InvalidOperationException("HttpContext is not available.");
+				?? throw new ValidationException("HttpContext is null.");
 
 			var userEmail = httpContext.User.FindFirst(ClaimTypes.Email)?.Value;
-			if (string.IsNullOrWhiteSpace(userEmail))
-				throw new ValidationException("User email not found in authentication token.");
+			if (string.IsNullOrEmpty(userEmail))
+				throw new ValidationException("User email not found in token.");
 
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
-				?? throw new ValidationException($"User with email '{userEmail}' not found.");
+				?? throw new ValidationException("User not found.");
 
 			if (user.UserStatus != UserStatus.Active)
-				throw new ValidationException("Your account is not activated.");
+				throw new ValidationException("User must be activated.");
 
 			if (user.UserRole != UserRole.CompanyAdmin)
 				throw new ValidationException("Only Company Admins can view shipment documents.");
 
-			var entities = await _unitOfWork.ShipmentDocuments.GetAllAsync(request.Search);
+			if (user.Company == null ||
+				!(user.Company.CompanyType == CompanyType.Forwarder || user.Company.CompanyType == CompanyType.Carrier))
+			{
+				throw new ValidationException("Your company is not allowed to view shipment documents.");
+			}
+			
+			var allDocuments = await _unitOfWork.ShipmentDocuments.GetAllAsync(request.Search);
 
-			return _mapper.Map<IEnumerable<ShipmentDocumentDto>>(entities);
+			var shipmentIds = allDocuments.Select(d => d.ShipmentId).Distinct().ToList();
+			var allShipments = await _unitOfWork.Shipments.GetAllAsync(); 
+
+			var shipmentLookup = allShipments
+				.Where(s => shipmentIds.Contains(s.Id))
+				.ToDictionary(s => s.Id, s => s);
+
+			var companyDocuments = allDocuments
+				.Where(doc =>
+					shipmentLookup.TryGetValue(doc.ShipmentId, out var shipment) &&
+					shipment.Contract != null &&
+					shipment.Contract.ForwarderId == user.CompanyId)
+				.ToList();
+
+			return companyDocuments.Select(doc => new ShipmentDocumentDto
+			{
+				Id = doc.Id,
+				ShipmentId = doc.ShipmentId,
+				DocumentType = doc.DocumentType.ToString(),
+				FileUrl = doc.FileUrl,
+				UploadDate = doc.UploadDate,
+				Verified = doc.Verified,
+				VerifiedByUserId = doc.VerifiedByUserId
+			}).ToList();
 		}
+
 	}
 }
