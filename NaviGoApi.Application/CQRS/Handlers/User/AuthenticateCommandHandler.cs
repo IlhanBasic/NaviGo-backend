@@ -1,18 +1,14 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
 using NaviGoApi.Application.CQRS.Commands.User;
+using NaviGoApi.Application.Services;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Net;
-using System.Security.Claims;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.CQRS.Handlers.User
@@ -20,37 +16,41 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 	public class AuthenticateCommandHandler : IRequestHandler<AuthenticateCommand, (string accessToken, string refreshToken)?>
 	{
 		private readonly IUnitOfWork _unitOfWork;
-		private readonly string _jwtSecret;
+		private readonly ITokenService _tokenService;
 		private readonly IHttpContextAccessor _httpContextAccessor;
-		public AuthenticateCommandHandler(IUnitOfWork unitOfWork, IConfiguration configuration,IHttpContextAccessor httpContextAccessor)
+
+		public AuthenticateCommandHandler(
+			IUnitOfWork unitOfWork,
+			ITokenService tokenService,
+			IHttpContextAccessor httpContextAccessor)
 		{
 			_unitOfWork = unitOfWork;
-			_jwtSecret = configuration["JWT_SECRET"]
-				?? throw new Exception("JWT_SECRET nije pronađen u konfiguraciji.");
+			_tokenService = tokenService;
 			_httpContextAccessor = httpContextAccessor;
 		}
 
 		public async Task<(string accessToken, string refreshToken)?> Handle(AuthenticateCommand request, CancellationToken cancellationToken)
 		{
 			var user = await _unitOfWork.Users.GetByEmailAsync(request.Email);
-			if (user == null || user.EmailVerified==false)
-				return null;
-			
+
+			if (user == null)
+				throw new ValidationException("User with this email does not exist.");
+
+			if (!user.EmailVerified)
+				throw new ValidationException("Email is not verified.");
+
+			if (user.UserStatus == UserStatus.Inactive)
+				throw new ValidationException("User account is inactive.");
+
 			var hashedPassword = HashPassword(request.Password);
 			if (user.PasswordHash != hashedPassword)
-				return null;
+				throw new ValidationException("Incorrect password.");
 
-			//var refreshToken = GenerateRefreshToken("");
-
-			//user.RefreshTokens.Add(refreshToken);
-			//await _unitOfWork.SaveChangesAsync();
-			//var refreshToken = GenerateRefreshToken(GetIpAddress());
-
-			var refreshToken = GenerateRefreshToken(GetIpAddress(), user.Id);
-			//user.RefreshTokens.Add(refreshToken);
+			var refreshToken = _tokenService.GenerateRefreshToken(GetIpAddress(), user.Id);
 			await _unitOfWork.Users.AddRefreshTokenAsync(refreshToken);
 			await _unitOfWork.SaveChangesAsync();
-			var accessToken = await GenerateJwtToken(user);
+
+			var accessToken = await _tokenService.GenerateJwtToken(user);
 
 			return (accessToken, refreshToken.Token);
 		}
@@ -63,55 +63,6 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			return Convert.ToBase64String(hashBytes);
 		}
 
-		private RefreshToken GenerateRefreshToken(string ipAddress,int id)
-		{
-			var randomBytes = new byte[64];
-			using var rng = RandomNumberGenerator.Create();
-			rng.GetBytes(randomBytes);
-
-			return new RefreshToken
-			{
-				Token = Convert.ToBase64String(randomBytes),
-				Expires = DateTime.UtcNow.AddDays(7),
-				Created = DateTime.UtcNow,
-				CreatedByIp = ipAddress,
-				UserId = id
-			};
-		}
-
-		private async Task<string> GenerateJwtToken(global::NaviGoApi.Domain.Entities.User user)
-		{
-			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSecret));
-			var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-			string companyType = "";
-			if (user.CompanyId.HasValue)
-			{
-				var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value);
-				companyType = company?.CompanyType.ToString() ?? "";
-			}
-
-			var claims = new[]
-			{
-		new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-		new Claim("email", user.Email),
-		new Claim("firstName", user.FirstName ?? ""),
-		new Claim("lastName", user.LastName ?? ""),
-		new Claim("companyType", companyType),
-		new Claim("companyId",user.CompanyId.ToString() ?? ""),
-		new Claim("id", user.Id.ToString()),
-		new Claim("role", user.UserRole.ToString()),
-		new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-	};
-
-			var token = new JwtSecurityToken(
-				claims: claims,
-				expires: DateTime.UtcNow.AddHours(2),
-				signingCredentials: creds);
-
-			return new JwtSecurityTokenHandler().WriteToken(token);
-		}
-
 		private string GetIpAddress()
 		{
 			var httpContext = _httpContextAccessor.HttpContext
@@ -119,6 +70,5 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 
 			return httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 		}
-
 	}
 }

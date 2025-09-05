@@ -25,12 +25,6 @@ namespace NaviGoApi.API.Controllers
 		public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
 		{
 			var result = await _mediator.Send(new AuthenticateCommand(request.Email, request.Password));
-			if (result == null)
-				return Unauthorized(new
-				{
-					error = "Unauthorized",
-					message = "Invalid email or password. Please check your credentials and try again."
-				});
 
 			return Ok(new
 			{
@@ -38,6 +32,7 @@ namespace NaviGoApi.API.Controllers
 				refreshToken = result.Value.refreshToken
 			});
 		}
+
 
 		/// <summary>
 		/// Refresh JWT token using a valid refresh token.

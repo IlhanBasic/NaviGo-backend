@@ -107,7 +107,7 @@ builder.Services.AddSingleton<IDriver>(sp =>
 //builder.Services.AddScoped<IUserLocationRepository, UserLocationNeo4jRepository>();
 
 builder.Services.Configure<ApiSettings>(builder.Configuration.GetSection("ApiSettings"));
-
+builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IPaymentCalculatorService, PaymentCalculatorService>();
 builder.Services.AddScoped<IDelayPenaltyCalculationService, DelayPenaltyCalculationService>();
