@@ -37,15 +37,78 @@ public class GetAllShipmentStatusHistoryQueryHandler : IRequestHandler<GetAllShi
 		if (user.UserStatus != UserStatus.Active)
 			throw new ValidationException("Your account is not activated.");
 
-		if (user.UserRole != UserRole.CompanyAdmin)
-			throw new ValidationException("Only Company Admins can view shipment status history.");
+		// 1. Fetchuj sve ShipmentStatusHistory
+		var allHistories = await _unitOfWork.ShipmentStatusHistories.GetAllAsync();
 
-		if (user.CompanyId == null)
-			throw new ValidationException("User is not associated with any company.");
+		// 2. Sakupi sve shipmentId-je
+		var shipmentIds = allHistories.Select(h => h.ShipmentId).Distinct().ToList();
+		var allShipments = await _unitOfWork.Shipments.GetAllAsync(); // fetch svih shipmenta
+		var shipmentLookup = allShipments
+			.Where(s => shipmentIds.Contains(s.Id))
+			.ToDictionary(s => s.Id, s => s);
 
-		var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value)
-			?? throw new ValidationException("Company not found.");
-		var entities = await _unitOfWork.ShipmentStatusHistories.GetAllAsync();
-		return _mapper.Map<IEnumerable<ShipmentStatusHistoryDto>>(entities);
+		// 3. Sakupi sve contractId-je iz shipment-a
+		var contractIds = allShipments.Select(s => s.ContractId).Distinct().ToList();
+		var allContracts = await _unitOfWork.Contracts.GetAllAsync();
+		var contractLookup = allContracts
+			.Where(c => contractIds.Contains(c.Id))
+			.ToDictionary(c => c.Id, c => c);
+
+		// 4. Sakupi sve rute koje su relevantne za Carrier
+		var routeIds = allContracts.Select(c => c.RouteId).Distinct().ToList();
+		var allRoutes = await _unitOfWork.Routes.GetAllAsync();
+		var routeLookup = allRoutes
+			.Where(r => routeIds.Contains(r.Id))
+			.ToDictionary(r => r.Id, r => r);
+
+		// 5. Filtriraj history po pravilu:
+		var filteredHistories = new List<ShipmentStatusHistory>();
+
+		foreach (var history in allHistories)
+		{
+			if (!shipmentLookup.TryGetValue(history.ShipmentId, out var shipment))
+				continue;
+
+			if (!contractLookup.TryGetValue(shipment.ContractId, out var contract))
+				continue;
+
+			bool canView = false;
+
+			if (user.UserRole == UserRole.RegularUser)
+			{
+				// RegularUser vidi samo svoje shipment-e preko ugovora
+				if (contract.ClientId == user.Id)
+					canView = true;
+			}
+			else if (user.Company != null)
+			{
+				switch (user.Company.CompanyType)
+				{
+					case CompanyType.Carrier:
+						if (routeLookup.TryGetValue(contract.RouteId, out var route))
+						{
+							if (route.CompanyId == user.CompanyId)
+								canView = true;
+						}
+						break;
+
+					case CompanyType.Forwarder:
+						if (contract.ForwarderId == user.CompanyId)
+							canView = true;
+						break;
+
+					case CompanyType.Client:
+						if (contract.ClientId == user.Id)
+							canView = true;
+						break;
+				}
+			}
+
+			if (canView)
+				filteredHistories.Add(history);
+		}
+
+		return _mapper.Map<IEnumerable<ShipmentStatusHistoryDto>>(filteredHistories);
 	}
+
 }

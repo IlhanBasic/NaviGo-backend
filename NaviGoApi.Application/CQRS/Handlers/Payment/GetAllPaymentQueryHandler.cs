@@ -3,14 +3,10 @@ using MediatR;
 using Microsoft.AspNetCore.Http;
 using NaviGoApi.Application.CQRS.Queries.Payment;
 using NaviGoApi.Application.DTOs.Payment;
-using NaviGoApi.Domain.Interfaces;
 using NaviGoApi.Domain.Entities;
-using System;
-using System.Collections.Generic;
+using NaviGoApi.Domain.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.CQRS.Handlers.Payment
 {
@@ -27,64 +23,96 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 			_httpContextAccessor = httpContextAccessor;
 		}
 
-		//public async Task<IEnumerable<PaymentDto?>> Handle(GetAllPaymentQuery request, CancellationToken cancellationToken)
-		//{
-		//	var httpContext = _httpContextAccessor.HttpContext
-		//		?? throw new InvalidOperationException("HttpContext is not available.");
-
-		//	var userEmail = httpContext.User.FindFirst(ClaimTypes.Email)?.Value;
-		//	if (string.IsNullOrWhiteSpace(userEmail))
-		//		throw new ValidationException("User email not found in authentication token.");
-
-		//	var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
-		//		?? throw new ValidationException($"User with email '{userEmail}' not found.");
-
-		//	if (user.UserStatus != UserStatus.Active)
-		//		throw new ValidationException("User must be active to view payments.");
-
-		//	var payments = await _unitOfWork.Payments.GetAllAsync();
-		//	return _mapper.Map<IEnumerable<PaymentDto>>(payments);
-		//}
 		public async Task<IEnumerable<PaymentDto?>> Handle(GetAllPaymentQuery request, CancellationToken cancellationToken)
 		{
 			var httpContext = _httpContextAccessor.HttpContext
-				?? throw new InvalidOperationException("HttpContext is not available.");
+				?? throw new ValidationException("HttpContext is null.");
 
 			var userEmail = httpContext.User.FindFirst(ClaimTypes.Email)?.Value;
-			if (string.IsNullOrWhiteSpace(userEmail))
-				throw new ValidationException("User email not found in authentication token.");
+			if (string.IsNullOrEmpty(userEmail))
+				throw new ValidationException("User email not found in token.");
 
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
-				?? throw new ValidationException($"User with email '{userEmail}' not found.");
+				?? throw new ValidationException("User not found.");
 
 			if (user.UserStatus != UserStatus.Active)
-				throw new ValidationException("User must be active to view payments.");
+				throw new ValidationException("User must be activated.");
 
-			var payments = await _unitOfWork.Payments.GetAllAsync();
+			if (user.UserRole != UserRole.CompanyAdmin && user.UserRole != UserRole.RegularUser)
+				throw new ValidationException("Only Company Admins or Regular Users can view payments.");
 
-			var paymentDtos = new List<PaymentDto>();
-			foreach (var payment in payments)
+			// Učitaj sve potrebne podatke
+			var allPayments = await _unitOfWork.Payments.GetAllAsync();
+			var allContracts = await _unitOfWork.Contracts.GetAllAsync();
+			var allRoutes = await _unitOfWork.Routes.GetAllAsync();
+			var allUsers = await _unitOfWork.Users.GetAllAsync();
+
+			IEnumerable<Domain.Entities.Payment> filteredPayments = allPayments;
+
+			if (user.UserRole == UserRole.RegularUser)
 			{
-				// Učitaj contract i client iz baze
-				var contract = await _unitOfWork.Contracts.GetByIdAsync(payment.ContractId);
-				var client = contract != null ? await _unitOfWork.Users.GetByIdAsync(contract.ClientId) : null;
+				// RegularUser vidi samo svoje paymente
+				filteredPayments = allPayments.Where(p => p.ClientId == user.Id);
+			}
+			else if (user.UserRole == UserRole.CompanyAdmin)
+			{
+				if (user.Company == null)
+					throw new ValidationException("Company not found for user.");
 
-				paymentDtos.Add(new PaymentDto
+				if (user.Company.CompanyType == CompanyType.Carrier)
 				{
-					Id = payment.Id,
-					ContractId = payment.ContractId,
-					Contract = contract?.ContractNumber ?? "",
-					Amount = payment.Amount,
-					PaymentDate = payment.PaymentDate,
-					PaymentStatus = payment.PaymentStatus.ToString(),
-					ReceiptUrl = payment.ReceiptUrl,
-					ClientId = payment.ClientId,
-					Client = client != null ? $"{client.FirstName} {client.LastName}" : ""
-				});
+					// Carrier -> vidi paymente vezane za svoje rute
+					filteredPayments = allPayments.Where(p =>
+					{
+						var contract = allContracts.FirstOrDefault(c => c.Id == p.ContractId);
+						if (contract == null) return false;
+
+						var route = allRoutes.FirstOrDefault(r => r.Id == contract.RouteId);
+						return route != null && route.CompanyId == user.Company.Id;
+					});
+				}
+				else if (user.Company.CompanyType == CompanyType.Forwarder)
+				{
+					// Forwarder -> vidi paymente svojih ugovora
+					filteredPayments = allPayments.Where(p =>
+					{
+						var contract = allContracts.FirstOrDefault(c => c.Id == p.ContractId);
+						return contract != null && contract.ForwarderId == user.Company.Id;
+					});
+				}
+				else if (user.Company.CompanyType == CompanyType.Client)
+				{
+					// CompanyAdmin za klijenta -> vidi paymente svojih zaposlenih
+					filteredPayments = allPayments.Where(p =>
+					{
+						var client = allUsers.FirstOrDefault(u => u.Id == p.ClientId);
+						return client != null && client.CompanyId == user.Company.Id;
+					});
+				}
+				else
+				{
+					throw new ValidationException("This company type cannot view payments.");
+				}
 			}
 
-			return paymentDtos;
-		}
+			return filteredPayments.Select(p =>
+			{
+				var contract = allContracts.FirstOrDefault(c => c.Id == p.ContractId);
+				var client = allUsers.FirstOrDefault(u => u.Id == p.ClientId);
 
+				return new PaymentDto
+				{
+					Id = p.Id,
+					ContractId = p.ContractId,
+					Contract = contract?.ContractNumber ?? "",
+					Amount = p.Amount,
+					PaymentDate = p.PaymentDate,
+					PaymentStatus = p.PaymentStatus.ToString(),
+					ReceiptUrl = p.ReceiptUrl,
+					ClientId = p.ClientId,
+					Client = client != null ? $"{client.FirstName} {client.LastName}" : ""
+				};
+			});
+		}
 	}
 }
