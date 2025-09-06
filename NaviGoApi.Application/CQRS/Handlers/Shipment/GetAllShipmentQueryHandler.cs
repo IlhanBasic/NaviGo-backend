@@ -35,41 +35,99 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 			var userEmail = httpContext.User.FindFirst(ClaimTypes.Email)?.Value;
 			if (string.IsNullOrWhiteSpace(userEmail))
 				throw new ValidationException("User email not found in authentication token.");
+
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
 				?? throw new ValidationException($"User with email '{userEmail}' not found.");
+
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("Your account is not activated.");
-			var shipments = await _unitOfWork.Shipments.GetAllAsync(request.Search);
-			var shipmentsDto = new List<ShipmentDto>();
-			//return _mapper.Map<IEnumerable<ShipmentDto?>>(shipments);
-			foreach(var s in shipments)
+
+			var shipments = (await _unitOfWork.Shipments.GetAllAsync(request.Search)).ToList();
+			var contracts = (await _unitOfWork.Contracts.GetAllAsync()).ToList();
+			var drivers = (await _unitOfWork.Drivers.GetAllAsync()).ToList();
+			var vehicles = (await _unitOfWork.Vehicles.GetAllAsync()).ToList();
+			var cargoTypes = (await _unitOfWork.CargoTypes.GetAllAsync()).ToList();
+			var users = (await _unitOfWork.Users.GetAllAsync()).ToList();
+
+			var contractsDict = contracts.ToDictionary(c => c.Id);
+			var driversDict = drivers.ToDictionary(d => d.Id);
+			var vehiclesDict = vehicles.ToDictionary(v => v.Id);
+			var cargoTypesDict = cargoTypes.ToDictionary(c => c.Id);
+			var usersDict = users.ToDictionary(u => u.Id);
+
+			Domain.Entities.Company? userCompany = null;
+			if (user.CompanyId != null)
 			{
-				var driver = await _unitOfWork.Drivers.GetByIdAsync(s.DriverId);
-				var cargoType = await _unitOfWork.CargoTypes.GetByIdAsync(s.CargoTypeId);
-				var contract = await _unitOfWork.Contracts.GetByIdAsync(s.ContractId);
-				var vehicle = await _unitOfWork.Vehicles.GetByIdAsync(s.VehicleId);
-				shipmentsDto.Add(new ShipmentDto
+				userCompany = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value)
+					?? throw new ValidationException($"Company with ID {user.CompanyId.Value} doesn't exist.");
+			}
+
+			var visibleShipments = shipments.Where(s =>
+			{
+				if (!contractsDict.TryGetValue(s.ContractId, out var contract))
+					return false;
+
+				if (user.UserRole == UserRole.SuperAdmin)
+					return true;
+				
+				if (contract.ClientId == user.Id)
+					return true;
+
+				if (userCompany != null)
 				{
-					ActualArrival = s.ActualArrival,
-					ActualDeparture = s.ActualDeparture,
-					ScheduledArrival= s.ScheduledArrival,
-					ScheduledDeparture= s.ScheduledDeparture,
-					CargoTypeId = s.CargoTypeId,
-					ContractId = s.ContractId,
+					if (userCompany.CompanyType == CompanyType.Forwarder && contract.ForwarderId == userCompany.Id)
+						return true;
+
+					if (userCompany.CompanyType == CompanyType.Carrier)
+					{
+						if (vehiclesDict.TryGetValue(s.VehicleId, out var v) && v.CompanyId == userCompany.Id)
+							return true;
+					}
+
+					if (userCompany.CompanyType == CompanyType.Client)
+					{
+						if (usersDict.TryGetValue(contract.ClientId, out var clientUser)
+							&& clientUser.CompanyId == userCompany.Id)
+						{
+							return true;
+						}
+					}
+				}
+				
+				return false;
+			}).ToList();
+			var shipmentsDto = visibleShipments.Select(s =>
+			{
+				driversDict.TryGetValue(s.DriverId, out var driver);
+				cargoTypesDict.TryGetValue(s.CargoTypeId, out var cargoType);
+				contractsDict.TryGetValue(s.ContractId, out var contract);
+				vehiclesDict.TryGetValue(s.VehicleId, out var vehicle);
+
+				return new ShipmentDto
+				{
+					Id = s.Id,
+					Status = s.Status.ToString(),
 					Description = s.Description,
-					DriverId = s.DriverId,
 					Priority = s.Priority,
 					WeightKg = s.WeightKg,
-					Status = s.Status.ToString(),
-					Id = s.Id,
-					CargoTypeName=cargoType.TypeName,
-					ContractName=contract.ContractNumber,
-					DriverName = $"{driver.FirstName} {driver.LastName}",
-					VehicleName=$"{vehicle.Brand}-{vehicle.Model} ({vehicle.ManufactureYear})",
-					VehicleId=s.VehicleId
-				});
-			}
+					ScheduledDeparture = s.ScheduledDeparture,
+					ScheduledArrival = s.ScheduledArrival,
+					ActualDeparture = s.ActualDeparture,
+					ActualArrival = s.ActualArrival,
+					CargoTypeId = s.CargoTypeId,
+					ContractId = s.ContractId,
+					DriverId = s.DriverId,
+					VehicleId = s.VehicleId,
+
+					CargoTypeName = cargoType?.TypeName ?? string.Empty,
+					ContractName = contract?.ContractNumber ?? string.Empty,
+					DriverName = driver != null ? $"{driver.FirstName} {driver.LastName}" : string.Empty,
+					VehicleName = vehicle != null ? $"{vehicle.Brand}-{vehicle.Model} ({vehicle.ManufactureYear})" : string.Empty
+				};
+			}).ToList();
+
 			return shipmentsDto;
 		}
+
 	}
 }

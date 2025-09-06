@@ -47,6 +47,16 @@ namespace NaviGoApi.Application.CQRS.Handlers.Route
 			if (!routes.Any())
 				return new List<RouteDto>();
 
+			// 🔑 Ako je Carrier → filtriraj samo njegove rute
+			if (user.CompanyId.HasValue)
+			{
+				var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value);
+				if (company != null && company.CompanyType == CompanyType.Carrier)
+				{
+					routes = routes.Where(r => r.CompanyId == user.CompanyId.Value);
+				}
+			}
+
 			var companyIds = routes.Select(r => r.CompanyId).Distinct().ToList();
 			var companies = (await _unitOfWork.Companies.GetAllAsync())
 							.Where(c => companyIds.Contains(c.Id))
@@ -84,5 +94,6 @@ namespace NaviGoApi.Application.CQRS.Handlers.Route
 
 			return routesDto;
 		}
+
 	}
 }

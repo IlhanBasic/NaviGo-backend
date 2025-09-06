@@ -40,30 +40,50 @@ namespace NaviGoApi.Application.CQRS.Handlers.ForwarderOffer
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
 				?? throw new ValidationException("User not found.");
 
-			if (user.UserStatus != Domain.Entities.UserStatus.Active)
+			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("User must be activated.");
 
-			var entities = await _unitOfWork.ForwarderOffers.GetAllAsync(request.Search);
-			var forwarderOffersdto = new List<ForwarderOfferDto>();
-			foreach (var entity in  entities)
+			if (user.CompanyId == null && user.UserRole != UserRole.SuperAdmin)
+				throw new ValidationException("User must belong to a company.");
+
+			Domain.Entities.Company? company = null;
+			if (user.CompanyId != null)
 			{
-				var company = await _unitOfWork.Companies.GetByIdAsync(entity.ForwarderId);
-				forwarderOffersdto.Add(new ForwarderOfferDto
-				{
-					Id = entity.Id,
-					CreatedAt = DateTime.UtcNow,
-					ExpiresAt = DateTime.UtcNow,
-					CommissionRate = entity.CommissionRate,
-					DiscountRate = entity.DiscountRate,
-					ForwarderId = entity.Id,
-					ForwarderOfferStatus = entity.ForwarderOfferStatus.ToString(),
-					RejectionReason = entity.RejectionReason,
-					RouteId = entity.RouteId,
-					ForwarderCompanyName = company != null ? company.CompanyName:""
-				});
+				company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value)
+					?? throw new ValidationException($"Company with ID {user.CompanyId.Value} doesn't exist.");
 			}
-			//return _mapper.Map<IEnumerable<ForwarderOfferDto>>(entities);
-			return forwarderOffersdto;
+
+			IEnumerable<Domain.Entities.ForwarderOffer> entities;
+
+			if (company != null && company.CompanyType == CompanyType.Forwarder)
+			{
+				entities = await _unitOfWork.ForwarderOffers.GetByForwarderIdAsync(company.Id);
+			}
+			else
+			{
+				entities = await _unitOfWork.ForwarderOffers.GetAllAsync(request.Search);
+			}
+			var allCompanies = await _unitOfWork.Companies.GetAllAsync();
+			var companiesDict = allCompanies.ToDictionary(c => c.Id, c => c);
+
+			var forwarderOffersDto = entities.Select(entity => new ForwarderOfferDto
+			{
+				Id = entity.Id,
+				CreatedAt = entity.CreatedAt,
+				ExpiresAt = entity.ExpiresAt,
+				CommissionRate = entity.CommissionRate,
+				DiscountRate = entity.DiscountRate,
+				ForwarderId = entity.ForwarderId,
+				ForwarderOfferStatus = entity.ForwarderOfferStatus.ToString(),
+				RejectionReason = entity.RejectionReason,
+				RouteId = entity.RouteId,
+				ForwarderCompanyName = companiesDict.TryGetValue(entity.ForwarderId, out var forwarderCompany)
+					? forwarderCompany.CompanyName
+					: string.Empty
+			}).ToList();
+
+			return forwarderOffersDto;
 		}
+
 	}
 }

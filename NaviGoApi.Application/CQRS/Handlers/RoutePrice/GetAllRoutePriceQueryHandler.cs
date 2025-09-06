@@ -26,7 +26,6 @@ namespace NaviGoApi.Application.CQRS.Handlers.RoutePrice
 			_unitOfWork = unitOfWork;
 			_httpContextAccessor = httpContextAccessor;
 		}
-
 		public async Task<IEnumerable<RoutePriceDto?>> Handle(GetAllRoutePriceQuery request, CancellationToken cancellationToken)
 		{
 			var httpContext = _httpContextAccessor.HttpContext
@@ -35,29 +34,56 @@ namespace NaviGoApi.Application.CQRS.Handlers.RoutePrice
 			var userEmail = httpContext.User.FindFirst(ClaimTypes.Email)?.Value;
 			if (string.IsNullOrWhiteSpace(userEmail))
 				throw new ValidationException("User email not found in authentication token.");
+
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
 				?? throw new ValidationException($"User with email '{userEmail}' not found.");
+
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("Your account is not activated.");
-			var entities = await _unitOfWork.RoutePrices.GetAllAsync();
-			var routePricesdto = new List<RoutePriceDto>();
-			foreach (var entity in entities)
+
+			var entities = (await _unitOfWork.RoutePrices.GetAllAsync()).ToList(); 
+			var routes = (await _unitOfWork.Routes.GetAllAsync()).ToList();      
+			var vehicleTypes = (await _unitOfWork.VehicleTypes.GetAllAsync()).ToList();
+
+			var routesDict = routes.ToDictionary(r => r.Id);
+			var vehicleTypesDict = vehicleTypes.ToDictionary(vt => vt.Id);
+
+			Domain.Entities.Company? userCompany = null;
+			if (user.CompanyId != null)
 			{
-				var vehicleType = await _unitOfWork.VehicleTypes.GetByIdAsync(entity.VehicleTypeId);
-				routePricesdto.Add(new RoutePriceDto
-				{
-					Id = entity.Id,
-					MinimumPrice = entity.MinimumPrice,
-					PricePerKm = entity.PricePerKm,
-					RouteId = entity.RouteId,
-					VehicleTypeId = entity.VehicleTypeId,
-					VehicleTypeName = vehicleType!=null ? vehicleType.TypeName : ""
-				});
+				userCompany = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value)
+					?? throw new ValidationException($"Company with ID {user.CompanyId.Value} doesn't exist.");
 			}
-			 
-			//return _mapper.Map<IEnumerable<RoutePriceDto>>(entities);
-				return routePricesdto;
+
+			IEnumerable<Domain.Entities.RoutePrice> visibleEntities = entities;
+			if (userCompany != null && userCompany.CompanyType == CompanyType.Carrier && user.UserRole != UserRole.SuperAdmin)
+			{
+				visibleEntities = entities.Where(e =>
+				{
+					if (!routesDict.TryGetValue(e.RouteId, out var route))
+						return false; 
+					return route.CompanyId == userCompany.Id;
+				}).ToList();
+			}
+
+			var routePricesDto = visibleEntities.Select(e =>
+			{
+				vehicleTypesDict.TryGetValue(e.VehicleTypeId, out var vt);
+
+				return new RoutePriceDto
+				{
+					Id = e.Id,
+					RouteId = e.RouteId,
+					VehicleTypeId = e.VehicleTypeId,
+					PricePerKm = e.PricePerKm,
+					MinimumPrice = e.MinimumPrice,
+					VehicleTypeName = vt?.TypeName ?? string.Empty
+				};
+			}).ToList();
+
+			return routePricesDto;
 		}
+
 	}
 
 }
