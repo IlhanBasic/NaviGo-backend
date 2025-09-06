@@ -42,25 +42,41 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("User must be activated.");
-			//if (user.UserRole != UserRole.CompanyAdmin && user.UserRole != UserRole.SuperAdmin)
-			//	throw new ValidationException("User is not authorized to view contracts.");
 
 			var contracts = await _unitOfWork.Contracts.GetAllAsync(request.Search);
-			//if (user.UserRole == UserRole.CompanyAdmin)
-			//{
-			//	contracts = contracts.Where(c => c.ForwarderId == user.CompanyId).ToList();
-			//}
 
-			//return _mapper.Map<IEnumerable<ContractDto>>(contracts);
-			var contractDtos = new List<ContractDto>();
+			var allUsers = await _unitOfWork.Users.GetAllAsync();
+			var allCompanies = await _unitOfWork.Companies.GetAllAsync();
+			var allRoutes = await _unitOfWork.Routes.GetAllAsync();
 
-			foreach (var contract in contracts)
+			if (user.UserRole == UserRole.CompanyAdmin && user.Company != null)
 			{
-				// Učitaj Client i Forwarder ručno
-				var client = await _unitOfWork.Users.GetByIdAsync(contract.ClientId);
-				var forwarder = await _unitOfWork.Companies.GetByIdAsync(contract.ForwarderId);
+				if (user.Company.CompanyType == CompanyType.Carrier)
+				{
+					contracts = contracts
+						.Where(c => allRoutes.FirstOrDefault(r => r.Id == c.RouteId)?.CompanyId == user.CompanyId)
+						.ToList();
+				}
+				else if (user.Company.CompanyType == CompanyType.Forwarder)
+				{
+					contracts = contracts.Where(c => c.ForwarderId == user.CompanyId).ToList();
+				}
+				else if (user.Company.CompanyType == CompanyType.Client)
+				{
+					contracts = contracts.Where(c => c.ClientId == user.Id).ToList();
+				}
+			}
+			else if (user.UserRole == UserRole.RegularUser)
+			{
+				contracts = contracts.Where(c => c.ClientId == user.Id).ToList();
+			}
 
-				contractDtos.Add(new ContractDto
+			var contractDtos = contracts.Select(contract =>
+			{
+				var client = allUsers.FirstOrDefault(u => u.Id == contract.ClientId);
+				var forwarder = allCompanies.FirstOrDefault(c => c.Id == contract.ForwarderId);
+
+				return new ContractDto
 				{
 					Id = contract.Id,
 					ClientId = contract.ClientId,
@@ -74,11 +90,13 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 					ContractStatus = contract.ContractStatus.ToString(),
 					PenaltyRatePerHour = contract.PenaltyRatePerHour,
 					MaxPenaltyPercent = contract.MaxPenaltyPercent,
-					ValidUntil = contract.SignedDate?.AddDays(30) ?? DateTime.UtcNow, // primer logike
+					ValidUntil = contract.SignedDate?.AddDays(30) ?? DateTime.UtcNow,
 					SignedDate = contract.SignedDate
-				});
-			}
+				};
+			}).ToList();
+
 			return contractDtos;
 		}
+
 	}
 }
