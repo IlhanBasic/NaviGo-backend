@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
@@ -20,6 +20,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IMapper _mapper;
 		private readonly IHttpContextAccessor _httpContextAccessor;
+
 		public GetAllVehiclesQueryHandler(IUnitOfWork unitOfWork, IMapper mapper, IHttpContextAccessor httpContextAccessor)
 		{
 			_unitOfWork = unitOfWork;
@@ -49,18 +50,26 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 			if (userCompany == null)
 				throw new ValidationException("Your company doesn't exist.");
 
-			if (userCompany.CompanyType != CompanyType.Carrier)
-				throw new ValidationException("Only Carrier companies can have vehicles.");
+			if (userCompany.CompanyType != CompanyType.Carrier && userCompany.CompanyType != CompanyType.Forwarder)
+				throw new ValidationException("Only Carrier and Forwarder companies can see vehicles.");
+			IEnumerable<Domain.Entities.Vehicle> vehicles;
 
-			// 1️⃣ Dohvati sva vozila korisnikovog Carrier-a
-			var companyVehicles = (await _unitOfWork.Vehicles.GetByCompanyIdAsync(userCompany.Id))
-								  .ToList();
+			if (userCompany.CompanyType == CompanyType.Forwarder)
+			{
+				vehicles = (await _unitOfWork.Vehicles.GetAllAsync())
+							.Where(v => v.VehicleStatus == VehicleStatus.Free)
+							.ToList();
+			}
+			else 
+			{
+				vehicles = (await _unitOfWork.Vehicles.GetByCompanyIdAsync(userCompany.Id))
+							.ToList();
+			}
 
-			if (!companyVehicles.Any())
+			if (!vehicles.Any())
 				return new List<VehicleDto>();
 
-			// 2️⃣ Dohvati sve lokacije i tipove vozila **koji su prisutni u ovoj listi**
-			var locationIds = companyVehicles
+			var locationIds = vehicles
 							  .Where(v => v.CurrentLocationId.HasValue)
 							  .Select(v => v.CurrentLocationId!.Value)
 							  .Distinct()
@@ -70,13 +79,12 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 							   .Where(l => locationIds.Contains(l.Id))
 							   .ToDictionary(l => l.Id, l => l);
 
-			var vehicleTypeIds = companyVehicles.Select(v => v.VehicleTypeId).Distinct().ToList();
+			var vehicleTypeIds = vehicles.Select(v => v.VehicleTypeId).Distinct().ToList();
 			var allVehicleTypes = (await _unitOfWork.VehicleTypes.GetAllAsync())
 								  .Where(t => vehicleTypeIds.Contains(t.Id))
 								  .ToDictionary(t => t.Id, t => t);
 
-			// 3️⃣ Mapiranje DTO koristeći pre-loadovane dictionaries
-			var vehiclesDto = companyVehicles.Select(v =>
+			var vehiclesDto = vehicles.Select(v =>
 			{
 				var location = v.CurrentLocationId.HasValue && allLocations.ContainsKey(v.CurrentLocationId.Value)
 							   ? allLocations[v.CurrentLocationId.Value]
@@ -111,6 +119,5 @@ namespace NaviGoApi.Application.CQRS.Handlers.Vehicle
 
 			return vehiclesDto;
 		}
-
 	}
 }
