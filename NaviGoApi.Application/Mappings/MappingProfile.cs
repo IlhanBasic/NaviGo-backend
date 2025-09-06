@@ -27,6 +27,7 @@ namespace NaviGoApi.Application.MappingProfiles
 		{
 			//User mappings
 			CreateMap<UserCreateDto, User>();
+			CreateMap<UserUpdateDto, User>();
 			CreateMap<User, UserDto>()
 				.ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => src.UserRole.ToString()));
 			CreateMap<UserSuperAdminCreateDto, User>()

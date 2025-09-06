@@ -32,6 +32,17 @@ namespace NaviGoApi.API.Controllers
 			var createdUser = await _mediator.Send(command);
 			return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, createdUser);
 		}
+		// PUT: api/user/{id} 
+		[HttpPut("{id}")]
+		public async Task<ActionResult> UpdateUser(int id, [FromBody] UserUpdateDto userUpdateDto)
+		{
+			var command = new UpdateUserCommand(id, userUpdateDto);
+			await _mediator.Send(command);
+
+			return Ok(new { Message = "Successfully updated user." });
+		}
+
+
 
 		// GET: api/user/{id}
 		[HttpGet("{id}")]
