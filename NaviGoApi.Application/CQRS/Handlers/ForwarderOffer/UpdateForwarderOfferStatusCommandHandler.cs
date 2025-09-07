@@ -35,12 +35,16 @@ public class UpdateForwarderOfferStatusCommandHandler : IRequestHandler<UpdateFo
 
 		if (user.UserStatus != UserStatus.Active)
 			throw new ValidationException("User must be activated.");
-
-		var offer = await _unitOfWork.ForwarderOffers.GetByIdAsync(request.ForwarderOfferDto.ForwarderOfferId)
+		Console.WriteLine(request.Id);
+		var offer = await _unitOfWork.ForwarderOffers.GetByIdAsync(request.Id)
 			?? throw new ValidationException("Forwarder offer not found.");
-
-		if (user.UserRole != UserRole.CompanyAdmin || user.CompanyId != offer.ForwarderId)
-			throw new ValidationException("Only the CompanyAdmin of this company can change the status of the offer.");
+		var route = await _unitOfWork.Routes.GetByIdAsync(offer.RouteId);
+		if (route == null)
+			throw new ValidationException($"Route with ID {offer.RouteId} doesn't exists.");
+		if (user.CompanyId == null)
+			throw new ValidationException("User must have company.");
+		if (user.UserRole != UserRole.CompanyAdmin && user.CompanyId != route.CompanyId)
+			throw new ValidationException("Only the CompanyAdmin Carrier can change the status of the offer.");
 		if (offer.ExpiresAt < DateTime.UtcNow && request.ForwarderOfferDto.NewStatus == ForwarderOfferStatus.Accepted)
 			throw new ValidationException("This forwarder offer cannot be accepted because it's expired.");
 
