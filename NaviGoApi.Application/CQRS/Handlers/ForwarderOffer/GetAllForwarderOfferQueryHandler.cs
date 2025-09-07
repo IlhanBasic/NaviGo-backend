@@ -43,8 +43,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.ForwarderOffer
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("User must be activated.");
 
-			if (user.CompanyId == null && user.UserRole != UserRole.SuperAdmin)
-				throw new ValidationException("User must belong to a company.");
+			//if (user.CompanyId == null && user.UserRole != UserRole.SuperAdmin)
+			//	throw new ValidationException("User must belong to a company.");
 
 			Domain.Entities.Company? company = null;
 			if (user.CompanyId != null)
