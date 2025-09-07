@@ -5,12 +5,8 @@ using NaviGoApi.Application.CQRS.Queries.Route;
 using NaviGoApi.Application.DTOs.Route;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.CQRS.Handlers.Route
 {
@@ -43,18 +39,39 @@ namespace NaviGoApi.Application.CQRS.Handlers.Route
 				throw new ValidationException("Your account is not activated.");
 
 			var routes = await _unitOfWork.Routes.GetAllAsync(request.Search);
-
 			if (!routes.Any())
 				return new List<RouteDto>();
 
-			// 🔑 Ako je Carrier → filtriraj samo njegove rute
 			if (user.CompanyId.HasValue)
 			{
 				var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value);
-				if (company != null && company.CompanyType == CompanyType.Carrier)
+
+				if (company != null)
 				{
-					routes = routes.Where(r => r.CompanyId == user.CompanyId.Value);
+					if (company.CompanyType == CompanyType.Carrier)
+					{
+						// Carrier → samo svoje rute
+						routes = routes.Where(r => r.CompanyId == user.CompanyId.Value);
+					}
+					if (company.CompanyType == CompanyType.Client)
+					{
+						var offeredRouteIds = (await _unitOfWork.ForwarderOffers.GetAllAsync())
+										.Select(o => o.RouteId)
+										.Distinct()
+										.ToHashSet();
+						routes = routes.Where(r => offeredRouteIds.Contains(r.Id));
+					}
 				}
+			}
+			else
+			{
+				if (user.UserRole != UserRole.RegularUser && user.UserRole != UserRole.SuperAdmin)
+					throw new ValidationException("User must be RegularUser or SuperAdmin or CompanyAdmin to see routes.");
+				var offeredRouteIds = (await _unitOfWork.ForwarderOffers.GetAllAsync())
+										.Select(o => o.RouteId)
+										.Distinct()
+										.ToHashSet();
+				routes = routes.Where(r => offeredRouteIds.Contains(r.Id));
 			}
 
 			var companyIds = routes.Select(r => r.CompanyId).Distinct().ToList();
