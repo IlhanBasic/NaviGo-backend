@@ -43,13 +43,13 @@ namespace NaviGoApi.Application.CQRS.Handlers.PickupChange
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("User must be activated.");
 
-			if (!(user.UserRole == UserRole.RegularUser ||
-				  (user.UserRole == UserRole.CompanyAdmin && user.Company != null && user.Company.CompanyType == CompanyType.Client)))
-			{
+			if (!(user.UserRole == UserRole.RegularUser || user.UserRole == UserRole.CompanyAdmin))
 				throw new ValidationException("You are not allowed to view pickup changes.");
-			}
 
-			var allPickupChanges = await _unitOfWork.PickupChanges.GetAllAsync();
+			var allPickupChanges = (await _unitOfWork.PickupChanges.GetAllAsync()).ToList();
+			var allShipments = (await _unitOfWork.Shipments.GetAllAsync()).ToList();
+			var allContracts = (await _unitOfWork.Contracts.GetAllAsync()).ToList();
+			var allRoutes = (await _unitOfWork.Routes.GetAllAsync()).ToList();
 
 			IEnumerable<Domain.Entities.PickupChange> filteredChanges;
 
@@ -59,16 +59,27 @@ namespace NaviGoApi.Application.CQRS.Handlers.PickupChange
 			}
 			else
 			{
-				filteredChanges = new List<Domain.Entities.PickupChange>();
-
-				foreach (var pc in allPickupChanges)
+				filteredChanges = allPickupChanges.Where(pc =>
 				{
-					var client = await _unitOfWork.Users.GetByIdAsync(pc.ClientId);
-					if (client != null && client.CompanyId == user.CompanyId)
+					var shipment = allShipments.FirstOrDefault(s => s.Id == pc.ShipmentId);
+					if (shipment == null) return false;
+
+					var contract = allContracts.FirstOrDefault(c => c.Id == shipment.ContractId);
+					if (contract == null) return false;
+
+					var route = allRoutes.FirstOrDefault(r => r.Id == contract.RouteId);
+					if (user.CompanyId != null && contract.ClientId != 0)
 					{
-						((List<Domain.Entities.PickupChange>)filteredChanges).Add(pc);
+						var client = allShipments.FirstOrDefault(s => s.Id == pc.ShipmentId)?.Contract?.ClientId;
+						if (client != null && client == user.CompanyId) return true;
 					}
-				}
+
+					if (user.CompanyId != null && contract.ForwarderId == user.CompanyId) return true;
+
+					if (route != null && route.CompanyId == user.CompanyId) return true;
+
+					return false;
+				}).ToList();
 			}
 
 			return filteredChanges.Select(pc => new PickupChangeDto

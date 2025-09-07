@@ -28,36 +28,48 @@ namespace NaviGoApi.Application.CQRS.Handlers.PickupChange
 		{
 			if (_httpContextAccessor.HttpContext == null)
 				throw new ValidationException("HttpContext is null.");
+
 			var userEmail = _httpContextAccessor.HttpContext.User
 				.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+
 			if (string.IsNullOrEmpty(userEmail))
 				throw new ValidationException("User email not found in token.");
+
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
 				?? throw new ValidationException("User not found.");
 
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("User must be activated.");
+
 			if ((user.CompanyId == null && user.UserRole != UserRole.RegularUser) ||
 				(user.CompanyId != null && user.UserRole != UserRole.CompanyAdmin))
 				throw new ValidationException("User not authorized to add this pickup change.");
+
 			if (user.CompanyId != null)
 			{
 				var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value);
 				if (company == null)
-					throw new ValidationException($"Company with ID {user.CompanyId.Value} doesn't exists.");
+					throw new ValidationException($"Company with ID {user.CompanyId.Value} doesn't exist.");
 				if (company.CompanyType != CompanyType.Carrier)
-					throw new ValidationException("User not authorized to update this pickup change.");
+					throw new ValidationException("User not authorized to add this pickup change.");
 			}
-			var existingPickupChange = await _unitOfWork.PickupChanges
-				.GetByShipmentAndClientAsync(request.PickupChangeDto.ShipmentId, user.Id);
-			if (existingPickupChange != null)
+
+			var allPickupChanges = (await _unitOfWork.PickupChanges.GetAllAsync())
+				.Where(pc => pc.ShipmentId == request.PickupChangeDto.ShipmentId)
+				.ToList();
+
+			if (allPickupChanges.Any(pc => pc.ClientId == user.Id))
 				throw new ValidationException("You already have an active pickup change for this shipment.");
+
 			var shipment = await _unitOfWork.Shipments.GetByIdAsync(request.PickupChangeDto.ShipmentId)
 				?? throw new KeyNotFoundException("Shipment not found.");
+
 			if (shipment.Status == ShipmentStatus.Delivered || shipment.Status == ShipmentStatus.Cancelled)
 				throw new ValidationException("Shipment is finished so cannot change pickup.");
+
 			if ((request.PickupChangeDto.NewTime - DateTime.UtcNow).TotalDays > 7)
 				throw new ValidationException("Pickup change can be made at most 7 days in advance.");
+
 			var entity = _mapper.Map<Domain.Entities.PickupChange>(request.PickupChangeDto);
 			entity.ClientId = user.Id;
 			entity.OldTime = shipment.ScheduledDeparture;
@@ -71,5 +83,6 @@ namespace NaviGoApi.Application.CQRS.Handlers.PickupChange
 
 			return entity.Id;
 		}
+
 	}
 }

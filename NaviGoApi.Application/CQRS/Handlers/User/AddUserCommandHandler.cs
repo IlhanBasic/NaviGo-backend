@@ -37,30 +37,20 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 		{
 			if (request.UserDto.UserRole == UserRole.SuperAdmin)
 				throw new ValidationException("This is not endpoint for creating SuperAdmin user");
+
 			var dto = request.UserDto;
 			var existsUser = await _unitOfWork.Users.GetByEmailAsync(dto.Email);
 			if (existsUser != null)
 				throw new ValidationException($"User with EMAIL {dto.Email} already exists.");
-			if ((dto.UserRole == UserRole.CompanyUser || dto.UserRole == UserRole.CompanyAdmin) && dto.CompanyId == null)
-			{
-				throw new ValidationException("CompanyUser or CompanyAdmin must be linked to a company.");
-			}
 
-			if (dto.UserRole == UserRole.SuperAdmin && dto.CompanyId != null)
-			{
-				throw new ValidationException("SuperAdmin must not be linked to a company.");
-			}
+			if ((dto.UserRole == UserRole.CompanyUser || dto.UserRole == UserRole.CompanyAdmin) && dto.CompanyId == null)
+				throw new ValidationException("CompanyUser or CompanyAdmin must be linked to a company.");
 
 			if (dto.CompanyId != null)
 			{
 				var companyExists = await _unitOfWork.Companies.GetByIdAsync(dto.CompanyId.Value);
-				if (companyExists==null)
-				{
+				if (companyExists == null)
 					throw new ValidationException($"Company with ID {dto.CompanyId} does not exist.");
-				}
-				if (companyExists.CompanyType != CompanyType.Client && dto.UserRole == UserRole.RegularUser)
-					throw new ValidationException($"RegularUser must work in Client company.");
-
 			}
 
 			var userEntity = _mapper.Map<Domain.Entities.User>(dto);
@@ -68,22 +58,33 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			userEntity.CreatedAt = DateTime.UtcNow;
 			userEntity.EmailVerificationToken = Guid.NewGuid().ToString();
 			userEntity.EmailVerificationTokenDuration = TimeSpan.FromMinutes(15);
-
-			if (userEntity.UserRole == UserRole.SuperAdmin)
-			{
-				userEntity.EmailVerified = true;
-			}
-
 			userEntity.UserStatus = UserStatus.Inactive;
-
-			// Čuvanje u bazi
 			await _unitOfWork.Users.AddAsync(userEntity);
 			await _unitOfWork.SaveChangesAsync();
 
-			
 			var verificationLink = $"{_apiBaseUrl}api/User/verify-email?token={userEntity.EmailVerificationToken}";
+
 			if (userEntity.UserRole != UserRole.SuperAdmin)
 				await _emailService.SendVerificationEmailAsync(userEntity.Email, verificationLink);
+
+			var allUsers = await _unitOfWork.Users.GetAllAsync();
+			var superAdmins = allUsers.Where(u => u.UserRole == UserRole.SuperAdmin).ToList();
+			foreach (var admin in superAdmins)
+			{
+				await _emailService.SendEmailCheckUserNotification(admin.Email, userEntity);
+			}
+			if (userEntity.CompanyId.HasValue)
+			{
+				var companyAdmins = allUsers
+					.Where(u => u.UserRole == UserRole.CompanyAdmin && u.CompanyId == userEntity.CompanyId.Value)
+					.ToList();
+
+				foreach (var companyAdmin in companyAdmins)
+				{
+					await _emailService.SendEmailCheckUserNotification(companyAdmin.Email, userEntity);
+				}
+			}
+
 			return _mapper.Map<UserDto>(userEntity);
 		}
 		private string HashPassword(string password)
