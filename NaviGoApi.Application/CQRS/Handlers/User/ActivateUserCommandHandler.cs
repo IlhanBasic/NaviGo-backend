@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Http;
 using NaviGoApi.Application.CQRS.Commands.User;
+using NaviGoApi.Application.Services;
 using NaviGoApi.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -16,10 +17,12 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 	{
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IHttpContextAccessor _httpContextAccessor;
-        public ActivateUserCommandHandler(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor)
+		private readonly IEmailService _emailService;
+        public ActivateUserCommandHandler(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor,IEmailService emailService)
         {
             _unitOfWork = unitOfWork;
 			_httpContextAccessor = httpContextAccessor;
+			_emailService = emailService;
         }
 
 		public async Task<Unit> Handle(ActivateUserCommand request, CancellationToken cancellationToken)
@@ -44,6 +47,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 					throw new ValidationException("UserStatus wasn't provided.");
 
 				targetUser.UserStatus = request.UserDto.UserStatus.Value;
+				await _emailService.SendEmailUserStatusNotification(targetUser.Email, targetUser);
 			}
 			else
 			{
@@ -55,6 +59,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 				if (company.Id != targetUser.CompanyId)
 					throw new ValidationException("You cannot activate a user for a different company.");
 				targetUser.UserRole = Domain.Entities.UserRole.CompanyAdmin;
+				await _emailService.SendEmailUserStatusNotification(targetUser.Email, targetUser);
 			}
 
 			await _unitOfWork.SaveChangesAsync();

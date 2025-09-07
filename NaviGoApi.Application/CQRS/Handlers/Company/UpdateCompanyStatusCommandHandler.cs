@@ -1,16 +1,11 @@
-﻿using AutoMapper;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Http;
 using NaviGoApi.Application.CQRS.Commands.Company;
+using NaviGoApi.Application.Services;
 using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NaviGoApi.Application.CQRS.Handlers.Company
 {
@@ -19,10 +14,12 @@ namespace NaviGoApi.Application.CQRS.Handlers.Company
 
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IHttpContextAccessor _httpContextAccessor;
-		public UpdateCompanyStatusCommandHandler(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor)
+		private readonly IEmailService _emailService;
+		public UpdateCompanyStatusCommandHandler(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor, IEmailService emailService)
 		{
 			_unitOfWork = unitOfWork;
 			_httpContextAccessor = httpContextAccessor;
+			_emailService = emailService;
 		}
 		public async Task<Unit> Handle(UpdateCompanyStatusCommand request, CancellationToken cancellationToken)
 		{
@@ -43,6 +40,10 @@ namespace NaviGoApi.Application.CQRS.Handlers.Company
 			existing.CompanyStatus = request.CompanyDto.CompanyStatus;
 			await _unitOfWork.Companies.UpdateAsync(existing);
 			await _unitOfWork.SaveChangesAsync();
+			var allEmployees = await _unitOfWork.Users.GetAllAsync();
+			var targetEmployees = allEmployees.Where(e => e.CompanyId == existing.Id).ToList();
+			var emailTasks = targetEmployees.Select(emp => _emailService.SendEmailCompanyStatusNotification(emp.Email, existing));
+			await Task.WhenAll(emailTasks);
 			return Unit.Value;
 		}
 	}

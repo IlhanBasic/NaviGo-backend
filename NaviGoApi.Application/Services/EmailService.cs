@@ -143,6 +143,48 @@ namespace NaviGoApi.Application.Services
 
 			await client.SendMailAsync(message);
 		}
+		public async Task SendEmailUserStatusNotification(string toEmail, User user)
+		{
+			var htmlBody = GenerateUserStatusEmailHtml(user);
+			var message = new MailMessage
+			{
+				From = new MailAddress(_smtpSettings.FromEmail, _smtpSettings.DisplayName),
+				Subject = "Your Account Status Has Changed",
+				Body = htmlBody,
+				IsBodyHtml = true
+			};
+
+			message.To.Add(toEmail);
+
+			using var client = new SmtpClient(_smtpSettings.Host, _smtpSettings.Port)
+			{
+				Credentials = new NetworkCredential(_smtpSettings.Username, _smtpSettings.Password),
+				EnableSsl = _smtpSettings.EnableSsl
+			};
+
+			await client.SendMailAsync(message);
+		}
+		public async Task SendEmailCompanyStatusNotification(string toEmail, Company company)
+		{
+			var htmlBody = GenerateCompanyStatusEmailHtml(company);
+			var message = new MailMessage
+			{
+				From = new MailAddress(_smtpSettings.FromEmail, _smtpSettings.DisplayName),
+				Subject = "Your Company Status Has Changed",
+				Body = htmlBody,
+				IsBodyHtml = true
+			};
+
+			message.To.Add(toEmail);
+
+			using var client = new SmtpClient(_smtpSettings.Host, _smtpSettings.Port)
+			{
+				Credentials = new NetworkCredential(_smtpSettings.Username, _smtpSettings.Password),
+				EnableSsl = _smtpSettings.EnableSsl
+			};
+
+			await client.SendMailAsync(message);
+		}
 		private string GenerateVerificationEmailHtml(string verificationLink)
 		{
 			return $@"
@@ -471,6 +513,146 @@ namespace NaviGoApi.Application.Services
         <p><strong>Old Pickup:</strong> {shipment.PickupChange?.OldTime.ToLocalTime():f}</p>
         <p><strong>New Pickup:</strong> {shipment.PickupChange?.NewTime.ToLocalTime():f}</p>
         <p>Please check your shipment details for more information.</p>
+        <div class='footer'>
+            – NaviGo Team
+        </div>
+    </div>
+</body>
+</html>";
+		}
+		public string GenerateUserStatusEmailHtml(User user)
+		{
+			string statusText = user.UserStatus == UserStatus.Active ? "Active" : "Inactive";
+			string statusColor = user.UserStatus == UserStatus.Active ? "#28a745" : "#dc3545"; // zeleno / crveno
+
+			return $@"
+<html>
+<head>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }}
+        .container {{
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }}
+        h2 {{
+            color: #007bff;
+            margin-bottom: 20px;
+        }}
+        p {{
+            color: #333333;
+            font-size: 16px;
+            line-height: 1.5;
+        }}
+        .status {{
+            font-weight: bold;
+            color: {statusColor};
+            font-size: 18px;
+        }}
+        .footer {{
+            margin-top: 30px;
+            font-size: 14px;
+            color: #888888;
+        }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <h2>Account Status Update</h2>
+        <p>Dear {user.FirstName} {user.LastName},</p>
+        <p>Your account status has been updated. The current status of your account is:</p>
+        <p class='status'>{statusText}</p>
+        <p>If you believe this is a mistake or have any questions, please contact support.</p>
+        <div class='footer'>
+            – NaviGo Team
+        </div>
+    </div>
+</body>
+</html>";
+		}
+		public string GenerateCompanyStatusEmailHtml(Company company)
+		{
+			string statusText;
+			string statusColor;
+			string extraMessage;
+
+			switch (company.CompanyStatus)
+			{
+				case CompanyStatus.Approved:
+					statusText = "Approved";
+					statusColor = "#28a745"; // green
+					extraMessage = "Congratulations! Your company has been approved and can now fully use the NaviGo platform.";
+					break;
+
+				case CompanyStatus.Rejected:
+					statusText = "Rejected";
+					statusColor = "#dc3545"; // red
+					extraMessage = "Unfortunately, your company registration has been rejected. Please contact support if you believe this is a mistake.";
+					break;
+
+				default: // Pending
+					statusText = "Pending";
+					statusColor = "#ffc107"; // yellow
+					extraMessage = "Your company registration is still under review. We will notify you once the verification process is complete.";
+					break;
+			}
+
+			return $@"
+<html>
+<head>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }}
+        .container {{
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }}
+        h2 {{
+            color: #007bff;
+            margin-bottom: 20px;
+        }}
+        p {{
+            color: #333333;
+            font-size: 16px;
+            line-height: 1.5;
+        }}
+        .status {{
+            font-weight: bold;
+            color: {statusColor};
+            font-size: 18px;
+        }}
+        .footer {{
+            margin-top: 30px;
+            font-size: 14px;
+            color: #888888;
+        }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <h2>Company Status Update</h2>
+        <p>Dear {company.CompanyName},</p>
+        <p>The current status of your company account is:</p>
+        <p class='status'>{statusText}</p>
+        <p>{extraMessage}</p>
         <div class='footer'>
             – NaviGo Team
         </div>

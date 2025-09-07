@@ -15,7 +15,8 @@ namespace NaviGoApi.Application.Services
 		Task SendEmailCheckUserNotification (string toEmail, User user);
 		Task SendEmailCheckCompanyNotification(string toEmail, Company company);
 		Task SendEmailPickupChangeNotification(string toEmail, Shipment shipment);
-
+		Task SendEmailUserStatusNotification(string toEmail, User user);
+		Task SendEmailCompanyStatusNotification(string toEmail, Company company);
 	}
 
 }
