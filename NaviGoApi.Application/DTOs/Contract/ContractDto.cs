@@ -18,6 +18,8 @@ namespace NaviGoApi.Application.DTOs.Contract
 		public string ForwarderCompanyName { get; set; }
 
 		public int RouteId { get; set; }
+		public int CarrierId { get; set; }
+		public string CarrierName { get; set; }
 
 		public string ContractNumber { get; set; }
 		public DateTime ContractDate { get; set; }

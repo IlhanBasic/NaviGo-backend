@@ -96,9 +96,25 @@ namespace NaviGoApi.Application.MappingProfiles
 			CreateMap<ContractUpdateDto, Contract>()
 				.ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 			CreateMap<Contract, ContractDto>()
-				.ForMember(dest => dest.ClientFullName, opt => opt.MapFrom(src => src.Client != null ? $"{src.Client.FirstName} {src.Client.LastName}" : null))
-				.ForMember(dest => dest.ForwarderCompanyName, opt => opt.MapFrom(src => src.Forwarder != null ? src.Forwarder.CompanyName : null))
-				.ForMember(dest => dest.ContractStatus, opt => opt.MapFrom(src => src.ContractStatus.ToString()));
+				.ForMember(dest => dest.ClientFullName,
+					opt => opt.MapFrom(src => src.Client != null
+						? $"{src.Client.FirstName} {src.Client.LastName}"
+						: null))
+				.ForMember(dest => dest.ForwarderCompanyName,
+					opt => opt.MapFrom(src => src.Forwarder != null
+						? src.Forwarder.CompanyName
+						: null))
+				.ForMember(dest => dest.CarrierId,
+					opt => opt.MapFrom(src => src.Route != null
+						? src.Route.CompanyId
+						: 0))
+				.ForMember(dest => dest.CarrierName,
+					opt => opt.MapFrom(src => src.Route != null && src.Route.Company != null
+						? src.Route.Company.CompanyName
+						: null))
+				.ForMember(dest => dest.ContractStatus,
+					opt => opt.MapFrom(src => src.ContractStatus.ToString()));
+
 			// Payment mappings
 			CreateMap<PaymentCreateDto, Payment>()
 				.ForMember(dest => dest.PaymentStatus, opt => opt.Ignore());

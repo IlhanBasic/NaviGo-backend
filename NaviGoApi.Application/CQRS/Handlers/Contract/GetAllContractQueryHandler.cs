@@ -75,15 +75,31 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 			{
 				var client = allUsers.FirstOrDefault(u => u.Id == contract.ClientId);
 				var forwarder = allCompanies.FirstOrDefault(c => c.Id == contract.ForwarderId);
-
+				var route = allRoutes.FirstOrDefault(r => r.Id == contract.RouteId);
+				var carrier = allCompanies.FirstOrDefault(c => c.Id == route?.CompanyId);
+				string clientName = "";
+				if (client != null)
+				{
+					if (client.CompanyId != null)
+					{
+						var clientCompany = allCompanies.FirstOrDefault(c => c.Id == client.CompanyId);
+						clientName = $"{client.FirstName} {client.LastName}" + (clientCompany != null ? $" ({clientCompany.CompanyName})" : "");
+					}
+					else
+					{
+						clientName = $"{client.FirstName} {client.LastName}";
+					}
+				}
 				return new ContractDto
 				{
 					Id = contract.Id,
 					ClientId = contract.ClientId,
-					ClientFullName = client != null ? $"{client.FirstName} {client.LastName}" : "",
+					ClientFullName = clientName,
 					ForwarderId = contract.ForwarderId,
 					ForwarderCompanyName = forwarder?.CompanyName ?? "",
 					RouteId = contract.RouteId,
+					CarrierId = route?.CompanyId ?? 0,
+					CarrierName = carrier?.CompanyName ?? "",
 					ContractNumber = contract.ContractNumber,
 					ContractDate = contract.ContractDate,
 					Terms = contract.Terms,
@@ -94,6 +110,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 					SignedDate = contract.SignedDate
 				};
 			}).ToList();
+
 
 			return contractDtos;
 		}
