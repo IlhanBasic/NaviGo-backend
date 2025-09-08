@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NaviGoApi.Infrastructure.Postgresql.Persistence;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NaviGoApi.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250908185612_AddNullableDriverIdVehicleIdInShipment")]
+    partial class AddNullableDriverIdVehicleIdInShipment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -536,9 +539,6 @@ namespace NaviGoApi.Infrastructure.Migrations
 
                     b.Property<decimal>("MinimumPrice")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("PricePerKg")
-                        .HasColumnType("numeric");
 
                     b.Property<decimal>("PricePerKm")
                         .HasColumnType("decimal(18,2)");

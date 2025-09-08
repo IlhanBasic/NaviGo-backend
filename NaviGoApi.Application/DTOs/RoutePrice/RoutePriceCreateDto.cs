@@ -11,6 +11,7 @@ namespace NaviGoApi.Application.DTOs.RoutePrice
 		public int RouteId { get; set; }
 		public int VehicleTypeId { get; set; }
 		public decimal PricePerKm { get; set; }
+		public decimal PricePerKg { get; set; }
 		public decimal MinimumPrice { get; set; }
 	}
 }

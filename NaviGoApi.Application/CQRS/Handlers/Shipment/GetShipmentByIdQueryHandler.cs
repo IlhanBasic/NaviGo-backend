@@ -35,40 +35,52 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 			var userEmail = httpContext.User.FindFirst(ClaimTypes.Email)?.Value;
 			if (string.IsNullOrWhiteSpace(userEmail))
 				throw new ValidationException("User email not found in authentication token.");
+
 			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
 				?? throw new ValidationException($"User with email '{userEmail}' not found.");
+
 			if (user.UserStatus != UserStatus.Active)
 				throw new ValidationException("Your account is not activated.");
+
 			var shipment = await _unitOfWork.Shipments.GetByIdAsync(request.Id);
 			if (shipment == null)
 				return null;
 
-			//return _mapper.Map<ShipmentDto>(shipment);
-			var driver = await _unitOfWork.Drivers.GetByIdAsync(shipment.DriverId);
+			// Provera nullable DriverId i VehicleId
+			Domain.Entities.Driver? driver = null;
+			if (shipment.DriverId.HasValue)
+				driver = await _unitOfWork.Drivers.GetByIdAsync(shipment.DriverId.Value);
+
+			Domain.Entities.Vehicle? vehicle = null;
+			if (shipment.VehicleId.HasValue)
+				vehicle = await _unitOfWork.Vehicles.GetByIdAsync(shipment.VehicleId.Value);
+
 			var cargoType = await _unitOfWork.CargoTypes.GetByIdAsync(shipment.CargoTypeId);
 			var contract = await _unitOfWork.Contracts.GetByIdAsync(shipment.ContractId);
-			var vehicle = await _unitOfWork.Vehicles.GetByIdAsync(shipment.VehicleId);
+
 			var shipmentDto = new ShipmentDto
 			{
-				ActualArrival = shipment.ActualArrival,
-				ActualDeparture = shipment.ActualDeparture,
-				ScheduledArrival = shipment.ScheduledArrival,
-				ScheduledDeparture = shipment.ScheduledDeparture,
-				CargoTypeId = shipment.CargoTypeId,
-				ContractId = shipment.ContractId,
-				Description = shipment.Description,
-				DriverId = shipment.DriverId,
-				Priority = shipment.Priority,
-				WeightKg = shipment.WeightKg,
-				Status = shipment.Status.ToString(),
 				Id = shipment.Id,
-				CargoTypeName = cargoType.TypeName,
+				ContractId = shipment.ContractId,
 				ContractName = contract.ContractNumber,
-				DriverName = $"{driver.FirstName} {driver.LastName}",
-				VehicleName = $"{vehicle.Brand}-{vehicle.Model} ({vehicle.ManufactureYear})",
-				VehicleId = shipment.VehicleId
+				CargoTypeId = shipment.CargoTypeId,
+				CargoTypeName = cargoType.TypeName,
+				DriverId = shipment.DriverId.Value, // nullable
+				DriverName = driver != null ? $"{driver.FirstName} {driver.LastName}" : null,
+				VehicleId = shipment.VehicleId.Value, // nullable
+				VehicleName = vehicle != null ? $"{vehicle.Brand}-{vehicle.Model} ({vehicle.ManufactureYear})" : null,
+				Description = shipment.Description,
+				WeightKg = shipment.WeightKg,
+				Priority = shipment.Priority,
+				Status = shipment.Status.ToString(),
+				ScheduledDeparture = shipment.ScheduledDeparture,
+				ScheduledArrival = shipment.ScheduledArrival,
+				ActualDeparture = shipment.ActualDeparture,
+				ActualArrival = shipment.ActualArrival
 			};
+
 			return shipmentDto;
 		}
+
 	}
 }

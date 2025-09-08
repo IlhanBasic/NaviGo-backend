@@ -15,6 +15,7 @@ namespace NaviGoApi.Domain.Entities
 		public int VehicleTypeId { get; set; }
 
 		public decimal PricePerKm { get; set; }
+		public decimal PricePerKg { get; set; }
 		public decimal MinimumPrice { get; set; }
 
 		// Navigaciona svojstva

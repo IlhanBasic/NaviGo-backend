@@ -21,6 +21,9 @@ namespace NaviGoApi.Application.Validators.RoutePrice
 			RuleFor(x => x.PricePerKm)
 				.GreaterThanOrEqualTo(0).WithMessage("Price per km must be non-negative.");
 
+			RuleFor(x => x.PricePerKg)
+				.GreaterThanOrEqualTo(0).WithMessage("Price per km must be non-negative.");
+
 			RuleFor(x => x.MinimumPrice)
 				.GreaterThanOrEqualTo(0).WithMessage("Minimum price must be non-negative.");
 		}

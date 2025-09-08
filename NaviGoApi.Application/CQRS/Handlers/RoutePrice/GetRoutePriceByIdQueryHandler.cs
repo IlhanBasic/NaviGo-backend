@@ -47,12 +47,13 @@ namespace NaviGoApi.Application.CQRS.Handlers.RoutePrice
 				Id = entity.Id,
 				MinimumPrice = entity.MinimumPrice,
 				PricePerKm = entity.PricePerKm,
+				PricePerKg = entity.PricePerKg,
 				RouteId = entity.RouteId,
 				VehicleTypeId = entity.VehicleTypeId,
 				VehicleTypeName = vehicleType != null ? vehicleType.TypeName : ""
 			};
-			//return _mapper.Map<RoutePriceDto>(entity);
 			return routePricedto;
+			//return _mapper.Map<RoutePriceDto>(entity);
 		}
 	}
 

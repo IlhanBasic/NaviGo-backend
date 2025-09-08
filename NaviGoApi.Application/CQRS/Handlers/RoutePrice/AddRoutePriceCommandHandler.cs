@@ -59,6 +59,9 @@ namespace NaviGoApi.Application.CQRS.Handlers.RoutePrice
 			if (request.RoutePriceDto.PricePerKm < 0)
 				throw new ValidationException("Price per km cannot be negative.");
 
+			if (request.RoutePriceDto.PricePerKg < 0)
+				throw new ValidationException("Price per kg cannot be negative.");
+
 			if (request.RoutePriceDto.MinimumPrice < 0)
 				throw new ValidationException("Minimum price cannot be negative.");
 			var exists = await _unitOfWork.RoutePrices.DuplicateRoutePrice(request.RoutePriceDto.RouteId, request.RoutePriceDto.VehicleTypeId);

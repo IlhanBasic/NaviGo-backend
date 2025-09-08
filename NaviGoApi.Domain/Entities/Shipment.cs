@@ -19,8 +19,8 @@ namespace NaviGoApi.Domain.Entities
 	{
 		public int Id { get; set; }
 		public int ContractId { get; set; }
-		public int VehicleId { get; set; }
-		public int DriverId { get; set; }
+		public int? VehicleId { get; set; }
+		public int? DriverId { get; set; }
 		public int CargoTypeId { get; set; }
 		public double WeightKg { get; set; }
 		public int Priority { get; set; }
@@ -32,11 +32,6 @@ namespace NaviGoApi.Domain.Entities
 		public DateTime? ActualDeparture { get; set; }
 		public DateTime? ActualArrival { get; set; }
 		public DateTime CreatedAt { get; set; }
-		//public int? DelayHours { get; set; }
-		//public decimal? DelayPenaltyAmount { get; set; }
-		//public DateTime? PenaltyCalculatedAt { get; set; }
-
-		// Navigaciona svojstva
 		public Contract? Contract { get; set; }
 		public Vehicle? Vehicle { get; set; }
 		public Driver? Driver { get; set; }

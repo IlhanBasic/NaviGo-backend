@@ -76,6 +76,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.RoutePrice
 					RouteId = e.RouteId,
 					VehicleTypeId = e.VehicleTypeId,
 					PricePerKm = e.PricePerKm,
+					PricePerKg = e.PricePerKg,
 					MinimumPrice = e.MinimumPrice,
 					VehicleTypeName = vt?.TypeName ?? string.Empty
 				};

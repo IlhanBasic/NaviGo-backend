@@ -21,6 +21,9 @@ namespace NaviGoApi.Application.Services
 			if (!shipment.ActualArrival.HasValue)
 				return null;
 
+			if (!shipment.VehicleId.HasValue)
+				throw new ValidationException("Shipment does not have a Vehicle assigned.");
+
 			// Izračun kašnjenja u satima
 			var delayHoursDecimal = (shipment.ActualArrival.Value - shipment.ScheduledArrival).TotalHours;
 			if (delayHoursDecimal <= 0)
@@ -42,7 +45,7 @@ namespace NaviGoApi.Application.Services
 						?? throw new ValidationException("Route is not loaded for shipment.");
 
 			// Učitavanje vozila i tipa
-			var vehicle = await _unitOfWork.Vehicles.GetByIdAsync(shipment.VehicleId)
+			var vehicle = await _unitOfWork.Vehicles.GetByIdAsync(shipment.VehicleId.Value)
 						  ?? throw new ValidationException("Vehicle not found.");
 			var vehicleTypeId = vehicle.VehicleTypeId;
 
@@ -113,5 +116,6 @@ namespace NaviGoApi.Application.Services
 
 			return await _unitOfWork.DelayPenalties.GetByShipmentIdAsync(shipment.Id);
 		}
+
 	}
 }

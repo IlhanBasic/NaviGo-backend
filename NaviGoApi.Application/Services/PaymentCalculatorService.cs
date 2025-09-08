@@ -28,9 +28,11 @@ namespace NaviGoApi.Application.Services
 			if (shipment == null)
 				throw new ValidationException($"No shipment found for contract ID {contract.Id}.");
 
-			var vehicle = await _unitOfWork.Vehicles.GetByIdAsync(shipment.VehicleId);
-			if (vehicle == null)
-				throw new ValidationException($"Vehicle with ID {shipment.VehicleId} not found.");
+			if (!shipment.VehicleId.HasValue)
+				throw new ValidationException($"Shipment with ID {shipment.Id} does not have a Vehicle assigned.");
+
+			var vehicle = await _unitOfWork.Vehicles.GetByIdAsync(shipment.VehicleId.Value)
+						  ?? throw new ValidationException($"Vehicle with ID {shipment.VehicleId} not found.");
 
 			var routePrices = await _unitOfWork.RoutePrices.GetAllAsync();
 			var routePrice = routePrices.FirstOrDefault(rp => rp.RouteId == route.Id && rp.VehicleTypeId == vehicle.VehicleTypeId)

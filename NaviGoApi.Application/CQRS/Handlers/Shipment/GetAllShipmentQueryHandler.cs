@@ -69,7 +69,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 
 				if (user.UserRole == UserRole.SuperAdmin)
 					return true;
-				
+
 				if (contract.ClientId == user.Id)
 					return true;
 
@@ -80,7 +80,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 
 					if (userCompany.CompanyType == CompanyType.Carrier)
 					{
-						if (vehiclesDict.TryGetValue(s.VehicleId, out var v) && v.CompanyId == userCompany.Id)
+						if (s.VehicleId.HasValue && vehiclesDict.TryGetValue(s.VehicleId.Value, out var v) && v.CompanyId == userCompany.Id)
 							return true;
 					}
 
@@ -93,15 +93,16 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 						}
 					}
 				}
-				
+
 				return false;
 			}).ToList();
+
 			var shipmentsDto = visibleShipments.Select(s =>
 			{
-				driversDict.TryGetValue(s.DriverId, out var driver);
+				driversDict.TryGetValue(s.DriverId ?? 0, out var driver);
 				cargoTypesDict.TryGetValue(s.CargoTypeId, out var cargoType);
 				contractsDict.TryGetValue(s.ContractId, out var contract);
-				vehiclesDict.TryGetValue(s.VehicleId, out var vehicle);
+				vehiclesDict.TryGetValue(s.VehicleId ?? 0, out var vehicle);
 
 				return new ShipmentDto
 				{
@@ -116,8 +117,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 					ActualArrival = s.ActualArrival,
 					CargoTypeId = s.CargoTypeId,
 					ContractId = s.ContractId,
-					DriverId = s.DriverId,
-					VehicleId = s.VehicleId,
+					DriverId = s.DriverId.Value, // nullable
+					VehicleId = s.VehicleId.Value, // nullable
 
 					CargoTypeName = cargoType?.TypeName ?? string.Empty,
 					ContractName = contract?.ContractNumber ?? string.Empty,
