@@ -19,10 +19,11 @@ namespace NaviGoApi.Application.Services
 		Task SendEmailUserStatusNotification(string toEmail, User user);
 		Task SendEmailCompanyStatusNotification(string toEmail, Company company);
 		Task SendEmailContractCreatedNotification(string toEmail, ContractNotificationDto contract);
-
 		Task SendEmailAfterContractRejection(string toEmail, Contract contract);
-
 		Task SendEmailAfterContractAcception(string toEmail, ContractDetailsDto contract);
+		Task SendEmailAfterPaymentRejection(string toEmail, Payment payment);
+		Task SendEmailAfterPaymentAcception(string toEmail, Payment payment);
+		Task SendEmailAfterPaymentCreated(string toEmail, Payment payment);
 	}
 
 }

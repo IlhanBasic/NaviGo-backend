@@ -19,17 +19,19 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 		private readonly IMapper _mapper;
 		private readonly IPaymentCalculatorService _paymentCalculator;
 		private readonly IHttpContextAccessor _httpContextAccessor;
-
+		private readonly IEmailService _emailService;
 		public AddPaymentCommandHandler(
 			IUnitOfWork unitOfWork,
 			IMapper mapper,
 			IPaymentCalculatorService paymentCalculator,
+			IEmailService emailService,
 			IHttpContextAccessor httpContextAccessor)
 		{
 			_mapper = mapper;
 			_unitOfWork = unitOfWork;
 			_paymentCalculator = paymentCalculator;
 			_httpContextAccessor = httpContextAccessor;
+			_emailService = emailService;
 		}
 
 		public async Task<Unit> Handle(AddPaymentCommand request, CancellationToken cancellationToken)
@@ -52,7 +54,12 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 
 			if (contract.ContractStatus is ContractStatus.Cancelled or ContractStatus.Completed)
 				throw new ValidationException("Contract is cancelled or completed and cannot be paid.");
-
+			var route = await _unitOfWork.Routes.GetByIdAsync(contract.RouteId);
+			if (route == null)
+				throw new ValidationException("Route must exist.");
+			var carrier = await _unitOfWork.Companies.GetByIdAsync(route.CompanyId);
+			if (carrier == null)
+				throw new ValidationException("Carrier must exist.");
 			if (user.CompanyId == null)
 			{
 				if (user.UserRole != UserRole.RegularUser)
@@ -88,6 +95,12 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 
 			await _unitOfWork.Payments.AddAsync(entity);
 			await _unitOfWork.SaveChangesAsync();
+			var allUsers = await _unitOfWork.Users.GetAllAsync();
+			var employees = allUsers.Where(e => e.CompanyId == carrier.Id && e.UserRole == UserRole.CompanyAdmin).ToList();
+			foreach (var employee in employees)
+			{
+				await _emailService.SendEmailAfterPaymentCreated(employee.Email,entity);
+			}
 
 			return Unit.Value;
 		}

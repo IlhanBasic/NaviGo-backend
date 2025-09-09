@@ -254,6 +254,80 @@ namespace NaviGoApi.Application.Services
 
 			await client.SendMailAsync(message);
 		}
+		public async Task SendEmailAfterPaymentRejection(string toEmail, NaviGoApi.Domain.Entities.Payment payment)
+		{
+			if (string.IsNullOrEmpty(toEmail))
+				throw new ArgumentException("Recipient email is required.", nameof(toEmail));
+			var htmlBody = GeneratePaymentRejectionEmailHtml(payment);
+
+			var message = new MailMessage
+			{
+				From = new MailAddress(_smtpSettings.FromEmail, _smtpSettings.DisplayName),
+				Subject = "Payment Rejected",
+				Body = htmlBody,
+				IsBodyHtml = true
+			};
+
+			message.To.Add(toEmail);
+
+			using var client = new SmtpClient(_smtpSettings.Host, _smtpSettings.Port)
+			{
+				Credentials = new NetworkCredential(_smtpSettings.Username, _smtpSettings.Password),
+				EnableSsl = _smtpSettings.EnableSsl
+			};
+
+			await client.SendMailAsync(message);
+		}
+		public async Task SendEmailAfterPaymentAcception(string toEmail, Payment payment)
+		{
+			if (string.IsNullOrEmpty(toEmail))
+				throw new ArgumentException("Recipient email is required.", nameof(toEmail));
+
+			var htmlBody = GeneratePaymentAcceptionEmailHtml(payment);
+
+			var message = new MailMessage
+			{
+				From = new MailAddress(_smtpSettings.FromEmail, _smtpSettings.DisplayName),
+				Subject = "Payment Accepted",
+				Body = htmlBody,
+				IsBodyHtml = true
+			};
+
+			message.To.Add(toEmail);
+
+			using var client = new SmtpClient(_smtpSettings.Host, _smtpSettings.Port)
+			{
+				Credentials = new NetworkCredential(_smtpSettings.Username, _smtpSettings.Password),
+				EnableSsl = _smtpSettings.EnableSsl
+			};
+
+			await client.SendMailAsync(message);
+		}
+		public async Task SendEmailAfterPaymentCreated(string toEmail, Payment payment)
+		{
+			if (string.IsNullOrEmpty(toEmail))
+				throw new ArgumentException("Recipient email is required.", nameof(toEmail));
+
+			var htmlBody = GeneratePaymentCreatedEmailHtml(payment);
+
+			var message = new MailMessage
+			{
+				From = new MailAddress(_smtpSettings.FromEmail, _smtpSettings.DisplayName),
+				Subject = "New Payment Created",
+				Body = htmlBody,
+				IsBodyHtml = true
+			};
+
+			message.To.Add(toEmail);
+
+			using var client = new SmtpClient(_smtpSettings.Host, _smtpSettings.Port)
+			{
+				Credentials = new NetworkCredential(_smtpSettings.Username, _smtpSettings.Password),
+				EnableSsl = _smtpSettings.EnableSsl
+			};
+
+			await client.SendMailAsync(message);
+		}
 		private string GenerateVerificationEmailHtml(string verificationLink)
 		{
 			return $@"
@@ -935,6 +1009,159 @@ namespace NaviGoApi.Application.Services
             </tbody>
         </table>
 
+        <div class='footer'>
+            – NaviGo Team
+        </div>
+    </div>
+</body>
+</html>";
+		}
+		public string GeneratePaymentRejectionEmailHtml(Payment payment)
+		{
+			return $@"
+<html>
+<head>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }}
+        .container {{
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }}
+        h2 {{
+            color: #dc3545;
+            margin-bottom: 20px;
+        }}
+        p {{
+            color: #333333;
+            font-size: 16px;
+            line-height: 1.5;
+        }}
+        .footer {{
+            margin-top: 30px;
+            font-size: 14px;
+            color: #888888;
+        }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <h2>Payment Rejected</h2>
+        <p>Dear Client,</p>
+        <p>Your contract with Number <strong>{payment.Id}</strong> has been rejected by the carrier.</p>
+        <p>Reason: The Carrier has determined that your payment slip is not authentic.</p>
+        <div class='footer'>
+            – NaviGo Team
+        </div>
+    </div>
+</body>
+</html>";
+		}
+		public string GeneratePaymentAcceptionEmailHtml(Payment payment)
+		{
+			return $@"
+<html>
+<head>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }}
+        .container {{
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }}
+        h2 {{
+            color: #28a745;
+            margin-bottom: 20px;
+        }}
+        p {{
+            color: #333333;
+            font-size: 16px;
+            line-height: 1.5;
+        }}
+        .footer {{
+            margin-top: 30px;
+            font-size: 14px;
+            color: #888888;
+        }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <h2>Payment Accepted</h2>
+        <p>Dear Client,</p>
+        <p>Your payment with ID <strong>{payment.Id}</strong> has been successfully <strong>accepted</strong>.</p>
+        <p>The carrier has confirmed the transport terms and your contract is now active.</p>
+        <div class='footer'>
+            – NaviGo Team
+        </div>
+    </div>
+</body>
+</html>";
+		}
+		public string GeneratePaymentCreatedEmailHtml(Payment payment)
+		{
+			return $@"
+<html>
+<head>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }}
+        .container {{
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }}
+        h2 {{
+            color: #007bff;
+            margin-bottom: 20px;
+        }}
+        p {{
+            color: #333333;
+            font-size: 16px;
+            line-height: 1.5;
+        }}
+        .footer {{
+            margin-top: 30px;
+            font-size: 14px;
+            color: #888888;
+        }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <h2>New Payment Created</h2>
+        <p>Dear Carrier,</p>
+        <p>A new payment has been created by a client for your transport service. Please check dashboard and verify this payment.</p>
+        <p><strong>Payment ID:</strong> {payment.Id}</p>
+        <p><strong>Amount:</strong> {payment.Amount:F2} </p>
+        <p><strong>Status:</strong> {payment.PaymentStatus}</p>
+        <p><strong>Date:</strong> {payment.PaymentDate:dd.MM.yyyy HH:mm}</p>
         <div class='footer'>
             – NaviGo Team
         </div>

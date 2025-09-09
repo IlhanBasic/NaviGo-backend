@@ -32,8 +32,7 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 
 		public async Task<IEnumerable<Vehicle>> GetAllAsync()
 		{
-			// Bez Include, vraća osnovne podatke o vozilima
-			return await _context.Vehicles.AsNoTracking().ToListAsync();
+			return await _context.Vehicles.ToListAsync();
 		}
 
 		public async Task<IEnumerable<Vehicle>> GetAllAsync(VehicleSearchDto vehicleSearch)
