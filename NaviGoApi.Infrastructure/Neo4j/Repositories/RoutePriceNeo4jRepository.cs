@@ -106,22 +106,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			}
 		}
 
-
-		public async Task<bool> ExistsAsync(int routeId, int vehicleTypeId)
-		{
-			var query = @"MATCH (rp:RoutePrice {RouteId: $routeId, VehicleTypeId: $vehicleTypeId}) RETURN rp LIMIT 1";
-			var session = _driver.AsyncSession();
-			var result = await session.RunAsync(query, new { routeId, vehicleTypeId });
-			var exists = await result.FetchAsync();
-			await session.CloseAsync();
-			return exists;
-		}
-
-		public Task<bool> ExistsAsync(Expression<Func<RoutePrice, bool>> predicate)
-		{
-			throw new ValidationException("ExistsAsync sa Expression isn't possible in Neo4j.");
-		}
-
 		public async Task<IEnumerable<RoutePrice>> GetAllAsync()
 		{
 			var query = @"MATCH (rp:RoutePrice) RETURN rp";
@@ -190,9 +174,34 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			return task.ContinueWith(async t => await session.CloseAsync());
 		}
 
-		public Task<IEnumerable<RoutePrice>> GetByRouteIdAsync(int routeId)
+		public async Task<IEnumerable<RoutePrice>> GetByRouteIdAsync(int routeId)
 		{
-			throw new NotImplementedException();
+			var query = @"
+        MATCH (rp:RoutePrice)
+        WHERE rp.RouteId = $routeId
+        RETURN rp
+    ";
+
+			var session = _driver.AsyncSession();
+			var result = await session.RunAsync(query, new { routeId });
+
+			var list = new List<RoutePrice>();
+			while (await result.FetchAsync())
+			{
+				var node = result.Current["rp"].As<INode>();
+				list.Add(new RoutePrice
+				{
+					Id = node.Properties["Id"].As<int>(),
+					RouteId = node.Properties["RouteId"].As<int>(),
+					VehicleTypeId = node.Properties["VehicleTypeId"].As<int>(),
+					PricePerKm = node.Properties["PricePerKm"].As<decimal>(),
+					MinimumPrice = node.Properties["MinimumPrice"].As<decimal>()
+				});
+			}
+
+			await session.CloseAsync();
+			return list;
 		}
+
 	}
 }

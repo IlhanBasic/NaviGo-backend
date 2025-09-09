@@ -37,11 +37,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.FirstOrDefaultAsync(x => x.RouteId == routeId && x.VehicleTypeId == vehicleTypeId);
 		}
 
-		public async Task<bool> ExistsAsync(Expression<Func<RoutePrice, bool>> predicate)
-		{
-			return await _context.RoutesPrices.AnyAsync(predicate);
-		}
-
 		public async Task<IEnumerable<RoutePrice>> GetAllAsync()
 		{
 			return await _context.RoutesPrices

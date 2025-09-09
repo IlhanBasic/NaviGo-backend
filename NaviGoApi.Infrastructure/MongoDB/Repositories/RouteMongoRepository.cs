@@ -80,11 +80,6 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return await LoadNavigationPropertiesAsync(routes);
 		}
 
-		public async Task<bool> ExistsAsync(Expression<Func<Route, bool>> predicate)
-		{
-			return await _routesCollection.Find(predicate).AnyAsync();
-		}
-
 		private async Task<IEnumerable<Route>> LoadNavigationPropertiesAsync(IEnumerable<Route> routes)
 		{
 			var list = routes.ToList();

@@ -35,11 +35,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			return  await _context.Contracts.FirstOrDefaultAsync(x => x.ContractNumber == contractNumber) != null;
 		}
 
-		public async Task<bool> ExistsAsync(Expression<Func<Contract, bool>> predicate)
-		{
-			return await _context.Contracts.AnyAsync(predicate);
-		}
-
 		public async Task<IEnumerable<Contract>> GetAllAsync()
 		{
 			return await _context.Contracts

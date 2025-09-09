@@ -12,7 +12,6 @@ namespace NaviGoApi.Domain.Interfaces
 		Task AddAsync(CargoType cargoType);
 		Task UpdateAsync(CargoType cargoType);
 		Task DeleteAsync(CargoType cargoType);
-		Task<bool> ExistsAsync(Expression<Func<CargoType, bool>> predicate);
 		Task<CargoType?> GetByTypeName(string name);
 	}
 }

@@ -88,11 +88,6 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			}
 		}
 
-		public async Task<bool> ExistsAsync(Expression<Func<Contract, bool>> predicate)
-		{
-			return await _contractsCollection.Find(predicate).AnyAsync();
-		}
-
 		// Helper method da popuni sve relacije
 		private async Task<IEnumerable<Contract>> PopulateRelationsAsync(IEnumerable<Contract> contracts)
 		{

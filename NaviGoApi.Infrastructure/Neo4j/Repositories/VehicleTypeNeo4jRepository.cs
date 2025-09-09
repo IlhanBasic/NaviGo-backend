@@ -161,12 +161,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				RequiresSpecialLicense = node.Properties.ContainsKey("requiresSpecialLicense") && (bool)node.Properties["requiresSpecialLicense"]
 			};
 		}
-
-		public Task<bool> ExistsAsync(Expression<Func<VehicleType, bool>> predicate)
-		{
-			throw new ValidationException("ExistsAsync is not possible in neo4j repository.");
-		}
-
 		public async Task<VehicleType?> GetByTypeName(string typeName)
 		{
 			var query = @"MATCH (vt:VehicleType {typeName: $typeName}) RETURN vt LIMIT 1";

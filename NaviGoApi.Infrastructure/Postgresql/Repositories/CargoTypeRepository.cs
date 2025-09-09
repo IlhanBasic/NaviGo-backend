@@ -26,10 +26,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			return Task.CompletedTask;
 		}
 
-		public async Task<bool> ExistsAsync(Expression<Func<CargoType, bool>> predicate)
-		{
-			return await _context.CargoTypes.AnyAsync(predicate);
-		}
 
 		public async Task<IEnumerable<CargoType>> GetAllAsync()
 		{

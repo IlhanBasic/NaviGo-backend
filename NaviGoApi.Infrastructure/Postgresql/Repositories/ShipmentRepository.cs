@@ -28,13 +28,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			_context.Shipments.Remove(shipment);
 			return Task.CompletedTask;
 		}
-
-		public Task DeleteRange(IEnumerable<Shipment> shipments)
-		{
-			_context.Shipments.RemoveRange(shipments);
-			return Task.CompletedTask;
-		}
-
 		public async Task<IEnumerable<Shipment>> GetAllAsync()
 		{
 			return await _context.Shipments

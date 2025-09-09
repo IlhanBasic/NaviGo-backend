@@ -16,7 +16,6 @@ namespace NaviGoApi.Domain.Interfaces
 		Task AddAsync(RoutePrice price);
 		Task UpdateAsync(RoutePrice price);
 		Task DeleteAsync(int id);
-		Task<bool> ExistsAsync(Expression<Func<RoutePrice, bool>> predicate);
 		Task<RoutePrice?> DuplicateRoutePrice(int routeId,int vehicleTypeId);
 	}
 }

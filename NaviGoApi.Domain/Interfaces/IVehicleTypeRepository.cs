@@ -15,7 +15,6 @@ namespace NaviGoApi.Domain.Interfaces
 		Task AddAsync(VehicleType vehicleType);
 		Task UpdateAsync(VehicleType vehicleType);
 		Task DeleteAsync(int id);
-		Task<bool> ExistsAsync(Expression<Func<VehicleType, bool>> predicate);
 		Task<VehicleType?> GetByTypeName(string typeName);
 
 

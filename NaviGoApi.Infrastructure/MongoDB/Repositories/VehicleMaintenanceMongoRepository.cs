@@ -65,12 +65,6 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			await _vehicleMaintenancesCollection.ReplaceOneAsync(vm => vm.Id == maintenance.Id, maintenance);
 		}
 
-		public Task SaveChangesAsync()
-		{
-			// MongoDB operacije su odmah sačuvane
-			return Task.CompletedTask;
-		}
-
 		// Helper metoda za učitavanje navigacionih property-ja
 		private async Task LoadNavigationPropertiesAsync(VehicleMaintenance? maintenance)
 		{

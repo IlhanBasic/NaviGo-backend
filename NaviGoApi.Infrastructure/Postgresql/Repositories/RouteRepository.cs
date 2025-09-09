@@ -75,10 +75,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.ToListAsync();
 		}
 
-		public async Task<bool> ExistsAsync(Expression<Func<Route, bool>> predicate)
-		{
-			return await _context.Routes.AnyAsync(predicate);
-		}
 
 		public async Task<bool> DuplicateRoute(int companyId, int startLocationId, int endLocationId)
 		{

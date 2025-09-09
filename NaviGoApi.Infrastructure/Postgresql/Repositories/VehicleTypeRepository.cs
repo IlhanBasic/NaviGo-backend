@@ -48,10 +48,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			_context.VehicleTypes.Update(vehicleType);
 			return Task.CompletedTask;
 		}
-		public async Task<bool> ExistsAsync(Expression<Func<VehicleType, bool>> predicate)
-		{
-			return await _context.VehicleTypes.AnyAsync(predicate);
-		}
 
 		public async Task<VehicleType?> GetByTypeName(string typeName)
 		{

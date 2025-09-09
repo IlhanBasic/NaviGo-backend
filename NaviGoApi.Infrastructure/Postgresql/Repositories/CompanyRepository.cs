@@ -53,30 +53,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			return await _context.Companies.FirstOrDefaultAsync(c => c.PIB == pib);
 		}
 
-		//public async Task<IEnumerable<Company>> GetAllAsync(CompanySearchDto companySearch)
-		//{
-		//	IQueryable<Company> query = _context.Companies;
-		//	if (!string.IsNullOrWhiteSpace(companySearch.Pib))
-		//	{
-		//		query = query.Where(c => c.PIB.Contains(companySearch.Pib));
-		//	}
-		//	if (!string.IsNullOrWhiteSpace(companySearch.CompanyName))
-		//	{
-		//		query = query.Where(c => c.CompanyName.Contains(companySearch.CompanyName));
-		//	}
-
-		//	var sortDirection = companySearch.SortDirection?.ToLower() == "desc" ? false : true;
-		//	query = companySearch.SortBy?.ToLower() switch
-		//	{
-		//		"companyname" => sortDirection ? query.OrderBy(c => c.CompanyName) : query.OrderByDescending(c => c.CompanyName),
-		//		"pib" => sortDirection ? query.OrderBy(c => c.PIB) : query.OrderByDescending(c => c.PIB),
-		//		"createdat" => sortDirection ? query.OrderBy(c => c.CreatedAt) : query.OrderByDescending(c => c.CreatedAt),
-		//		_ => sortDirection ? query.OrderBy(c => c.Id) : query.OrderByDescending(c => c.Id)
-		//	};
-		//	var skip = (companySearch.Page - 1) * companySearch.PageSize;
-		//	query = query.Skip(skip).Take(companySearch.PageSize);
-		//	return await query.ToListAsync();
-		//}
 		public async Task<IEnumerable<Company>> GetAllAsync(CompanySearchDto companySearch)
 		{
 			IQueryable<Company> query = _context.Companies;

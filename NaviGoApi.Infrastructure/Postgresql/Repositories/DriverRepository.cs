@@ -66,7 +66,7 @@ public class DriverRepository : IDriverRepository
 
 	public async Task<IEnumerable<Driver>> GetAvailableDriversAsync()
 	{
-		return await _context.Drivers.ToListAsync();
+		return await _context.Drivers.Where(d=>d.DriverStatus == DriverStatus.Available).ToListAsync();
 	}
 
 	public async Task<IEnumerable<Driver>> GetByCompanyIdAsync(int companyId)

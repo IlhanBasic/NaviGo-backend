@@ -89,57 +89,6 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 				throw new ValidationException($"Company with Id {company.Id} not found for update.");
 			}
 		}
-
-		public async Task<bool> ExistsAsync(Expression<Func<Company, bool>> predicate)
-		{
-			return await _companiesCollection.Find(predicate).AnyAsync();
-		}
-
-		//public async Task<IEnumerable<Company>> GetAllAsync(CompanySearchDto companySearch)
-		//{
-		//	var filter = Builders<Company>.Filter.Empty;
-
-		//	if (!string.IsNullOrWhiteSpace(companySearch.Pib))
-		//		filter &= Builders<Company>.Filter.Regex(c => c.PIB, new BsonRegularExpression(companySearch.Pib, "i"));
-
-		//	if (!string.IsNullOrWhiteSpace(companySearch.CompanyName))
-		//		filter &= Builders<Company>.Filter.Regex(c => c.CompanyName, new BsonRegularExpression(companySearch.CompanyName, "i"));
-
-		//	var sortDefinition = companySearch.SortBy?.ToLower() switch
-		//	{
-		//		"companyname" => companySearch.SortDirection.ToLower() == "desc"
-		//			? Builders<Company>.Sort.Descending(c => c.CompanyName)
-		//			: Builders<Company>.Sort.Ascending(c => c.CompanyName),
-		//		"pib" => companySearch.SortDirection.ToLower() == "desc"
-		//			? Builders<Company>.Sort.Descending(c => c.PIB)
-		//			: Builders<Company>.Sort.Ascending(c => c.PIB),
-		//		"createdat" => companySearch.SortDirection.ToLower() == "desc"
-		//			? Builders<Company>.Sort.Descending(c => c.CreatedAt)
-		//			: Builders<Company>.Sort.Ascending(c => c.CreatedAt),
-		//		_ => companySearch.SortDirection.ToLower() == "desc"
-		//			? Builders<Company>.Sort.Descending(c => c.Id)
-		//			: Builders<Company>.Sort.Ascending(c => c.Id)
-		//	};
-
-		//	var skip = (companySearch.Page - 1) * companySearch.PageSize;
-
-		//	var companies = await _companiesCollection
-		//		.Find(filter)
-		//		.Sort(sortDefinition)
-		//		.Skip(skip)
-		//		.Limit(companySearch.PageSize)
-		//		.ToListAsync();
-
-		//	var driversCollection = _companiesCollection.Database.GetCollection<Driver>("Drivers");
-
-		//	foreach (var company in companies)
-		//	{
-		//		var drivers = await driversCollection.Find(d => d.CompanyId == company.Id).ToListAsync();
-		//		company.Drivers = drivers;
-		//	}
-
-		//	return companies;
-		//}
 		public async Task<IEnumerable<Company>> GetAllAsync(CompanySearchDto companySearch)
 		{
 			var filter = Builders<Company>.Filter.Empty;

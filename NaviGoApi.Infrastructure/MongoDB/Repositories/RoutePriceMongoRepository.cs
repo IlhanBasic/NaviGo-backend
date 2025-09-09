@@ -71,11 +71,6 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 				throw new ValidationException($"RoutePrice with Id {price.Id} not found for update.");
 		}
 
-		public async Task<bool> ExistsAsync(Expression<Func<RoutePrice, bool>> predicate)
-		{
-			return await _routePricesCollection.Find(predicate).AnyAsync();
-		}
-
 		private async Task<IEnumerable<RoutePrice>> LoadNavigationPropertiesAsync(IEnumerable<RoutePrice> prices)
 		{
 			var list = prices.ToList();
@@ -100,9 +95,13 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 				.FirstOrDefaultAsync();
 		}
 
-		public Task<IEnumerable<RoutePrice>> GetByRouteIdAsync(int routeId)
+		public async Task<IEnumerable<RoutePrice>> GetByRouteIdAsync(int routeId)
 		{
-			throw new NotImplementedException();
+			var prices = await _routePricesCollection
+				.Find(rp => rp.RouteId == routeId)
+				.ToListAsync();
+			return await LoadNavigationPropertiesAsync(prices);
 		}
+
 	}
 }

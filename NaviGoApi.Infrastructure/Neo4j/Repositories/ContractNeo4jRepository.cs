@@ -171,12 +171,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			return true;
 		}
 
-
-		public Task<bool> ExistsAsync(Expression<Func<Contract, bool>> predicate)
-		{
-			throw new ValidationException("ExistsAsync isn't possible in Neo4j.");
-		}
-
 		public async Task<IEnumerable<Contract>> GetAllAsync()
 		{
 			var query = @"MATCH (c:Contract) RETURN c";

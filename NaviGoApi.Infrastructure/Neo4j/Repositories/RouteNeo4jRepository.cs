@@ -207,26 +207,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				await session.CloseAsync();
 			}
 		}
-
-		//private Route MapRouteNode(INode node)
-		//{
-		//	return new Route
-		//	{
-		//		Id = node["Id"].As<int>(),
-		//		CompanyId = node["CompanyId"].As<int>(),
-		//		StartLocationId = node["StartLocationId"].As<int>(),
-		//		EndLocationId = node["EndLocationId"].As<int>(),
-		//		DistanceKm = node["DistanceKm"].As<double>(),
-		//		EstimatedDurationHours = node["EstimatedDurationHours"].As<double>(),
-		//		BasePrice = node["BasePrice"].As<decimal>(),
-		//		IsActive = node["IsActive"].As<bool>(),
-		//		CreatedAt = node["CreatedAt"].As<ZonedDateTime>().ToDateTimeOffset().LocalDateTime,
-		//		AvailableFrom = node["AvailableFrom"].As<ZonedDateTime>().ToDateTimeOffset().LocalDateTime,
-		//		AvailableTo = node["AvailableTo"].As<ZonedDateTime>().ToDateTimeOffset().LocalDateTime,
-		//		GeometryEncoded = node["GeometryEncoded"].As<string?>(),
-		//		//GeometryJson = node["GeometryJson"].As<string?>()
-		//	};
-		//}
 		private DateTime ConvertNeo4jDate(object value)
 		{
 			if (value is ZonedDateTime zdt)
@@ -254,11 +234,6 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				GeometryEncoded = node["GeometryEncoded"].As<string?>(),
 				//GeometryJson = node["GeometryJson"].As<string?>()
 			};
-		}
-
-		public async Task<bool> ExistsAsync(Expression<Func<Route, bool>> predicate)
-		{
-			throw new ValidationException("ExistsAsync sa Expression isn't possible in Neo4j.");
 		}
 
 		public async Task<bool> DuplicateRoute(int companyId, int startLocationId, int endLocationId)

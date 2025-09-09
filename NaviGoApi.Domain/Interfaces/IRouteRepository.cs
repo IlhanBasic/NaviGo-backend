@@ -19,7 +19,6 @@ namespace NaviGoApi.Domain.Interfaces
 		// Specifične metode za Route, ako su potrebne
 		Task<IEnumerable<Route>> GetActiveRoutesAsync();
 		Task<IEnumerable<Route>> GetRoutesByCompanyIdAsync(int companyId);
-		Task<bool> ExistsAsync(Expression<Func<Route, bool>> predicate);
 		Task<bool> DuplicateRoute(int companyId, int startLocationId, int endLocationId);
 		Task<bool> DuplicateRouteUpdate(int companyId, int startLocationId, int endLocationId,int routeId);
 	}

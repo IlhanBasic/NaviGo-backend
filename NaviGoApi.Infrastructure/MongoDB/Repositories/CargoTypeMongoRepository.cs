@@ -65,11 +65,6 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			}
 		}
 
-		public async Task<bool> ExistsAsync(Expression<Func<CargoType, bool>> predicate)
-		{
-			return await _cargoTypesCollection.Find(predicate).AnyAsync();
-		}
-
 		public async Task<CargoType?> GetByTypeName(string name)
 		{
 			return await _cargoTypesCollection

@@ -15,7 +15,6 @@ namespace NaviGoApi.Domain.Interfaces
 		Task AddAsync(Contract contract);
 		Task UpdateAsync(Contract contract);
 		Task DeleteAsync(Contract contract);
-		Task<bool> ExistsAsync(Expression<Func<Contract, bool>> predicate);
 
 		// Primer specifičnih metoda:
 		Task<IEnumerable<Contract>> GetByClientIdAsync(int clientId);

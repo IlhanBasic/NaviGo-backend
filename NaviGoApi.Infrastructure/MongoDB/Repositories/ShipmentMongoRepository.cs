@@ -159,10 +159,5 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 
 			return shipments;
 		}
-
-		public Task DeleteRange(IEnumerable<Shipment> shipments)
-		{
-			throw new NotImplementedException();
-		}
 	}
 }
