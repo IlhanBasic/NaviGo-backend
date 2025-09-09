@@ -131,19 +131,20 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			}
 		}
 
-		public async Task<IEnumerable<Vehicle>> GetAvailableVehiclesAsync()
+		public async Task<IEnumerable<Vehicle>> GetAvailableVehiclesAsync(int companyId)
 		{
 			var query = @"
-				MATCH (v:Vehicle)
-				WHERE v.vehicleStatus = $status
-				RETURN v";
+        MATCH (v:Vehicle)
+        WHERE v.vehicleStatus = $status AND v.CompanyId = $companyId
+        RETURN v
+    ";
 
 			var session = _driver.AsyncSession();
 			try
 			{
-				var result = await session.RunAsync(query, new { status = VehicleStatus.Free.ToString() });
-				var list = new List<Vehicle>();
+				var result = await session.RunAsync(query, new { status = VehicleStatus.Free.ToString(), companyId });
 
+				var list = new List<Vehicle>();
 				await result.ForEachAsync(record =>
 				{
 					var node = record["v"].As<INode>();

@@ -71,11 +71,10 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 		}
 
 
-		public async Task<IEnumerable<Vehicle>> GetAvailableVehiclesAsync()
+		public async Task<IEnumerable<Vehicle>> GetAvailableVehiclesAsync(int companyId)
 		{
 			return await _context.Vehicles
-				.Where(v => v.VehicleStatus==VehicleStatus.Free)
-				.AsNoTracking()
+				.Where(v => v.VehicleStatus==VehicleStatus.Free && v.CompanyId == companyId)
 				.ToListAsync();
 		}
 

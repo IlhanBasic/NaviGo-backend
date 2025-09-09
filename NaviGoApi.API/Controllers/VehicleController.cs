@@ -29,6 +29,14 @@ namespace NaviGoApi.API.Controllers
 			var result = await _mediator.Send(new GetAllVehiclesQuery(searchDto));
 			return Ok(result);
 		}
+		// GET: api/vehicle/available
+		[HttpGet("available")]
+		[Authorize]
+		public async Task<ActionResult<IEnumerable<VehicleDto>>> GetAllAvailable()
+		{
+			var result = await _mediator.Send(new GetAllAvailableVehicleQuery());
+			return Ok(result);
+		}
 
 		// GET: api/vehicle/{id}
 		[HttpGet("{id}")]

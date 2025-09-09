@@ -17,6 +17,6 @@ namespace NaviGoApi.Domain.Interfaces
 
 		// Primer dodatnih metoda
 		Task<IEnumerable<Driver>> GetByCompanyIdAsync(int companyId);
-		Task<IEnumerable<Driver>> GetAvailableDriversAsync();
+		Task<IEnumerable<Driver>> GetAvailableDriversAsync(int companyId);
 	}
 }

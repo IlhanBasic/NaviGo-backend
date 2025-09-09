@@ -28,6 +28,14 @@ namespace NaviGoApi.API.Controllers
 			var result = await _mediator.Send(new GetAllDriverQuery(search));
 			return Ok(result);
 		}
+		// GET: api/driver
+		[HttpGet("available")]
+		[Authorize]
+		public async Task<IActionResult> GetAllAvailable()
+		{
+			var result = await _mediator.Send(new GetAllAvailableDriverQuery());
+			return Ok(result);
+		}
 
 		// GET: api/driver/5
 		[HttpGet("{id}")]

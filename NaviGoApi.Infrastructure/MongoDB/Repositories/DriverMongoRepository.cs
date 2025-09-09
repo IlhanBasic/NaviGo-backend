@@ -54,10 +54,10 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return await _driversCollection.Find(_ => true).ToListAsync();
 		}
 
-		public async Task<IEnumerable<Driver>> GetAvailableDriversAsync()
+		public async Task<IEnumerable<Driver>> GetAvailableDriversAsync(int companyId)
 		{
 			return await _driversCollection
-				.Find(d => d.DriverStatus == DriverStatus.Available)
+				.Find(d => d.DriverStatus == DriverStatus.Available && d.CompanyId==companyId)
 				.ToListAsync();
 		}
 
@@ -78,11 +78,6 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			var result = await _driversCollection.ReplaceOneAsync(d => d.Id == driver.Id, driver);
 			if (result.MatchedCount == 0)
 				throw new ValidationException($"Driver with Id {driver.Id} not found for update.");
-		}
-
-		public async Task<bool> ExistsAsync(Expression<System.Func<Driver, bool>> predicate)
-		{
-			return await _driversCollection.Find(predicate).AnyAsync();
 		}
 
 		public async Task<IEnumerable<Driver>> GetAllAsync(DriverSearchDto driverSearch)

@@ -45,9 +45,9 @@ namespace NaviGoApi.Infrastructure.MongoDB.Repositories
 			return await _vehiclesCollection.Find(_ => true).ToListAsync();
 		}
 
-		public async Task<IEnumerable<Vehicle>> GetAvailableVehiclesAsync()
+		public async Task<IEnumerable<Vehicle>> GetAvailableVehiclesAsync(int companyId)
 		{
-			return await _vehiclesCollection.Find(v => v.VehicleStatus == VehicleStatus.Free).ToListAsync();
+			return await _vehiclesCollection.Find(v => v.VehicleStatus == VehicleStatus.Free && v.CompanyId == companyId).ToListAsync();
 		}
 
 		public async Task<IEnumerable<Vehicle>> GetByCompanyIdAsync(int companyId)

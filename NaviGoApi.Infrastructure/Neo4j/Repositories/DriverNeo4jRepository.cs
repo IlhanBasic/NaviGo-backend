@@ -100,18 +100,20 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			return records.Select(r => MapNodeToEntity(r["d"].As<INode>())).ToList();
 		}
 
-		public async Task<IEnumerable<Driver>> GetAvailableDriversAsync()
+		public async Task<IEnumerable<Driver>> GetAvailableDriversAsync(int companyId)
 		{
 			await using var session = _driver.AsyncSession();
+
 			var cursor = await session.RunAsync(@"
-                MATCH (d:Driver)
-                WHERE d.DriverStatus = $Status
-                RETURN d",
-				new { Status = (int)DriverStatus.Available });
+        MATCH (d:Driver)
+        WHERE d.DriverStatus = $Status AND d.CompanyId = $CompanyId
+        RETURN d",
+				new { Status = (int)DriverStatus.Available, CompanyId = companyId });
 
 			var records = await cursor.ToListAsync();
 			return records.Select(r => MapNodeToEntity(r["d"].As<INode>())).ToList();
 		}
+
 
 		public async Task<IEnumerable<Driver>> GetByCompanyIdAsync(int companyId)
 		{
