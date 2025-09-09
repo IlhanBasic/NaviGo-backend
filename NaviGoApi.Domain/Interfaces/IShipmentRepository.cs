@@ -14,6 +14,7 @@ namespace NaviGoApi.Domain.Interfaces
 		Task AddAsync(Shipment shipment);
 		Task UpdateAsync(Shipment shipment);
 		Task DeleteAsync(Shipment shipment);
+		Task DeleteRange(IEnumerable<Shipment> shipments);
 
 		// Specifične metode za Shipment ako trebaš
 		Task<IEnumerable<Shipment>> GetByContractIdAsync(int contractId);

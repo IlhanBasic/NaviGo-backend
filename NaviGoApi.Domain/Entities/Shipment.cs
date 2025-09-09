@@ -19,8 +19,8 @@ namespace NaviGoApi.Domain.Entities
 	{
 		public int Id { get; set; }
 		public int ContractId { get; set; }
-		public int? VehicleId { get; set; }
-		public int? DriverId { get; set; }
+		public int? VehicleId { get; set; } = null!;
+		public int? DriverId { get; set; } = null!;
 		public int CargoTypeId { get; set; }
 		public double WeightKg { get; set; }
 		public int Priority { get; set; }

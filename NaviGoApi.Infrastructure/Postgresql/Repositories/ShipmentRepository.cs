@@ -29,6 +29,12 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 			return Task.CompletedTask;
 		}
 
+		public Task DeleteRange(IEnumerable<Shipment> shipments)
+		{
+			_context.Shipments.RemoveRange(shipments);
+			return Task.CompletedTask;
+		}
+
 		public async Task<IEnumerable<Shipment>> GetAllAsync()
 		{
 			return await _context.Shipments
@@ -36,7 +42,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.Include(s => s.Vehicle)
 				.Include(s => s.Driver)
 				.Include(s => s.CargoType)
-				.AsNoTracking()
 				.ToListAsync();
 		}
 
@@ -47,7 +52,6 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 				.Include(s => s.Vehicle)
 				.Include(s => s.Driver)
 				.Include(s => s.CargoType)
-				.AsNoTracking()
 				.AsQueryable();
 
 			query = (shipmentSearch.SortBy?.ToLower(), shipmentSearch.SortDirection.ToLower()) switch
@@ -71,14 +75,32 @@ namespace NaviGoApi.Infrastructure.Postgresql.Repositories
 
 		public async Task<IEnumerable<Shipment>> GetByContractIdAsync(int contractId)
 		{
-			return await _context.Shipments
-				.Where(s => s.ContractId == contractId)
-				.Include(s => s.Contract)
-				.Include(s => s.Vehicle)
-				.Include(s => s.Driver)
-				.Include(s => s.CargoType)
-				.AsNoTracking()
-				.ToListAsync();
+			Console.WriteLine($"Pretraga pošiljaka za ContractId: {contractId}");
+			var shipments = await _context.Shipments
+	.Where(s => s.ContractId == contractId)
+	.Include(s => s.CargoType)
+	.Select(s => new Shipment
+	{
+		Id = s.Id,
+		ContractId = s.ContractId,
+		DriverId = s.DriverId,
+		VehicleId = s.VehicleId,
+		CargoTypeId = s.CargoTypeId,
+		WeightKg = s.WeightKg,
+		Priority = s.Priority,
+		Status = s.Status,
+		ScheduledDeparture = s.ScheduledDeparture,
+		ScheduledArrival = s.ScheduledArrival,
+		Contract = s.Contract,
+		CargoType = s.CargoType,
+		Driver = s.Driver,   // EF Core LEFT JOIN automatski
+		Vehicle = s.Vehicle
+	})
+	.ToListAsync();
+
+			Console.WriteLine($"Pronađeno {shipments.Count} pošiljaka.");
+			return shipments;
+
 		}
 
 		public async Task<Shipment?> GetByIdAsync(int id)

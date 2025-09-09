@@ -92,6 +92,8 @@ namespace NaviGoApi.Application.MappingProfiles
 			CreateMap<RoutePrice, RoutePriceDto>()
 				.ForMember(dest => dest.VehicleTypeName, opt => opt.MapFrom(src => src.VehicleType != null ? src.VehicleType.TypeName : string.Empty));
 			// Contract mappings
+			CreateMap<ClientContractCreateDto, Contract>();
+			CreateMap<CarrierContractStatusUpdateDto, Contract>();
 			CreateMap<ContractCreateDto, Contract>();
 			CreateMap<ContractUpdateDto, Contract>()
 				.ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));

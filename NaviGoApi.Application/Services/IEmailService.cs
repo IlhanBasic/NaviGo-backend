@@ -1,4 +1,5 @@
-﻿using NaviGoApi.Domain.Entities;
+﻿using NaviGoApi.Application.CQRS.Handlers.Contract;
+using NaviGoApi.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,11 @@ namespace NaviGoApi.Application.Services
 		Task SendEmailPickupChangeNotification(string toEmail, Shipment shipment);
 		Task SendEmailUserStatusNotification(string toEmail, User user);
 		Task SendEmailCompanyStatusNotification(string toEmail, Company company);
+		Task SendEmailContractCreatedNotification(string toEmail, ContractNotificationDto contract);
+
+		Task SendEmailAfterContractRejection(string toEmail, Contract contract);
+
+		Task SendEmailAfterContractAcception(string toEmail, ContractDetailsDto contract);
 	}
 
 }

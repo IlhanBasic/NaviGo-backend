@@ -254,5 +254,9 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			return list;
 		}
 
+		public Task DeleteRange(IEnumerable<Shipment> shipments)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

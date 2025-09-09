@@ -5,7 +5,8 @@ using NaviGoApi.Application.CQRS.Commands.Contract;
 using NaviGoApi.Application.CQRS.Queries.Contract;
 using NaviGoApi.Application.DTOs.Contract;
 using NaviGoApi.Common.DTOs;
-using System.Collections.Generic; // Za KeyNotFoundException
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations; // Za KeyNotFoundException
 
 namespace NaviGoApi.API.Controllers
 {
@@ -49,6 +50,21 @@ namespace NaviGoApi.API.Controllers
 			return Ok(new { message = "Contract created successfully." });
 		}
 
+		// POST: api/contract/client
+		[HttpPost("client")]
+		[Authorize]
+		public async Task<IActionResult> CreateClientContract([FromBody] ClientContractCreateDto dto)
+		{
+			if (dto == null)
+				return BadRequest(new { message = "Contract data is required." });
+
+			// Validacija DTO-a (FluentValidation će se automatski primeniti ako je registrovan)
+			var command = new AddClientContractCommand(dto);
+			await _mediator.Send(command);
+
+			return Ok(new { message = "Contract created successfully." });
+		}
+
 		// PUT: api/contract/{id}
 		[HttpPut("{id:int}")]
 		[Authorize]
@@ -58,6 +74,29 @@ namespace NaviGoApi.API.Controllers
 			{
 				await _mediator.Send(new UpdateContractCommand(id, dto));
 				return Ok(new { message = "Contract updated successfully." });
+			}
+			catch (KeyNotFoundException)
+			{
+				return NotFound(new { error = "NotFound", message = $"Contract with ID {id} not found." });
+			}
+		}
+		// PUT: api/contract/carrier/{id}/status
+		[HttpPut("carrier/{id:int}/status")]
+		[Authorize]
+		public async Task<IActionResult> UpdateCarrierContractStatus(int id, [FromBody] CarrierContractStatusUpdateDto dto)
+		{
+			if (dto == null)
+				return BadRequest(new { message = "Contract status data is required." });
+
+			try
+			{
+				var command = new UpdateCarrierContractStatusCommand(id,dto);
+				await _mediator.Send(command);
+				return Ok(new { message = "Contract status updated successfully." });
+			}
+			catch (ValidationException ex)
+			{
+				return BadRequest(new { error = "ValidationError", message = ex.Message });
 			}
 			catch (KeyNotFoundException)
 			{
