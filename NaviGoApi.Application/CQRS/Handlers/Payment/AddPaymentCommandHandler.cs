@@ -54,6 +54,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 
 			if (contract.ContractStatus is ContractStatus.Cancelled or ContractStatus.Completed)
 				throw new ValidationException("Contract is cancelled or completed and cannot be paid.");
+			if (contract.ContractStatus != ContractStatus.Active)
+				throw new ValidationException("Contract must be checked by Carrier before payment.");
 			var route = await _unitOfWork.Routes.GetByIdAsync(contract.RouteId);
 			if (route == null)
 				throw new ValidationException("Route must exist.");

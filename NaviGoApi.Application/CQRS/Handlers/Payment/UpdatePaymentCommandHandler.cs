@@ -10,66 +10,39 @@ using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
-
 namespace NaviGoApi.Application.CQRS.Handlers.Payment
 {
 	public class UpdatePaymentCommandHandler : IRequestHandler<UpdatePaymentCommand, Unit>
 	{
-		private readonly IUnitOfWork _unitOfWork;
-		private readonly IMapper _mapper;
-		private readonly IHttpContextAccessor _httpContextAccessor;
-		private readonly IEmailService _emailService;
-
-		public UpdatePaymentCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, IHttpContextAccessor httpContextAccessor,IEmailService emailService)
+		private readonly IUnitOfWork _unitOfWork; private readonly IMapper _mapper; private readonly IHttpContextAccessor _httpContextAccessor; private readonly IEmailService _emailService; public UpdatePaymentCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, IHttpContextAccessor httpContextAccessor, IEmailService emailService)
 		{
 			_unitOfWork = unitOfWork;
 			_mapper = mapper;
 			_httpContextAccessor = httpContextAccessor;
 			_emailService = emailService;
 		}
-
-
 		public async Task<Unit> Handle(UpdatePaymentCommand request, CancellationToken cancellationToken)
 		{
-			var httpContext = _httpContextAccessor.HttpContext
-				?? throw new InvalidOperationException("HttpContext is not available.");
-
-			var userEmail = httpContext.User.FindFirst(ClaimTypes.Email)?.Value
-				?? throw new ValidationException("User email not found in authentication token.");
-
-			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail)
-				?? throw new ValidationException($"User with email '{userEmail}' not found.");
-
-			if (user.UserStatus != UserStatus.Active)
-				throw new ValidationException("User must be active to perform this operation.");
-
-			if (user.CompanyId == null)
-				throw new ValidationException("Only company users can update payments.");
-
-			var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value)
-				?? throw new ValidationException("Company not found.");
-
-			if (company.CompanyStatus != CompanyStatus.Approved)
-				throw new ValidationException("Company must be approved to perform this action.");
-
-			if (company.CompanyType != CompanyType.Forwarder && company.CompanyType != CompanyType.Carrier)
-				throw new ValidationException("Only Forwarder or Carrier companies can update payments.");
-
-			if (user.UserRole != UserRole.CompanyAdmin)
-				throw new ValidationException("You must be a company admin to update payments.");
-
-			var payment = await _unitOfWork.Payments.GetByIdAsync(request.Id)
-				?? throw new ValidationException($"Payment with Id {request.Id} not found.");
-
+			var httpContext = _httpContextAccessor.HttpContext ??
+			  throw new InvalidOperationException("HttpContext is not available.");
+			var userEmail = httpContext.User.FindFirst(ClaimTypes.Email)?.Value;
+			if (string.IsNullOrWhiteSpace(userEmail)) throw new ValidationException("User email not found in authentication token.");
+			var user = await _unitOfWork.Users.GetByEmailAsync(userEmail) ??
+			  throw new ValidationException($"User with email '{userEmail}' not found.");
+			if (user.UserStatus != UserStatus.Active) throw new ValidationException("User must be active to perform this operation.");
+			if (user.CompanyId == null) throw new ValidationException("Only company users can update payments.");
+			var company = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value) ??
+			  throw new ValidationException("Company not found.");
+			if (company.CompanyStatus != CompanyStatus.Approved) throw new ValidationException("Company must be approved to perform this action.");
+			if (company.CompanyType != CompanyType.Forwarder && company.CompanyType != CompanyType.Carrier) throw new ValidationException("Only Forwarder or Carrier companies can update payments.");
+			if (user.UserRole != UserRole.CompanyAdmin) throw new ValidationException("You must be a company admin to update payments.");
+			var payment = await _unitOfWork.Payments.GetByIdAsync(request.Id) ??
+			  throw new ValidationException($"Payment with Id {request.Id} not found.");
 			payment.PaymentStatus = request.PaymentDto.PaymentStatus;
-
-			var contract = await _unitOfWork.Contracts.GetByIdAsync(payment.ContractId)
-					?? throw new ValidationException("Contract must exist before this action.");
-
+			var contract = await _unitOfWork.Contracts.GetByIdAsync(payment.ContractId) ??
+			  throw new ValidationException("Contract must exist before this action.");
 			var shipments = (await _unitOfWork.Shipments.GetByContractIdAsync(contract.Id)).ToList();
-			if (!shipments.Any())
-				throw new ValidationException("This Contract doesn't have any shipments.");
-
+			if (!shipments.Any()) throw new ValidationException("This Contract doesn't have any shipments.");
 			if (request.PaymentDto.PaymentStatus == PaymentStatus.Verified)
 			{
 				foreach (var s in shipments)
@@ -77,59 +50,97 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 					if (s.DriverId == null) throw new ValidationException($"Shipment {s.Id} must have a driver assigned.");
 					if (s.VehicleId == null) throw new ValidationException($"Shipment {s.Id} must have a vehicle assigned.");
 				}
-
-				var driverIds = shipments.Select(s => s.DriverId!.Value).Distinct().ToList();
-				var vehicleIds = shipments.Select(s => s.VehicleId!.Value).Distinct().ToList();
-
-				// batch update Drivers
-				var allDrivers = await _unitOfWork.Drivers.GetAllAsync();
-				foreach (var drv in allDrivers.Where(d => driverIds.Contains(d.Id)))
-					drv.DriverStatus = DriverStatus.OnRoute;
-
-				// batch update Vehicles
-				var allVehicles = await _unitOfWork.Vehicles.GetAllAsync();
-				foreach (var veh in allVehicles.Where(v => vehicleIds.Contains(v.Id)))
-					veh.VehicleStatus = VehicleStatus.OnRoute;
-
-				// update Shipments
+				var driverIds = shipments.Select(s => s.DriverId!.Value).Distinct();
+				var vehicleIds = shipments.Select(s => s.VehicleId!.Value).Distinct();
+				var drivers = await _unitOfWork.Drivers.GetAllAsync();
+				var vehicles = await _unitOfWork.Vehicles.GetAllAsync();
+				foreach (var dId in driverIds)
+				{
+					var drv = drivers.FirstOrDefault(d => d.Id == dId);
+					if (drv != null)
+					{
+						drv.DriverStatus = DriverStatus.OnRoute;
+					}
+				}
+				foreach (var vId in vehicleIds)
+				{
+					var veh = vehicles.FirstOrDefault(v => v.Id == vId);
+					if (veh != null)
+					{
+						veh.VehicleStatus = VehicleStatus.OnRoute;
+					}
+				}
 				foreach (var s in shipments)
+				{
 					s.Status = ShipmentStatus.InTransit;
-
-				var clientUser = await _unitOfWork.Users.GetByIdAsync(contract.ClientId)
-					?? throw new ValidationException("Client must exist in contract.");
-
+					await _unitOfWork.Shipments.UpdateAsync(s);
+				}
+				await _unitOfWork.Contracts.UpdateAsync(contract);
+				var clientUser = await _unitOfWork.Users.GetByIdAsync(contract.ClientId);
+				if (clientUser == null) throw new ValidationException("Client must exist in contract.");
 				if (clientUser.UserRole == UserRole.RegularUser)
+				{
 					await _emailService.SendEmailAfterPaymentAcception(clientUser.Email, payment);
+				}
 				else
 				{
-					if (clientUser.CompanyId == null) throw new ValidationException("Client must have a company.");
+					if (clientUser.CompanyId == null) throw new ValidationException("Client must have a company if he is not a RegularUser.");
+					if (clientUser.UserRole != UserRole.CompanyAdmin) throw new ValidationException("User must be Company Admin in Client Company.");
+					var allCompanies = await _unitOfWork.Companies.GetAllAsync();
+					Domain.Entities.Company? targetCompany = null;
+					foreach (var c in allCompanies)
+					{
+						if (c.Id == clientUser.CompanyId.Value)
+						{
+							targetCompany = c;
+							break;
+						}
+					}
+					if (targetCompany == null) throw new ValidationException("Client company doesn't exist.");
 					var allUsers = await _unitOfWork.Users.GetAllAsync();
-					foreach (var u in allUsers.Where(u => u.CompanyId == clientUser.CompanyId && u.UserRole == UserRole.CompanyAdmin))
-						await _emailService.SendEmailAfterPaymentAcception(u.Email, payment);
+					foreach (var u in allUsers)
+					{
+						if (u.CompanyId == targetCompany.Id && u.UserRole == UserRole.CompanyAdmin)
+						{
+							await _emailService.SendEmailAfterPaymentAcception(u.Email, payment);
+						}
+					}
 				}
 			}
 			else if (request.PaymentDto.PaymentStatus == PaymentStatus.Rejected)
 			{
-				var clientUser = await _unitOfWork.Users.GetByIdAsync(contract.ClientId)
-					?? throw new ValidationException("Client must exist in contract.");
-
+				var clientUser = await _unitOfWork.Users.GetByIdAsync(contract.ClientId);
+				if (clientUser == null) throw new ValidationException("Client must exist in contract.");
 				if (clientUser.UserRole == UserRole.RegularUser)
-					await _emailService.SendEmailAfterPaymentRejection(clientUser.Email, payment);
-				else
 				{
-					if (clientUser.CompanyId == null) throw new ValidationException("Client must have a company.");
-					var allUsers = await _unitOfWork.Users.GetAllAsync();
-					foreach (var u in allUsers.Where(u => u.CompanyId == clientUser.CompanyId && u.UserRole == UserRole.CompanyAdmin))
+					await _emailService.SendEmailAfterPaymentRejection(clientUser.Email, payment);
+					return Unit.Value;
+				}
+				if (clientUser.CompanyId == null) throw new ValidationException("Client must have a company if he is not a RegularUser.");
+				if (clientUser.UserRole != UserRole.CompanyAdmin) throw new ValidationException("User must be Company Admin in Client Company.");
+				var allCompanies = await _unitOfWork.Companies.GetAllAsync();
+				Domain.Entities.Company? targetCompany = null;
+				foreach (var c in allCompanies)
+				{
+					if (c.Id == clientUser.CompanyId.Value)
+					{
+						targetCompany = c;
+						break;
+					}
+				}
+				if (targetCompany == null) throw new ValidationException("Client company doesn't exist.");
+				var allUsers = await _unitOfWork.Users.GetAllAsync();
+				foreach (var u in allUsers)
+				{
+					if (u.CompanyId == targetCompany.Id && u.UserRole == UserRole.CompanyAdmin)
+					{
 						await _emailService.SendEmailAfterPaymentRejection(u.Email, payment);
+					}
 				}
 			}
-
-			// Save everything in one call
+			await _unitOfWork.Payments.UpdateAsync(payment);
 			await _unitOfWork.SaveChangesAsync();
-
 			return Unit.Value;
 		}
-
 	}
-
 }

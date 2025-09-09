@@ -1,4 +1,5 @@
-﻿using NaviGoApi.Domain.Entities;
+﻿using Microsoft.AspNetCore.Http;
+using NaviGoApi.Domain.Entities;
 using NaviGoApi.Domain.Interfaces;
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -23,30 +24,46 @@ namespace NaviGoApi.Application.Services
 
 			if (!shipment.VehicleId.HasValue)
 				throw new ValidationException("Shipment does not have a Vehicle assigned.");
+
 			var delayHoursDecimal = (shipment.ActualArrival.Value - shipment.ScheduledArrival).TotalHours;
 			if (delayHoursDecimal <= 0)
 				return null;
 
 			int delayHours = (int)Math.Ceiling(delayHoursDecimal);
+
 			var contract = await _unitOfWork.Contracts.GetByIdAsync(shipment.ContractId)
 						   ?? throw new ValidationException("Contract is not loaded for shipment.");
+
 			var payment = (await _unitOfWork.Payments.GetByContractIdAsync(contract.Id)).FirstOrDefault()
 						  ?? throw new ValidationException("Payment is not loaded or not found for this contract.");
+
 			var route = await _unitOfWork.Routes.GetByIdAsync(contract.RouteId)
 						?? throw new ValidationException("Route is not loaded for shipment.");
+
 			var vehicle = await _unitOfWork.Vehicles.GetByIdAsync(shipment.VehicleId.Value)
 						  ?? throw new ValidationException("Vehicle not found.");
+
 			var vehicleTypeId = vehicle.VehicleTypeId;
+
 			var routePrice = (await _unitOfWork.RoutePrices.GetAllAsync())
 							 .FirstOrDefault(rp => rp.RouteId == route.Id && rp.VehicleTypeId == vehicleTypeId)
 							 ?? throw new ValidationException($"No price defined for vehicle type ID {vehicleTypeId} on route ID {route.Id}.");
+
 			decimal transportPrice = (decimal)route.DistanceKm * routePrice.PricePerKm;
 			decimal weightPrice = (decimal)shipment.WeightKg * routePrice.PricePerKg;
 			transportPrice += weightPrice;
+
 			transportPrice = Math.Max(transportPrice, routePrice.MinimumPrice);
+
+			if (shipment.Priority == 1)
+			{
+				transportPrice *= 1.2m;
+			}
+
 			var forwarderOffer = await _unitOfWork.ForwarderOffers.GetByIdAsync(contract.ForwarderOfferId);
 			var discountPercent = forwarderOffer?.DiscountRate ?? 0;
 			transportPrice = transportPrice * (1 - discountPercent / 100m);
+
 			var penaltyRatePerHour = contract.PenaltyRatePerHour;
 			var maxPenaltyPercent = contract.MaxPenaltyPercent;
 			decimal penaltyAmount = transportPrice * (penaltyRatePerHour / 100m) * delayHours;
@@ -55,7 +72,6 @@ namespace NaviGoApi.Application.Services
 			if (penaltyAmount > maxPenaltyAmount)
 			{
 				penaltyAmount = maxPenaltyAmount;
-				Console.WriteLine("DEBUG: Penal je veći od maksimalnog - primenjujem MaxPenaltyAmount");
 			}
 
 			var existingPenalty = await _unitOfWork.DelayPenalties.GetByShipmentIdAsync(shipment.Id);
@@ -88,6 +104,7 @@ namespace NaviGoApi.Application.Services
 
 			await _unitOfWork.Payments.UpdateAsync(payment);
 			await _unitOfWork.SaveChangesAsync();
+
 			return await _unitOfWork.DelayPenalties.GetByShipmentIdAsync(shipment.Id);
 		}
 	}

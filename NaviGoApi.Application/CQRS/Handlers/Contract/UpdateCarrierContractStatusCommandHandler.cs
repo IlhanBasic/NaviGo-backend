@@ -64,16 +64,26 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 
 			if (request.ContractDto.ContractStatus == ContractStatus.Active)
 			{
+				
 
 				if (!request.ContractDto.DriverId.HasValue || !request.ContractDto.VehicleId.HasValue)
 					throw new ValidationException("DriverId and VehicleId are required when accepting a contract.");
-
+				var contractDriver = await _unitOfWork.Drivers.GetByIdAsync(request.ContractDto.DriverId.Value);
+				if (contractDriver == null)
+					throw new ValidationException($"Driver with ID {request.ContractDto.DriverId.Value} doesn't exist.");
+				if (contractDriver.DriverStatus != DriverStatus.Available)
+					throw new ValidationException("This driver wasn't available.");
+				var contractVehicle = await _unitOfWork.Vehicles.GetByIdAsync(request.ContractDto.VehicleId.Value);
+				if (contractVehicle == null)
+					throw new ValidationException($"Vehicle with ID {request.ContractDto.VehicleId.Value} doesn't exist.");
+				if (contractVehicle.VehicleStatus != VehicleStatus.Free)
+					throw new ValidationException("This vehicle wasn't available.");
 				contract.ContractStatus = ContractStatus.Active;
 
 				foreach (var shipment in shipments)
 				{
-					shipment.DriverId = request.ContractDto.DriverId;
-					shipment.VehicleId = request.ContractDto.VehicleId;
+					shipment.DriverId = contractDriver.Id;
+					shipment.VehicleId = contractVehicle.Id;
 					shipment.Status = ShipmentStatus.Scheduled;
 					await _unitOfWork.Shipments.UpdateAsync(shipment);
 				}
