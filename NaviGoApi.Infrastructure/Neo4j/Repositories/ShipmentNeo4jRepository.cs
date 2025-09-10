@@ -197,30 +197,56 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				ZonedDateTime zdt => zdt.ToDateTimeOffset().UtcDateTime,
 				LocalDateTime ldt => new DateTime(ldt.Year, ldt.Month, ldt.Day, ldt.Hour, ldt.Minute, ldt.Second, ldt.Nanosecond / 1_000_000, DateTimeKind.Utc),
 				DateTime dt => dt,
+				string s => DateTime.Parse(s),
 				_ => throw new InvalidCastException($"Unexpected date type: {value.GetType()}")
 			};
 		}
 
 		private Shipment MapNodeToShipment(INode node)
 		{
+			int GetInt(string key) => node.Properties.ContainsKey(key) && node[key] != null
+				? Convert.ToInt32(node[key])
+				: 0;
+
+			int? GetNullableInt(string key) => node.Properties.ContainsKey(key) && node[key] != null
+				? Convert.ToInt32(node[key])
+				: (int?)null;
+
+			double GetDouble(string key) => node.Properties.ContainsKey(key) && node[key] != null
+				? Convert.ToDouble(node[key])
+				: 0.0;
+
+			ShipmentStatus GetStatus(string key) => node.Properties.ContainsKey(key) && node[key] != null
+				? (ShipmentStatus)Convert.ToInt32(node[key])
+				: ShipmentStatus.Scheduled;
+
+			string? GetString(string key) => node.Properties.ContainsKey(key) && node[key] != null
+				? node[key].ToString()
+				: null;
+
+			DateTime GetDateTime(string key) => ConvertNeo4jDate(node.Properties.GetValueOrDefault(key)) ?? DateTime.MinValue;
+
+			DateTime? GetNullableDateTime(string key) => ConvertNeo4jDate(node.Properties.GetValueOrDefault(key));
+
 			return new Shipment
 			{
-				Id = node.Properties["Id"].As<int>(),
-				ContractId = node.Properties["ContractId"].As<int>(),
-				VehicleId = node.Properties["VehicleId"].As<int>(),
-				DriverId = node.Properties["DriverId"].As<int>(),
-				CargoTypeId = node.Properties["CargoTypeId"].As<int>(),
-				WeightKg = node.Properties["WeightKg"].As<double>(),
-				Priority = node.Properties["Priority"].As<int>(),
-				Description = node.Properties.ContainsKey("Description") ? node.Properties["Description"].As<string>() : null,
-				Status = (ShipmentStatus)(int)node.Properties["Status"].As<long>(),
-				ScheduledDeparture = ConvertNeo4jDate(node.Properties["ScheduledDeparture"])!.Value,
-				ScheduledArrival = ConvertNeo4jDate(node.Properties["ScheduledArrival"])!.Value,
-				ActualDeparture = ConvertNeo4jDate(node.Properties.GetValueOrDefault("ActualDeparture")),
-				ActualArrival = ConvertNeo4jDate(node.Properties.GetValueOrDefault("ActualArrival")),
-				CreatedAt = ConvertNeo4jDate(node.Properties["CreatedAt"])!.Value
+				Id = GetInt("Id"),
+				ContractId = GetInt("ContractId"),
+				VehicleId = GetNullableInt("VehicleId"),
+				DriverId = GetNullableInt("DriverId"),
+				CargoTypeId = GetInt("CargoTypeId"),
+				WeightKg = GetDouble("WeightKg"),
+				Priority = GetInt("Priority"),
+				Description = GetString("Description"),
+				Status = GetStatus("Status"),
+				ScheduledDeparture = GetDateTime("ScheduledDeparture"),
+				ScheduledArrival = GetDateTime("ScheduledArrival"),
+				ActualDeparture = GetNullableDateTime("ActualDeparture"),
+				ActualArrival = GetNullableDateTime("ActualArrival"),
+				CreatedAt = GetDateTime("CreatedAt")
 			};
 		}
+
 
 		public async Task<IEnumerable<Shipment>> GetAllAsync(ShipmentSearchDto search)
 		{

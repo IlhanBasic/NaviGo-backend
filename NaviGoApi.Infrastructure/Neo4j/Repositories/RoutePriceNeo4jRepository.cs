@@ -17,14 +17,15 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		{
 			_driver = driver;
 		}
+
 		private async Task<int> GetNextIdAsync(string entityName)
 		{
 			var query = @"
-            MERGE (c:Counter { name: $entityName })
-            ON CREATE SET c.lastId = 1
-            ON MATCH SET c.lastId = c.lastId + 1
-            RETURN c.lastId as lastId
-        ";
+                MERGE (c:Counter { name: $entityName })
+                ON CREATE SET c.lastId = 1
+                ON MATCH SET c.lastId = c.lastId + 1
+                RETURN c.lastId as lastId
+            ";
 
 			var session = _driver.AsyncSession();
 			try
@@ -38,6 +39,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				await session.CloseAsync();
 			}
 		}
+
 		public async Task AddAsync(RoutePrice price)
 		{
 			var id = await GetNextIdAsync("RoutePrice");
@@ -47,8 +49,10 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
                     RouteId: $routeId,
                     VehicleTypeId: $vehicleTypeId,
                     PricePerKm: $pricePerKm,
+                    PricePerKg: $pricePerKg,
                     MinimumPrice: $minimumPrice
                 })";
+
 			var session = _driver.AsyncSession();
 			await session.RunAsync(query, new
 			{
@@ -56,6 +60,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				routeId = price.RouteId,
 				vehicleTypeId = price.VehicleTypeId,
 				pricePerKm = price.PricePerKm,
+				pricePerKg = price.PricePerKg,
 				minimumPrice = price.MinimumPrice
 			});
 			await session.CloseAsync();
@@ -72,11 +77,11 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		public async Task<RoutePrice?> DuplicateRoutePrice(int routeId, int vehicleTypeId)
 		{
 			var query = @"
-        MATCH (rp:RoutePrice)
-        WHERE rp.RouteId = $routeId
-          AND rp.VehicleTypeId = $vehicleTypeId
-        RETURN rp
-        LIMIT 1";
+                MATCH (rp:RoutePrice)
+                WHERE rp.RouteId = $routeId
+                  AND rp.VehicleTypeId = $vehicleTypeId
+                RETURN rp
+                LIMIT 1";
 
 			var session = _driver.AsyncSession();
 			try
@@ -97,6 +102,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 					RouteId = node.Properties["RouteId"].As<int>(),
 					VehicleTypeId = node.Properties["VehicleTypeId"].As<int>(),
 					PricePerKm = node.Properties["PricePerKm"].As<decimal>(),
+					PricePerKg = node.Properties.ContainsKey("PricePerKg") ? node.Properties["PricePerKg"].As<decimal>() : 0m,
 					MinimumPrice = node.Properties["MinimumPrice"].As<decimal>()
 				};
 			}
@@ -122,6 +128,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 					RouteId = node.Properties["RouteId"].As<int>(),
 					VehicleTypeId = node.Properties["VehicleTypeId"].As<int>(),
 					PricePerKm = node.Properties["PricePerKm"].As<decimal>(),
+					PricePerKg = node.Properties.ContainsKey("PricePerKg") ? node.Properties["PricePerKg"].As<decimal>() : 0m,
 					MinimumPrice = node.Properties["MinimumPrice"].As<decimal>()
 				});
 			}
@@ -150,6 +157,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				RouteId = node.Properties["RouteId"].As<int>(),
 				VehicleTypeId = node.Properties["VehicleTypeId"].As<int>(),
 				PricePerKm = node.Properties["PricePerKm"].As<decimal>(),
+				PricePerKg = node.Properties.ContainsKey("PricePerKg") ? node.Properties["PricePerKg"].As<decimal>() : 0m,
 				MinimumPrice = node.Properties["MinimumPrice"].As<decimal>()
 			};
 		}
@@ -161,7 +169,9 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
                 SET rp.RouteId = $routeId,
                     rp.VehicleTypeId = $vehicleTypeId,
                     rp.PricePerKm = $pricePerKm,
+                    rp.PricePerKg = $pricePerKg,
                     rp.MinimumPrice = $minimumPrice";
+
 			var session = _driver.AsyncSession();
 			var task = session.RunAsync(query, new
 			{
@@ -169,6 +179,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 				routeId = price.RouteId,
 				vehicleTypeId = price.VehicleTypeId,
 				pricePerKm = price.PricePerKm,
+				pricePerKg = price.PricePerKg,
 				minimumPrice = price.MinimumPrice
 			});
 			return task.ContinueWith(async t => await session.CloseAsync());
@@ -177,10 +188,10 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		public async Task<IEnumerable<RoutePrice>> GetByRouteIdAsync(int routeId)
 		{
 			var query = @"
-        MATCH (rp:RoutePrice)
-        WHERE rp.RouteId = $routeId
-        RETURN rp
-    ";
+                MATCH (rp:RoutePrice)
+                WHERE rp.RouteId = $routeId
+                RETURN rp
+            ";
 
 			var session = _driver.AsyncSession();
 			var result = await session.RunAsync(query, new { routeId });
@@ -195,6 +206,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 					RouteId = node.Properties["RouteId"].As<int>(),
 					VehicleTypeId = node.Properties["VehicleTypeId"].As<int>(),
 					PricePerKm = node.Properties["PricePerKm"].As<decimal>(),
+					PricePerKg = node.Properties.ContainsKey("PricePerKg") ? node.Properties["PricePerKg"].As<decimal>() : 0m,
 					MinimumPrice = node.Properties["MinimumPrice"].As<decimal>()
 				});
 			}

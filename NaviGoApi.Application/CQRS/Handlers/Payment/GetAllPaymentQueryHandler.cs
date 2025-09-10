@@ -56,10 +56,12 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 			}
 			else if (user.UserRole == UserRole.CompanyAdmin)
 			{
-				if (user.Company == null)
+				if (user.CompanyId == null)
 					throw new ValidationException("Company not found for user.");
-
-				if (user.Company.CompanyType == CompanyType.Carrier)
+				var userCompany = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value);
+				if (userCompany == null)
+					throw new ValidationException("Company doesn't exist.");
+				if (userCompany.CompanyType == CompanyType.Carrier)
 				{
 					// Carrier -> vidi paymente vezane za svoje rute
 					filteredPayments = allPayments.Where(p =>
@@ -68,25 +70,25 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 						if (contract == null) return false;
 
 						var route = allRoutes.FirstOrDefault(r => r.Id == contract.RouteId);
-						return route != null && route.CompanyId == user.Company.Id;
+						return route != null && route.CompanyId == userCompany.Id;
 					});
 				}
-				else if (user.Company.CompanyType == CompanyType.Forwarder)
+				else if (userCompany.CompanyType == CompanyType.Forwarder)
 				{
 					// Forwarder -> vidi paymente svojih ugovora
 					filteredPayments = allPayments.Where(p =>
 					{
 						var contract = allContracts.FirstOrDefault(c => c.Id == p.ContractId);
-						return contract != null && contract.ForwarderId == user.Company.Id;
+						return contract != null && contract.ForwarderId == userCompany.Id;
 					});
 				}
-				else if (user.Company.CompanyType == CompanyType.Client)
+				else if (userCompany.CompanyType == CompanyType.Client)
 				{
 					// CompanyAdmin za klijenta -> vidi paymente svojih zaposlenih
 					filteredPayments = allPayments.Where(p =>
 					{
 						var client = allUsers.FirstOrDefault(u => u.Id == p.ClientId);
-						return client != null && client.CompanyId == user.Company.Id;
+						return client != null && client.CompanyId == userCompany.Id;
 					});
 				}
 				else

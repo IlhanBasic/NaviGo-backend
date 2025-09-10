@@ -127,25 +127,37 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 
 		private PickupChange MapNodeToEntity(INode node)
 		{
+			int GetInt(string key) => node.Properties.ContainsKey(key) && node[key] != null
+				? node[key].As<int>()
+				: 0;
+
+			decimal GetDecimal(string key) => node.Properties.ContainsKey(key) && node[key] != null
+				? Convert.ToDecimal(node[key])
+				: 0m;
+
+			DateTime GetDateTime(string key) => node.Properties.ContainsKey(key) && node[key] != null
+				? ConvertToDateTime(node[key])
+				: DateTime.MinValue;
+
 			return new PickupChange
 			{
-				Id = node.Properties["Id"].As<int>(),
-				ShipmentId = node.Properties["ShipmentId"].As<int>(),
-				ClientId = node.Properties["ClientId"].As<int>(),
-				OldTime = ConvertToDateTime(node.Properties["OldTime"]),
-				NewTime = ConvertToDateTime(node.Properties["NewTime"]),
-				ChangeCount = node.Properties["ChangeCount"].As<int>(),
-				AdditionalFee = Convert.ToDecimal(node.Properties["AdditionalFee"]),
+				Id = GetInt("Id"),
+				ShipmentId = GetInt("ShipmentId"),
+				ClientId = GetInt("ClientId"),
+				OldTime = GetDateTime("OldTime"),
+				NewTime = GetDateTime("NewTime"),
+				ChangeCount = GetInt("ChangeCount"),
+				AdditionalFee = GetDecimal("AdditionalFee")
 			};
 		}
 
-		// Helper metoda
+		// Helper metoda za konverziju Neo4j temporalnih tipova
 		private DateTime ConvertToDateTime(object value)
 		{
 			return value switch
 			{
 				ZonedDateTime zdt => zdt.ToDateTimeOffset().UtcDateTime,
-				LocalDateTime ldt => ldt.ToDateTime(),
+				LocalDateTime ldt => new DateTime(ldt.Year, ldt.Month, ldt.Day, ldt.Hour, ldt.Minute, ldt.Second),
 				DateTime dt => dt,
 				string s => DateTime.Parse(s),
 				_ => throw new InvalidCastException($"Unexpected date type: {value.GetType()}")

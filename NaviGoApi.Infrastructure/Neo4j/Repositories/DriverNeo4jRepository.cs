@@ -172,19 +172,56 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 
 		private Driver MapNodeToEntity(INode node)
 		{
-			return new Driver
+			if (node == null) return null!;
+
+			// HireDate
+			DateTime? hireDate = null;
+			if (node.Properties.ContainsKey("HireDate") && node["HireDate"] != null)
 			{
-				Id = node.Properties["Id"].As<int>(),
-				CompanyId = node.Properties["CompanyId"].As<int>(),
-				FirstName = node.Properties["FirstName"].As<string>(),
-				LastName = node.Properties["LastName"].As<string>(),
-				PhoneNumber = node.Properties["PhoneNumber"].As<string>(),
-				LicenseNumber = node.Properties["LicenseNumber"].As<string>(),
-				LicenseExpiry = node.Properties.ContainsKey("LicenseExpiry") ? node.Properties["LicenseExpiry"].As<ZonedDateTime>().ToDateTimeOffset().LocalDateTime : null,
-				LicenseCategories = node.Properties["LicenseCategories"].As<string>(),
-				HireDate = node.Properties["HireDate"].As<ZonedDateTime>().ToDateTimeOffset().LocalDateTime,
-				DriverStatus = (DriverStatus)node.Properties["DriverStatus"].As<int>()
+				var localDateTime = node["HireDate"].As<LocalDateTime>();
+				hireDate = new DateTime(
+					localDateTime.Year,
+					localDateTime.Month,
+					localDateTime.Day,
+					localDateTime.Hour,
+					localDateTime.Minute,
+					localDateTime.Second
+				);
+			}
+
+			// LicenseExpiry
+			DateTime? licenseExpiry = null;
+			if (node.Properties.ContainsKey("LicenseExpiry") && node["LicenseExpiry"] != null)
+			{
+				var localDateTime = node["LicenseExpiry"].As<LocalDateTime>();
+				licenseExpiry = new DateTime(
+					localDateTime.Year,
+					localDateTime.Month,
+					localDateTime.Day,
+					localDateTime.Hour,
+					localDateTime.Minute,
+					localDateTime.Second
+				);
+			}
+
+			// Mapiranje Driver entiteta
+			var driver = new Driver
+			{
+				Id = node["Id"].As<int>(),
+				CompanyId = node["CompanyId"].As<int>(),
+				FirstName = node["FirstName"].As<string>(),
+				LastName = node["LastName"].As<string>(),
+				PhoneNumber = node["PhoneNumber"].As<string>(),
+				LicenseNumber = node["LicenseNumber"].As<string>(),
+				LicenseCategories = node["LicenseCategories"].As<string>(),
+				HireDate = hireDate ?? DateTime.MinValue,
+				LicenseExpiry = licenseExpiry,
+				DriverStatus = Enum.TryParse<DriverStatus>(node["DriverStatus"].As<string>(), out var status)
+							   ? status
+							   : DriverStatus.Available
 			};
+
+			return driver;
 		}
 
 		public async Task<IEnumerable<Driver>> GetAllAsync(DriverSearchDto driverSearch)

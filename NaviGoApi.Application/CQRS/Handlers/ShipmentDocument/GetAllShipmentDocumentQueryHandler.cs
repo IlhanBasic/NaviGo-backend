@@ -47,9 +47,13 @@ namespace NaviGoApi.Application.CQRS.Handlers.ShipmentDocument
 
 			if (user.UserRole != UserRole.CompanyAdmin)
 				throw new ValidationException("Only Company Admins can view shipment documents.");
-
-			if (user.Company == null ||
-				!(user.Company.CompanyType == CompanyType.Forwarder || user.Company.CompanyType == CompanyType.Carrier))
+			if (user.CompanyId == null)
+				throw new ValidationException("You don't have a company.");
+			var userCompany = await _unitOfWork.Companies.GetByIdAsync(user.CompanyId.Value);
+			if (userCompany == null)
+				throw new ValidationException("Your company doesn't exist.");
+			if (userCompany == null ||
+				!(userCompany.CompanyType == CompanyType.Forwarder || userCompany.CompanyType == CompanyType.Carrier))
 			{
 				throw new ValidationException("Your company is not allowed to view shipment documents.");
 			}
