@@ -252,29 +252,28 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 
 		public async Task UpdateAsync(Contract contract)
 		{
-			var query = @"
-        MATCH (c:Contract {Id: $id})
-        SET c.ClientId = $clientId,
-            c.ForwarderId = $forwarderId,
-            c.RouteId = $routeId,
-            c.ContractNumber = $contractNumber,
-            c.ContractDate = $contractDate,
-            c.Terms = $terms,
-            c.ContractStatus = $contractStatus,
-            c.PenaltyRatePerHour = $penaltyRatePerHour,
-            c.MaxPenaltyPercent = $maxPenaltyPercent,
-            c.SignedDate = $signedDate
-    ";
-
-			// Koristi WriteTransaction za commit
 			var session = _driver.AsyncSession();
 			try
 			{
 				await session.WriteTransactionAsync(async tx =>
 				{
-					await tx.RunAsync(query, new
+					var query = @"
+                MATCH (c:Contract {Id: $id})
+                SET c.ClientId = $clientId,
+                    c.ForwarderId = $forwarderId,
+                    c.RouteId = $routeId,
+                    c.ContractNumber = $contractNumber,
+                    c.ContractDate = $contractDate,
+                    c.Terms = $terms,
+                    c.ContractStatus = $contractStatus,
+                    c.PenaltyRatePerHour = $penaltyRatePerHour,
+                    c.MaxPenaltyPercent = $maxPenaltyPercent,
+                    c.SignedDate = $signedDate
+                RETURN c"; // bitno: RETURN c da bi commitovao promene
+
+					var parameters = new
 					{
-						id = contract.Id.ToString(),
+						id = contract.Id,
 						clientId = contract.ClientId,
 						forwarderId = contract.ForwarderId,
 						routeId = contract.RouteId,
@@ -285,7 +284,10 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 						penaltyRatePerHour = contract.PenaltyRatePerHour,
 						maxPenaltyPercent = contract.MaxPenaltyPercent,
 						signedDate = contract.SignedDate
-					});
+					};
+
+					var result = await tx.RunAsync(query, parameters);
+					await result.ConsumeAsync(); // obavezno da bi WriteTransaction stvarno izvršio commit
 				});
 			}
 			finally

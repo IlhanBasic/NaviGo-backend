@@ -47,7 +47,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		public async Task AddAsync(Company company)
 		{
 			var id = await GetNextIdAsync("Company");
-
+			company.Id = id;
 			var query = @"
             CREATE (c:Company {
                 Id: $Id,

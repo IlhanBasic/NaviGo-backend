@@ -82,10 +82,12 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 				PenaltyRatePerHour = request.ContractDto.PenaltyRatePerHour,
 				MaxPenaltyPercent = request.ContractDto.MaxPenaltyPercent,
 				ContractStatus = ContractStatus.Pending,
-				ContractNumber = Guid.NewGuid().ToString("N").ToUpper(),
+				ContractNumber = $"CTR-{DateTime.UtcNow:yyyyMMddHHmmss}-{currentUser.Id}",
 				ContractDate = DateTime.UtcNow,
-				Terms = $"Contract terms auto-generated for {currentUser.FirstName} {currentUser.LastName}."
-			};
+				Terms = $@"
+				The parties hereby agree to comply with all obligations under this contract, including timely delivery, proper handling of goods, adherence to applicable laws and regulations, and fulfillment of any agreed service standards. 
+				Failure to meet these obligations may result in penalties as outlined in this contract."
+		};
 
 			await _unitOfWork.Contracts.AddAsync(contract);
 			await _unitOfWork.SaveChangesAsync();
