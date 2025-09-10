@@ -101,8 +101,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.Contract
 						WeightKg = shipmentDto.WeightKg,
 						Priority = shipmentDto.Priority,
 						Description = shipmentDto.Description,
-						ScheduledDeparture = shipmentDto.ScheduledDeparture,
-						ScheduledArrival = shipmentDto.ScheduledArrival,
+						ScheduledDeparture = DateTime.SpecifyKind(shipmentDto.ScheduledDeparture, DateTimeKind.Utc),
+						ScheduledArrival = DateTime.SpecifyKind(shipmentDto.ScheduledArrival, DateTimeKind.Utc),
 						ContractId = contract.Id,
 						Status = ShipmentStatus.Scheduled,
 						CreatedAt = DateTime.UtcNow

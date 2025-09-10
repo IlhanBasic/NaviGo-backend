@@ -117,8 +117,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.Shipment
 					ActualArrival = s.ActualArrival,
 					CargoTypeId = s.CargoTypeId,
 					ContractId = s.ContractId,
-					DriverId = s.DriverId.Value, // nullable
-					VehicleId = s.VehicleId.Value, // nullable
+					DriverId = s.DriverId,
+					VehicleId = s.VehicleId,
 
 					CargoTypeName = cargoType?.TypeName ?? string.Empty,
 					ContractName = contract?.ContractNumber ?? string.Empty,
