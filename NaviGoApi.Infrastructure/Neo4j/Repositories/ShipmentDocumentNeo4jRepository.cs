@@ -177,19 +177,38 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		// Helper method to map Neo4j node properties to ShipmentDocument entity
 		private ShipmentDocument MapNodeToShipmentDocument(INode node)
 		{
+			var uploadDateObj = node.Properties["uploadDate"];
+
+			DateTime uploadDate;
+
+			if (uploadDateObj is LocalDateTime ldt)
+			{
+				uploadDate = ldt.ToDateTime(); // konvertuje u DateTime
+			}
+			else if (uploadDateObj is DateTime dt)
+			{
+				uploadDate = dt;
+			}
+			else
+			{
+				// fallback
+				uploadDate = DateTime.Parse(uploadDateObj.ToString());
+			}
+
 			return new ShipmentDocument
 			{
-				Id = Convert.ToInt32(node.Properties["id"]),
-				ShipmentId = Convert.ToInt32(node.Properties["shipmentId"]),
-				DocumentType = (DocumentType)Convert.ToInt32(node.Properties["documentType"]),
+				Id = node.Properties["id"].As<int>(),
+				ShipmentId = node.Properties["shipmentId"].As<int>(),
+				DocumentType = (DocumentType)node.Properties["documentType"].As<int>(),
 				FileUrl = node.Properties["fileUrl"]?.ToString() ?? string.Empty,
-				UploadDate = DateTime.Parse(node.Properties["uploadDate"].ToString()),
-				Verified = Convert.ToBoolean(node.Properties["verified"]),
+				UploadDate = uploadDate,
+				Verified = node.Properties["verified"].As<bool>(),
 				VerifiedByUserId = node.Properties.ContainsKey("verifiedByUserId") && node.Properties["verifiedByUserId"] != null
-					? (int?)Convert.ToInt32(node.Properties["verifiedByUserId"])
+					? node.Properties["verifiedByUserId"].As<int?>()
 					: null
 			};
 		}
+
 
 		public async Task<IEnumerable<ShipmentDocument>> GetAllAsync(ShipmentDocumentSearchDto search)
 		{

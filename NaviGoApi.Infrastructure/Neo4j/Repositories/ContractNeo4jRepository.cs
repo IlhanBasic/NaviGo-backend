@@ -43,6 +43,7 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 		public async Task AddAsync(Contract contract)
 		{
 			var id = await GetNextIdAsync("Contract");
+			contract.Id = id;
 			var query = @"
                 CREATE (c:Contract {
                     Id: $id,
@@ -249,39 +250,50 @@ namespace NaviGoApi.Infrastructure.Neo4j.Repositories
 			}
 		}
 
-
 		public async Task UpdateAsync(Contract contract)
 		{
 			var query = @"
-                MATCH (c:Contract {Id: $id})
-                SET c.ClientId = $clientId,
-                    c.ForwarderId = $forwarderId,
-                    c.RouteId = $routeId,
-                    c.ContractNumber = $contractNumber,
-                    c.ContractDate = $contractDate,
-                    c.Terms = $terms,
-                    c.ContractStatus = $contractStatus,
-                    c.PenaltyRatePerHour = $penaltyRatePerHour,
-                    c.MaxPenaltyPercent = $maxPenaltyPercent,
-                    c.SignedDate = $signedDate";
+        MATCH (c:Contract {Id: $id})
+        SET c.ClientId = $clientId,
+            c.ForwarderId = $forwarderId,
+            c.RouteId = $routeId,
+            c.ContractNumber = $contractNumber,
+            c.ContractDate = $contractDate,
+            c.Terms = $terms,
+            c.ContractStatus = $contractStatus,
+            c.PenaltyRatePerHour = $penaltyRatePerHour,
+            c.MaxPenaltyPercent = $maxPenaltyPercent,
+            c.SignedDate = $signedDate
+    ";
 
+			// Koristi WriteTransaction za commit
 			var session = _driver.AsyncSession();
-			await session.RunAsync(query, new
+			try
 			{
-				id = contract.Id,
-				clientId = contract.ClientId,
-				forwarderId = contract.ForwarderId,
-				routeId = contract.RouteId,
-				contractNumber = contract.ContractNumber,
-				contractDate = contract.ContractDate,
-				terms = contract.Terms,
-				contractStatus = (int)contract.ContractStatus,
-				penaltyRatePerHour = contract.PenaltyRatePerHour,
-				maxPenaltyPercent = contract.MaxPenaltyPercent,
-				signedDate = contract.SignedDate
-			});
-			await session.CloseAsync();
+				await session.WriteTransactionAsync(async tx =>
+				{
+					await tx.RunAsync(query, new
+					{
+						id = contract.Id.ToString(),
+						clientId = contract.ClientId,
+						forwarderId = contract.ForwarderId,
+						routeId = contract.RouteId,
+						contractNumber = contract.ContractNumber,
+						contractDate = contract.ContractDate,
+						terms = contract.Terms,
+						contractStatus = (int)contract.ContractStatus,
+						penaltyRatePerHour = contract.PenaltyRatePerHour,
+						maxPenaltyPercent = contract.MaxPenaltyPercent,
+						signedDate = contract.SignedDate
+					});
+				});
+			}
+			finally
+			{
+				await session.CloseAsync();
+			}
 		}
+
 		private Route MapNodeToRoute(INode node)
 		{
 			return new Route

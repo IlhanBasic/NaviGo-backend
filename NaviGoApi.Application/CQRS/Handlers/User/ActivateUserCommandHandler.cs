@@ -53,6 +53,8 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 			{
 				if (currentUser.UserRole != Domain.Entities.UserRole.CompanyAdmin)
 					throw new ValidationException("Only CompanyAdmin can change the UserRole.");
+				if (currentUser.CompanyId == null)
+					throw new ValidationException("User must work in some company.");
 				var company = await _unitOfWork.Companies.GetByIdAsync(currentUser.CompanyId.Value);
 				if (company == null)
 					throw new ValidationException("Your company could not be found.");
@@ -61,7 +63,7 @@ namespace NaviGoApi.Application.CQRS.Handlers.User
 				targetUser.UserRole = Domain.Entities.UserRole.CompanyAdmin;
 				await _emailService.SendEmailUserStatusNotification(targetUser.Email, targetUser);
 			}
-
+			await _unitOfWork.Users.UpdateAsync(targetUser);
 			await _unitOfWork.SaveChangesAsync();
 			return Unit.Value;
 		}
