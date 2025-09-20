@@ -125,9 +125,12 @@ namespace NaviGoApi.Application.MappingProfiles
 
 			CreateMap<Payment, PaymentDto>()
 				.ForMember(dest => dest.PaymentStatus, opt => opt.MapFrom(src => src.PaymentStatus.ToString()));
-			// Forwarder Offer mappings
-			CreateMap<ForwarderOfferCreateDto, ForwarderOffer>();
-			CreateMap<ForwarderOfferUpdateDto, ForwarderOffer>()
+            // Forwarder Offer mappings
+            CreateMap<ForwarderOfferCreateDto, ForwarderOffer>()
+    .ForMember(dest => dest.CommissionRate, opt => opt.MapFrom(src => src.CommissionRate))
+    .ForMember(dest => dest.DiscountRate, opt => opt.MapFrom(src => src.DiscountRate));
+
+            CreateMap<ForwarderOfferUpdateDto, ForwarderOffer>()
 				.ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null)); 
 			CreateMap<ForwarderOffer, ForwarderOfferDto>()
 				.ForMember(dest => dest.ForwarderOfferStatus, opt => opt.MapFrom(src => src.ForwarderOfferStatus.ToString()))

@@ -126,26 +126,85 @@ namespace NaviGoApi.Application.CQRS.Handlers.Payment
 					}
 				}
 			}
-			else if (request.PaymentDto.PaymentStatus == PaymentStatus.Rejected)
-			{
-				if (clientUser.UserRole == UserRole.RegularUser || clientUser.CompanyId != null)
-				{
-					if (clientUser.UserRole == UserRole.RegularUser)
-					{
-						await _emailService.SendEmailAfterPaymentRejection(clientUser.Email, payment);
-					}
-					else
-					{
-						var allUsers = await _unitOfWork.Users.GetAllAsync();
-						foreach (var u in allUsers.Where(u => u.CompanyId == clientUser.CompanyId && u.UserRole == UserRole.CompanyAdmin))
-						{
-							await _emailService.SendEmailAfterPaymentRejection(u.Email, payment);
-						}
-					}
-				}
-			}
+            //else if (request.PaymentDto.PaymentStatus == PaymentStatus.Rejected)
+            //{
+            //	if (clientUser.UserRole == UserRole.RegularUser || clientUser.CompanyId != null)
+            //	{
+            //		if (clientUser.UserRole == UserRole.RegularUser)
+            //		{
+            //			await _emailService.SendEmailAfterPaymentRejection(clientUser.Email, payment);
+            //		}
+            //		else
+            //		{
+            //			var allUsers = await _unitOfWork.Users.GetAllAsync();
+            //			foreach (var u in allUsers.Where(u => u.CompanyId == clientUser.CompanyId && u.UserRole == UserRole.CompanyAdmin))
+            //			{
+            //				await _emailService.SendEmailAfterPaymentRejection(u.Email, payment);
+            //			}
+            //		}
+            //	}
+            //}
+            else if (request.PaymentDto.PaymentStatus == PaymentStatus.Rejected)
+            {
+                // Oslobodi sve vozače i vozila
+                var driverIds = shipments.Select(s => s.DriverId).Where(id => id != null).Select(id => id!.Value).Distinct();
+                var vehicleIds = shipments.Select(s => s.VehicleId).Where(id => id != null).Select(id => id!.Value).Distinct();
 
-			return Unit.Value;
+                var drivers = await _unitOfWork.Drivers.GetAllAsync();
+                var vehicles = await _unitOfWork.Vehicles.GetAllAsync();
+
+                foreach (var dId in driverIds)
+                {
+                    var drv = drivers.FirstOrDefault(d => d.Id == dId);
+                    if (drv != null)
+                    {
+                        drv.DriverStatus = DriverStatus.Available; // oslobodi vozača
+                        await _unitOfWork.Drivers.UpdateAsync(drv);
+                    }
+                }
+
+                foreach (var vId in vehicleIds)
+                {
+                    var veh = vehicles.FirstOrDefault(v => v.Id == vId);
+                    if (veh != null)
+                    {
+                        veh.VehicleStatus = VehicleStatus.Free; // oslobodi vozilo
+                        await _unitOfWork.Vehicles.UpdateAsync(veh);
+                    }
+                }
+
+                // Poništi status svih shipment-a
+                foreach (var s in shipments)
+                {
+                    s.Status = ShipmentStatus.Cancelled; // ili neki default status
+                    s.DriverId = null; // ukloni vozača
+                    s.VehicleId = null; // ukloni vozilo
+                    await _unitOfWork.Shipments.UpdateAsync(s);
+                }
+
+                // Poništi ugovor
+                contract.ContractStatus = ContractStatus.Cancelled;
+                await _unitOfWork.Contracts.UpdateAsync(contract);
+
+                // Sačuvaj promene pre slanja mejlova
+                await _unitOfWork.SaveChangesAsync();
+
+                // Slanje mejlova
+                if (clientUser.UserRole == UserRole.RegularUser)
+                {
+                    await _emailService.SendEmailAfterPaymentRejection(clientUser.Email, payment);
+                }
+                else
+                {
+                    var allUsers = await _unitOfWork.Users.GetAllAsync();
+                    foreach (var u in allUsers.Where(u => u.CompanyId == clientUser.CompanyId && u.UserRole == UserRole.CompanyAdmin))
+                    {
+                        await _emailService.SendEmailAfterPaymentRejection(u.Email, payment);
+                    }
+                }
+            }
+
+            return Unit.Value;
 		}
 
 	}
